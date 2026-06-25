@@ -91,20 +91,20 @@
     {
       "id": "a0000000-0000-4000-8000-000000000009",
       "partner_email": "cynthia@theunexpectedsomeone.com",
-      "status": "Preparing",
-      "ship_date": null,
+      "status": "Shipped",
+      "ship_date": "2026-06-24",
       "tracking_number": "1Z11JR320322661868",
       "return_by_date": null,
-      "notes": "The Unexpected Someone (Content Creator). FULLY GIFTED, no return (keeps both pieces). For July 19 black-tie wedding. Label created (UPS 1Z11JR320322661868) to McLean VA 22102 - NOT yet shipped, going out Jun 24-25. DELIVERABLE: owes 1 social post; monitor her Instagram."
+      "notes": "FULLY GIFTED, no return (keeps both pieces). For July 19 black-tie wedding. SHIPPED 2026-06-24 via UPS to McLean VA 22102. DELIVERABLE: owes 1 social post; monitor her Instagram."
     },
     {
       "id": "a0000000-0000-4000-8000-000000000010",
       "partner_email": "cynthiahattersley@gmail.com",
-      "status": "Preparing",
-      "ship_date": null,
-      "tracking_number": null,
+      "status": "Shipped",
+      "ship_date": "2026-06-25",
+      "tracking_number": "1Z11JR320336767540",
       "return_by_date": null,
-      "notes": "STALLED on swaps (awaiting stock check). First request: Double Angle V Tee (white) + French Terry Drop Pocket Tee (asphalt) - V Tee was OUT OF STOCK. Latest request (Jun 22, via Leslie): French Terry Flooded Pants + Double Angle V Neck, both in PUTTY. Sofia checking the warehouse Jun 23 on availability before shipping."
+      "notes": "Confirmed against typed stock transfer TR-00217. Swaps resolved (Double Angle V-Tee + Flooded Pants both in Putty). SHIPPED 2026-06-25 via UPS to 2325 Warm Springs Ln, Templeton CA 93465. Assistant: Leslie."
     },
     {
       "id": "a0000000-0000-4000-8000-000000000011",
@@ -127,11 +127,11 @@
     {
       "id": "a0000000-0000-4000-8000-000000000013",
       "partner_email": "debie@imagemattersswfl.com",
-      "status": "Preparing",
-      "ship_date": null,
+      "status": "Shipped",
+      "ship_date": "2026-06-24",
       "tracking_number": "1Z11JR320308137489",
       "return_by_date": null,
-      "notes": "Image Matters SWFL (Stylist). Confirmed against typed stock transfer TR-00212. Label created (UPS 1Z11JR320308137489) to 4753 Imperial Eagle Drive, Fort Myers FL 33966 - NOT yet shipped, going out Jun 24-25. Color analyst - cool palette (Cameo/Peony/White), no warm tones, no black on top. Commission link sent."
+      "notes": "Confirmed against typed stock transfer TR-00212. SHIPPED 2026-06-24 via UPS to 4753 Imperial Eagle Drive, Fort Myers FL 33966. Color analyst - cool palette, no warm tones, no black on top. Commission link sent."
     }
   ],
   "kit_pieces": [
@@ -183,11 +183,11 @@
     { "id": "b0000000-0000-4000-8000-000000000901", "kit_id": "a0000000-0000-4000-8000-000000000009", "piece_name": "Nylon Triple Collar Jacket", "color": "Vapor", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000000902", "kit_id": "a0000000-0000-4000-8000-000000000009", "piece_name": "Nylon Big Pocket Pants", "color": "Vapor", "partner_decision": null },
 
-    { "id": "b0000000-0000-4000-8000-000000001001", "kit_id": "a0000000-0000-4000-8000-000000000010", "piece_name": "Cotton Flood Pants (4098)", "color": "White [confirm]", "partner_decision": null },
-    { "id": "b0000000-0000-4000-8000-000000001002", "kit_id": "a0000000-0000-4000-8000-000000000010", "piece_name": "Pima Cotton Jackie O Top (1026)", "color": "White [confirm]", "partner_decision": null },
-    { "id": "b0000000-0000-4000-8000-000000001003", "kit_id": "a0000000-0000-4000-8000-000000000010", "piece_name": "Linen Crop Pant (505LIN)", "color": "Black [confirm]", "partner_decision": null },
-    { "id": "b0000000-0000-4000-8000-000000001004", "kit_id": "a0000000-0000-4000-8000-000000000010", "piece_name": "Knit Sweater (290K)", "color": "Capri [confirm]", "partner_decision": null },
-    { "id": "b0000000-0000-4000-8000-000000001005", "kit_id": "a0000000-0000-4000-8000-000000000010", "piece_name": "Luxury Boxy Tee (9791)", "color": "Lipstick [confirm]", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001001", "kit_id": "a0000000-0000-4000-8000-000000000010", "piece_name": "French Terry Double Angle V-Tee", "color": "Putty", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001002", "kit_id": "a0000000-0000-4000-8000-000000000010", "piece_name": "French Terry Drop Pocket Tee", "color": "Asphalt", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001003", "kit_id": "a0000000-0000-4000-8000-000000000010", "piece_name": "French Terry Flooded Pants", "color": "Putty", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001004", "kit_id": "a0000000-0000-4000-8000-000000000010", "piece_name": "Handkerchief Linen Crop Gaucho Pants", "color": "Black", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001005", "kit_id": "a0000000-0000-4000-8000-000000000010", "piece_name": "Pima Cotton Luxury Boxy T-Shirt", "color": "Lake", "partner_decision": null },
 
     { "id": "b0000000-0000-4000-8000-000000001301", "kit_id": "a0000000-0000-4000-8000-000000000013", "piece_name": "Cotton Swing Tank", "color": "Cameo", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000001302", "kit_id": "a0000000-0000-4000-8000-000000000013", "piece_name": "Pima Cotton Hamptons Crewneck Crochet Sweater", "color": "Cameo", "partner_decision": null },
