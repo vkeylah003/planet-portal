@@ -75,8 +75,8 @@ export default function PartnerPortal() {
           <Logo subtitle="Hmm" />
           <p className="mt-6 text-sm text-espresso/70 leading-relaxed">
             We couldn't find a partner profile for{' '}
-            <span className="font-medium">{user.email}</span>. Please reach out to Lauren
-            so we can get you set up.
+            <span className="font-medium">{user.email}</span>. Please reach out to the
+            PLANET team so we can get you set up.
           </p>
           <button
             onClick={() => signOut().then(() => navigate('/'))}
@@ -360,7 +360,7 @@ function NoteSection({ partner, onSaved }) {
 
   return (
     <Card>
-      <p className="eyebrow">Leave Lauren a note</p>
+      <p className="eyebrow">Leave the PLANET team a note</p>
       <p className="text-sm text-espresso/55 mt-2">
         Questions, feedback, or anything you'd like to share.
       </p>
