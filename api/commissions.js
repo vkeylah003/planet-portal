@@ -74,7 +74,7 @@ export default async function handler(req, res) {
     if (publicToken) affHeaders['x-goaffpro-public-token'] = publicToken
 
     const affResp = await fetch(
-      `${GOAFFPRO_BASE}/admin/affiliates?fields=id,email,balance,unpaid_commissions,paid_commissions,total_commissions,total_sales,orders_count`,
+      `${GOAFFPRO_BASE}/admin/affiliates?fields=id,email,balance,unpaid_commissions,paid_commissions,total_commissions,total_sales,orders_count,visits,clicks`,
       { headers: affHeaders }
     )
 
@@ -108,6 +108,8 @@ export default async function handler(req, res) {
         total: Number(me.total_commissions || me.balance || 0),
         sales: Number(me.total_sales || 0),
         orders: Number(me.orders_count || 0),
+        // GoAffPro labels referral-link clicks as "visits"; fall back to `clicks`.
+        clicks: Number(me.visits ?? me.clicks ?? 0),
       },
     })
   } catch (err) {

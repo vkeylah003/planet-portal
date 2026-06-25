@@ -210,6 +210,7 @@ function Earnings() {
             <Stat label="Paid out" value={money(state.data.earnings.paid)} />
             <Stat label="Total sales" value={money(state.data.earnings.sales)} />
             <Stat label="Orders" value={state.data.earnings.orders} />
+            <Stat label="Link clicks" value={Number(state.data.earnings.clicks || 0)} />
           </div>
         </div>
       )}
