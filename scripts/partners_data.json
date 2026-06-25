@@ -32,7 +32,7 @@
       "ship_date": "2026-06-11",
       "tracking_number": "1Z11JR320318248680",
       "return_by_date": "2026-07-16",
-      "notes": "Carol Davidson Inc (Stylist). UPS 1Z11JR320318248680. Shipped 2026-06-11, delivered 2026-06-16. Confirmed against typed stock transfer TR-00591. Keeping both jackets (Cropped Asymmetrical - Mint + Triple Collar - Black), maybe the Metallic Mini Seed Stitch sweater; returning the White Jackie O Top + the Mint Big Pocket Pants (arrived dirty). Call Tue Jun 23 11am ET to settle payment + returns + promo."
+      "notes": "Confirmed against typed stock transfer TR-00591. FINAL: kept (purchased) the Triple Collar Jacket (Black) + Metallic Mini Seed Stitch sweater (White/Silver); returned the rest (Cropped Asymmetrical Jacket, White Jackie O Top, Mint Big Pocket Pants)."
     },
     {
       "id": "a0000000-0000-4000-8000-000000000003",
@@ -82,11 +82,11 @@
     {
       "id": "a0000000-0000-4000-8000-000000000008",
       "partner_email": "nellenaj@gmail.com",
-      "status": "Shipped",
+      "status": "Delivered",
       "ship_date": "2026-06-19",
       "tracking_number": "1Z11JR320338632888",
       "return_by_date": null,
-      "notes": "Silver is the New Blonde (Content Creator). UPS 1Z11JR320338632888. Shipped 2026-06-19, arriving Tue 2026-06-23. Confirmed against typed stock transfer TR-00201. Ships to 22 Misty Cove II, Hilton Head SC 29928."
+      "notes": "Silver is the New Blonde (Content Creator). UPS 1Z11JR320338632888. Shipped 2026-06-19. Delivered 2026-06-23 (confirmed via UPS). Confirmed against typed stock transfer TR-00201. Ships to 22 Misty Cove II, Hilton Head SC 29928."
     },
     {
       "id": "a0000000-0000-4000-8000-000000000009",
@@ -141,11 +141,11 @@
     { "id": "b0000000-0000-4000-8000-000000000104", "kit_id": "a0000000-0000-4000-8000-000000000001", "piece_name": "Cotton Half Moon Shirt (1317CT)", "color": "Nautical Stripe [confirm]", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000000105", "kit_id": "a0000000-0000-4000-8000-000000000001", "piece_name": "Nylon Big Pocket Pants (04N)", "color": "Marina [confirm]", "partner_decision": null },
 
-    { "id": "b0000000-0000-4000-8000-000000000201", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Nylon Big Pocket Pants", "color": "Mint (RETURNING - arrived dirty)", "partner_decision": "Return" },
-    { "id": "b0000000-0000-4000-8000-000000000202", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Nylon Cropped Asymmetrical Jacket", "color": "Mint (KEEPING)", "partner_decision": "Keep" },
-    { "id": "b0000000-0000-4000-8000-000000000203", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Nylon Triple Collar Jacket", "color": "Black (KEEPING)", "partner_decision": "Keep" },
-    { "id": "b0000000-0000-4000-8000-000000000204", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Pima Cotton Jackie O Top", "color": "White (RETURNING)", "partner_decision": "Return" },
-    { "id": "b0000000-0000-4000-8000-000000000205", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Pima Cotton Metallic Mini Seed Stitch", "color": "White/Silver (considering)", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000000201", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Nylon Big Pocket Pants", "color": "Mint", "partner_decision": "Return" },
+    { "id": "b0000000-0000-4000-8000-000000000202", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Nylon Cropped Asymmetrical Jacket", "color": "Mint", "partner_decision": "Return" },
+    { "id": "b0000000-0000-4000-8000-000000000203", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Nylon Triple Collar Jacket", "color": "Black", "partner_decision": "Keep" },
+    { "id": "b0000000-0000-4000-8000-000000000204", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Pima Cotton Jackie O Top", "color": "White", "partner_decision": "Return" },
+    { "id": "b0000000-0000-4000-8000-000000000205", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Pima Cotton Metallic Mini Seed Stitch", "color": "White/Silver", "partner_decision": "Keep" },
 
     { "id": "b0000000-0000-4000-8000-000000000301", "kit_id": "a0000000-0000-4000-8000-000000000003", "piece_name": "Cotton Flood Pants", "color": "White", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000000302", "kit_id": "a0000000-0000-4000-8000-000000000003", "piece_name": "Cotton Half Moon Shirt", "color": "Chambray Stripe", "partner_decision": null },
