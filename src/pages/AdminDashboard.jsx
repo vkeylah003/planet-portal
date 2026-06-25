@@ -9,6 +9,14 @@ const KIT_STATUSES = ['Preparing', 'Shipped', 'Delivered', 'Return Pending', 'Re
 const CONTENT_TYPES = ['Reel', 'Feed Post', 'Story', 'Blog Post']
 const PLATFORMS = ['GoAffPro', 'Impact']
 
+// Lavie's recommended prospects (not partners in the kit pipeline).
+// Edit this list to add/remove names. business + email are optional.
+const LAVIE_RECOMMENDATIONS = [
+  { name: 'Hollie Dwyer' },
+  { name: 'Maiysha Cade' },
+  { name: 'Dani', business: 'Live Like You Green It', email: 'dani@livelikeyougreenit.com' },
+]
+
 export default function AdminDashboard() {
   const { signOut } = useAuth()
   const navigate = useNavigate()
@@ -45,6 +53,7 @@ export default function AdminDashboard() {
     { id: 'partners', label: 'Partners' },
     { id: 'kits', label: 'Kit Tracker' },
     { id: 'content', label: 'Content Tracker' },
+    { id: 'recommendations', label: 'Recommendations' },
   ]
 
   return (
@@ -89,6 +98,7 @@ export default function AdminDashboard() {
         {tab === 'content' && (
           <ContentTab partners={partners} content={content} onChange={load} />
         )}
+        {tab === 'recommendations' && <RecommendationsTab />}
       </main>
     </div>
   )
@@ -687,6 +697,47 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
         </div>
       </div>
     </Modal>
+  )
+}
+
+/* ─────────────────────── Lavie's Recommendations ─────────────────── */
+
+function RecommendationsTab() {
+  return (
+    <div>
+      <h2 className="font-heading text-3xl text-espresso mb-1">Lavie's Recommendations</h2>
+      <p className="text-sm text-espresso/55 mb-5">
+        Recommended prospects — not yet in the kit pipeline.
+      </p>
+
+      {LAVIE_RECOMMENDATIONS.length === 0 ? (
+        <EmptyState title="No recommendations yet" hint="Names will appear here as they're added." />
+      ) : (
+        <div className="card divide-y divide-espresso/5">
+          {LAVIE_RECOMMENDATIONS.map((r, i) => (
+            <div
+              key={i}
+              className="px-5 py-4 flex items-start justify-between gap-4 flex-wrap"
+            >
+              <div>
+                <p className="font-medium text-espresso">{r.name}</p>
+                {r.business && (
+                  <p className="text-sm text-espresso/55 mt-0.5">{r.business}</p>
+                )}
+              </div>
+              {r.email && (
+                <a
+                  href={`mailto:${r.email}`}
+                  className="text-sm text-gold hover:underline break-all"
+                >
+                  {r.email}
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
