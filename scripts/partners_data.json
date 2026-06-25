@@ -3,17 +3,18 @@
   "partners": [
     { "name": "Mitchell Christian", "email": "houseofpossum@gmail.com", "status": "Active Partner", "platform": "GoAffPro" },
     { "name": "Carol Davidson", "email": "carol@caroldavidson.com", "status": "Active Partner", "platform": "GoAffPro" },
-    { "name": "Robin Lamonte", "email": "admin@helloim50ish.com", "status": "Active Partner", "platform": "GoAffPro" },
+    { "name": "Robin LaMonte", "email": "admin@helloim50ish.com", "status": "Active Partner", "platform": "GoAffPro" },
     { "name": "Jodie Filogomo", "email": "jtouchofstyle@gmail.com", "status": "Active Partner", "platform": "GoAffPro" },
     { "name": "Marcia Crivorot", "email": "hello@marciacrivorot.com", "status": "Active Partner", "platform": "GoAffPro" },
     { "name": "Jenny Pancoast", "email": "jenny.pancoast@gmail.com", "status": "Active Partner", "platform": "GoAffPro" },
     { "name": "Ginger Burr", "email": "ginger@totalimageconsultants.com", "status": "Active Partner", "platform": "GoAffPro" },
-    { "name": "Jan Correll", "email": "nellenaj@gmail.com", "status": "Active Partner", "platform": "GoAffPro" },
+    { "name": "Jan Correll", "email": "jan@silveristhenewblonde.com", "status": "Active Partner", "platform": "GoAffPro" },
     { "name": "Cynthia Sitcov", "email": "cynthia@theunexpectedsomeone.com", "status": "Active Partner", "platform": "GoAffPro" },
     { "name": "Cindy Hattersley", "email": "cynthiahattersley@gmail.com", "status": "Active Partner", "platform": "GoAffPro" },
     { "name": "Megan Saustad", "email": "megan@meganslifestyle.com", "status": "Active Partner", "platform": "GoAffPro" },
     { "name": "Deborah Sorlie", "email": "info@deborahsorlie.com", "status": "Active Partner", "platform": "GoAffPro" },
-    { "name": "Debie Grass", "email": "debie@imagemattersswfl.com", "status": "Active Partner", "platform": "GoAffPro" }
+    { "name": "Debie Grass", "email": "debie@imagemattersswfl.com", "status": "Active Partner", "platform": "GoAffPro" },
+    { "name": "Emily Caroline", "email": "styledbyemilycaroline@gmail.com", "status": "Active Partner", "platform": "GoAffPro" }
   ],
   "kits": [
     {
@@ -81,7 +82,7 @@
     },
     {
       "id": "a0000000-0000-4000-8000-000000000008",
-      "partner_email": "nellenaj@gmail.com",
+      "partner_email": "jan@silveristhenewblonde.com",
       "status": "Delivered",
       "ship_date": "2026-06-19",
       "tracking_number": "1Z11JR320338632888",
