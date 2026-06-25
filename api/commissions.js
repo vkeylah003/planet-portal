@@ -27,11 +27,14 @@ export default async function handler(req, res) {
 
   const accessToken = process.env.GOAFFPRO_ACCESS_TOKEN
   const publicToken = process.env.GOAFFPRO_PUBLIC_TOKEN
-  const supabaseUrl = process.env.SUPABASE_URL
+  // Fall back to the VITE_ vars that are already set in Vercel for the frontend.
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
 
   // Graceful "not configured" response so the UI can show a friendly note
-  // instead of an error before you've added the GoAffPro admin token.
-  if (!accessToken || !publicToken) {
+  // instead of an error before you've added the GoAffPro admin token. Only the
+  // admin access token is required; the public token is optional.
+  if (!accessToken) {
     return res.status(200).json({
       configured: false,
       message:
@@ -52,7 +55,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${bearer}`,
         // Supabase's GoTrue endpoint requires an apikey header. Prefer the
         // anon key when configured; the user's JWT also works as a fallback.
-        apikey: process.env.SUPABASE_ANON_KEY || bearer,
+        apikey: supabaseKey || bearer,
       },
     })
 
@@ -66,14 +69,13 @@ export default async function handler(req, res) {
     }
 
     // 3: fetch affiliates from GoAffPro admin API and match by email.
+    const affHeaders = { 'x-goaffpro-access-token': accessToken }
+    // The public token is optional — only send it when configured.
+    if (publicToken) affHeaders['x-goaffpro-public-token'] = publicToken
+
     const affResp = await fetch(
       `${GOAFFPRO_BASE}/admin/affiliates?fields=id,email,balance,unpaid_commissions,paid_commissions,total_commissions,total_sales,orders_count`,
-      {
-        headers: {
-          'x-goaffpro-access-token': accessToken,
-          'x-goaffpro-public-token': publicToken,
-        },
-      }
+      { headers: affHeaders }
     )
 
     if (!affResp.ok) {
