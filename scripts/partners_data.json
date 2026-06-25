@@ -91,11 +91,11 @@
     {
       "id": "a0000000-0000-4000-8000-000000000009",
       "partner_email": "cynthia@theunexpectedsomeone.com",
-      "status": "Shipped",
-      "ship_date": "2026-06-24",
+      "status": "Preparing",
+      "ship_date": null,
       "tracking_number": "1Z11JR320322661868",
       "return_by_date": null,
-      "notes": "The Unexpected Someone (Content Creator). FULLY GIFTED, no return (keeps both pieces). For July 19 black-tie wedding. SHIPPED 2026-06-24 via UPS to McLean VA 22102. DELIVERABLE: owes 1 social post; monitor her Instagram."
+      "notes": "The Unexpected Someone (Content Creator). FULLY GIFTED, no return (keeps both pieces). For July 19 black-tie wedding. Label created (UPS 1Z11JR320322661868) to McLean VA 22102 - NOT yet shipped, going out Jun 24-25. DELIVERABLE: owes 1 social post; monitor her Instagram."
     },
     {
       "id": "a0000000-0000-4000-8000-000000000010",
@@ -127,11 +127,11 @@
     {
       "id": "a0000000-0000-4000-8000-000000000013",
       "partner_email": "debie@imagemattersswfl.com",
-      "status": "Shipped",
-      "ship_date": "2026-06-24",
+      "status": "Preparing",
+      "ship_date": null,
       "tracking_number": "1Z11JR320308137489",
       "return_by_date": null,
-      "notes": "Image Matters SWFL (Stylist). Confirmed against typed stock transfer TR-00212. SHIPPED 2026-06-24 via UPS to Fort Myers FL. Color analyst - cool palette (Cameo/Peony/White), no warm tones, no black on top. Commission link sent."
+      "notes": "Image Matters SWFL (Stylist). Confirmed against typed stock transfer TR-00212. Label created (UPS 1Z11JR320308137489) to 4753 Imperial Eagle Drive, Fort Myers FL 33966 - NOT yet shipped, going out Jun 24-25. Color analyst - cool palette (Cameo/Peony/White), no warm tones, no black on top. Commission link sent."
     }
   ],
   "kit_pieces": [
