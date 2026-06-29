@@ -114,7 +114,7 @@
       "ship_date": null,
       "tracking_number": null,
       "return_by_date": null,
-      "notes": "Megan's Lifestyle (Content Creator). Gifted stylist collab. Chooses 3 from the Stylist Collective collection; keeps 1 gifted (first month), MUST RETURN the other 2 (or buy at 50%). DELIVERABLE: owes 1 Reel; keep up with her socials to confirm she posts it. Awaiting her picks."
+      "notes": "Confirmed picks. Ships to 2941 Fondren Drive, Dallas, TX 75205. SIZING DELAY: Cotton Mini Man Shirt in Cherry only available in Size 2 right now; she wants Size 1, so kit is slightly delayed until Size 1 is back in stock. Gifted stylist collab (keeps 1, returns/buys other 2 at 50%); owes 1 Reel."
     },
     {
       "id": "a0000000-0000-4000-8000-000000000012",
@@ -123,7 +123,7 @@
       "ship_date": null,
       "tracking_number": null,
       "return_by_date": null,
-      "notes": "Deborah Sorlie (Stylist). Gifted stylist collab. Confirmed terms: chooses 3 from the Stylist Collective collection, keeps 1 gifted for the first month, MUST RETURN the other 2 (or buy at 50%). DELIVERABLE: owes 1 Reel; keep up with her socials to confirm she posts it. Awaiting her picks."
+      "notes": "Confirmed picks Jun 24; away until Jul 1. Ships to 3449 Corte Sonrisa, Carlsbad, CA 92009. SIZING DELAY: Nylon Big Pocket Pants Black Size 1 is out of stock (only Size 0); Size 1 on order, arriving soon, so kit slightly delayed until it lands. Gifted stylist collab (keeps 1, returns/buys other 2 at 50%); owes 1 reviewed Reel/Static + 1 Story."
     },
     {
       "id": "a0000000-0000-4000-8000-000000000013",
@@ -194,6 +194,12 @@
     { "id": "b0000000-0000-4000-8000-000000001302", "kit_id": "a0000000-0000-4000-8000-000000000013", "piece_name": "Pima Cotton Hamptons Crewneck Crochet Sweater", "color": "Cameo", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000001303", "kit_id": "a0000000-0000-4000-8000-000000000013", "piece_name": "Pima Cotton Luxury Bateau Tee", "color": "Peony", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000001304", "kit_id": "a0000000-0000-4000-8000-000000000013", "piece_name": "Sateen E-Z Pants", "color": "White", "partner_decision": null },
-    { "id": "b0000000-0000-4000-8000-000000001305", "kit_id": "a0000000-0000-4000-8000-000000000013", "piece_name": "Sateen Menz Shirt", "color": "White", "partner_decision": null }
+    { "id": "b0000000-0000-4000-8000-000000001305", "kit_id": "a0000000-0000-4000-8000-000000000013", "piece_name": "Sateen Menz Shirt", "color": "White", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001101", "kit_id": "a0000000-0000-4000-8000-000000000011", "piece_name": "Vegan Leather Mini Cargo Jacket", "color": "Black", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001102", "kit_id": "a0000000-0000-4000-8000-000000000011", "piece_name": "Cotton Mini Man Shirt", "color": "Cherry (Size 1 requested)", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001103", "kit_id": "a0000000-0000-4000-8000-000000000011", "piece_name": "Nylon Big Pocket Pants", "color": "Black (Size 0)", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001201", "kit_id": "a0000000-0000-4000-8000-000000000012", "piece_name": "Nylon Big Pocket Pants", "color": "Black (Size 1)", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001202", "kit_id": "a0000000-0000-4000-8000-000000000012", "piece_name": "Cotton Mini Man Shirt", "color": "Lava (Size 1)", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001203", "kit_id": "a0000000-0000-4000-8000-000000000012", "piece_name": "Cotton Lycra Ruched Tank Dress", "color": "Titanium (Size 0)", "partner_decision": null }
   ]
 }
