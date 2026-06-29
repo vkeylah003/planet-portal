@@ -62,8 +62,18 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Auth check failed' })
   }
 
+  // Auth: impact.com uses HTTP Basic auth — username = Account SID,
+  // password = the (scoped) Auth/Access Token — NOT a Bearer token.
   const basic = 'Basic ' + Buffer.from(`${sid}:${token}`).toString('base64')
-  const impactHeaders = { Authorization: basic, Accept: 'application/json' }
+  // API version: scoped access tokens are pinned to a version, but the request
+  // must still declare it. impact.com versions via the `IR-Version` header
+  // (or `IrVersion` query param); the value is the integer version number
+  // ("14"), not the release date.
+  const impactHeaders = {
+    Authorization: basic,
+    Accept: 'application/json',
+    'IR-Version': '14',
+  }
 
   // Rolling 30-day window.
   const end = new Date()
@@ -80,11 +90,16 @@ export default async function handler(req, res) {
       `&PageSize=100&Page=1`
     const actionsResp = await fetch(actionsUrl, { headers: impactHeaders })
     if (!actionsResp.ok) {
-      const text = await actionsResp.text()
+      // Surface the REAL cause: Impact's HTTP status + the start of its
+      // response body. console.error so it also lands in the Vercel logs.
+      const body = (await actionsResp.text().catch(() => '')).slice(0, 200)
+      console.error(
+        `Impact Actions request failed: ${actionsResp.status} ${actionsResp.statusText} — ${body}`
+      )
       return res.status(502).json({
         connected: true,
-        error: 'Impact Actions request failed',
-        detail: text.slice(0, 300),
+        error: `Impact Actions request failed (HTTP ${actionsResp.status})`,
+        detail: body,
       })
     }
     const actionsData = await actionsResp.json()
