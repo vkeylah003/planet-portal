@@ -90,14 +90,28 @@ export default async function handler(req, res) {
     // is 30).
     //
     // PageSize: Impact enforces a MINIMUM page size of 2,000 (default 20,000).
-    // Sending PageSize=100 is below that floor and is rejected with HTTP 400 —
-    // this was the bug. 2000 is the smallest accepted value and is plenty for a
-    // 30-day window. (Page is 1-based.)
-    const actionsUrl =
-      `${IMPACT_BASE}/Advertisers/${sid}/Actions` +
-      `?ActionDateStart=${encodeURIComponent(stamp(start))}` +
-      `&ActionDateEnd=${encodeURIComponent(stamp(end))}` +
-      `&PageSize=2000&Page=1`
+    // Sending PageSize=100 is below that floor and is rejected with HTTP 400.
+    // 2000 is the smallest accepted value and is plenty for a 30-day window.
+    // (Page is 1-based.)
+    //
+    // Build params via URLSearchParams and only append values that are
+    // non-empty — Impact rejects blank filter params (e.g. an empty CampaignId
+    // → {"Status":"ERROR","Message":"Parameter 'CampaignId' has invalid value
+    // ''"}). We never send blank Status/SubId/CampaignId.
+    const actionsParams = new URLSearchParams({
+      ActionDateStart: stamp(start),
+      ActionDateEnd: stamp(end),
+      PageSize: '2000',
+      Page: '1',
+    })
+    // Optional program scoping: set IMPACT_CAMPAIGN_ID in Vercel to restrict to
+    // one Impact program/campaign (PLANET's is 54491). When unset we OMIT the
+    // CampaignId param entirely — that returns actions across the whole
+    // advertiser account, which is the default we want. Never sent when blank.
+    const campaignId = (process.env.IMPACT_CAMPAIGN_ID || '').trim()
+    if (campaignId) actionsParams.set('CampaignId', campaignId)
+
+    const actionsUrl = `${IMPACT_BASE}/Advertisers/${sid}/Actions?${actionsParams.toString()}`
     const actionsResp = await fetch(actionsUrl, { headers: impactHeaders })
     if (!actionsResp.ok) {
       // Surface the REAL cause: Impact's HTTP status + the start of its
