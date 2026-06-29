@@ -3,6 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Badge, PlatformBadge, Spinner, FullPageLoader, EmptyState, Field } from '../components/ui'
+import { fetchImpactSummary } from '../lib/impact'
+
+function money(n) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+    Number(n || 0)
+  )
+}
 
 const PARTNER_STATUSES = ['Contacted', 'Interested', 'Active Partner', 'Passed']
 const KIT_STATUSES = ['Preparing', 'Shipped', 'Delivered', 'Return Pending', 'Returned']
@@ -20,7 +27,7 @@ const LAVIE_RECOMMENDATIONS = [
 export default function AdminDashboard() {
   const { signOut } = useAuth()
   const navigate = useNavigate()
-  const [tab, setTab] = useState('partners')
+  const [tab, setTab] = useState('overview')
 
   const [loading, setLoading] = useState(true)
   const [partners, setPartners] = useState([])
@@ -50,6 +57,7 @@ export default function AdminDashboard() {
   if (loading) return <FullPageLoader label="Loading dashboard…" />
 
   const tabs = [
+    { id: 'overview', label: 'Overview' },
     { id: 'partners', label: 'Partners' },
     { id: 'kits', label: 'Kit Tracker' },
     { id: 'content', label: 'Content Tracker' },
@@ -91,6 +99,9 @@ export default function AdminDashboard() {
           ))}
         </div>
 
+        {tab === 'overview' && (
+          <OverviewTab partners={partners} kits={kits} content={content} />
+        )}
         {tab === 'partners' && <PartnersTab partners={partners} onChange={load} />}
         {tab === 'kits' && (
           <KitsTab partners={partners} kits={kits} pieces={pieces} onChange={load} />
@@ -100,6 +111,186 @@ export default function AdminDashboard() {
         )}
         {tab === 'recommendations' && <RecommendationsTab />}
       </main>
+    </div>
+  )
+}
+
+/* ───────────────────────────── Overview ──────────────────────────── */
+
+function Metric({ label, value, sub, accent = 'text-espresso' }) {
+  return (
+    <div className="card p-5">
+      <p className="text-[11px] uppercase tracking-widest text-espresso/45">{label}</p>
+      <p className={`font-heading text-3xl mt-2 ${accent}`}>{value}</p>
+      {sub ? <p className="text-xs text-espresso/45 mt-1">{sub}</p> : null}
+    </div>
+  )
+}
+
+function MiniStat({ label, value }) {
+  return (
+    <div className="bg-cream rounded-xl px-3 py-2.5 border border-espresso/5">
+      <div className="text-espresso font-medium">{value}</div>
+      <div className="text-[10px] uppercase tracking-widest text-espresso/40 mt-0.5">
+        {label}
+      </div>
+    </div>
+  )
+}
+
+function ConnectImpact({ message }) {
+  return (
+    <div className="text-center py-6 px-4">
+      <p className="font-heading text-lg text-espresso/70">Connect Impact</p>
+      <p className="text-sm text-espresso/45 mt-2 leading-relaxed">
+        {message ||
+          'Add IMPACT_ACCOUNT_SID and IMPACT_AUTH_TOKEN in Vercel to see live affiliate sales, commission, and clicks.'}
+      </p>
+    </div>
+  )
+}
+
+function OverviewTab({ partners, kits, content }) {
+  const [impact, setImpact] = useState({ loading: true })
+
+  useEffect(() => {
+    let active = true
+    fetchImpactSummary()
+      .then((d) => active && setImpact({ loading: false, data: d }))
+      .catch((e) => active && setImpact({ loading: false, error: e.message }))
+    return () => {
+      active = false
+    }
+  }, [])
+
+  // Supabase-derived metrics.
+  const kitByStatus = KIT_STATUSES.reduce((a, s) => ((a[s] = 0), a), {})
+  for (const k of kits) if (k.status in kitByStatus) kitByStatus[k.status] += 1
+  const totalKits = kits.length
+  const delivered = kitByStatus.Delivered
+
+  // Outstanding deliverables ≈ partners with a delivered kit but no logged content.
+  const loggedPartnerIds = new Set(content.map((c) => c.partner_id))
+  const deliveredPartnerIds = new Set(
+    kits.filter((k) => k.status === 'Delivered').map((k) => k.partner_id)
+  )
+  let outstanding = 0
+  deliveredPartnerIds.forEach((pid) => {
+    if (!loggedPartnerIds.has(pid)) outstanding += 1
+  })
+
+  const imp = impact.data
+  const connected = Boolean(imp?.connected)
+
+  return (
+    <div className="space-y-8">
+      {/* Headline metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Metric
+          label="Partners"
+          value={partners.length}
+          sub={`${totalKits} kit${totalKits === 1 ? '' : 's'} built`}
+        />
+        <Metric
+          label="Kits delivered"
+          value={delivered}
+          accent="text-green-700"
+          sub={`${totalKits - delivered} in progress`}
+        />
+        <Metric
+          label="Impact sales · 30d"
+          value={connected ? money(imp.sales) : '—'}
+          accent="text-gold"
+          sub={connected ? `${imp.orders} order${imp.orders === 1 ? '' : 's'}` : 'Not connected'}
+        />
+        <Metric
+          label="Impact commission · 30d"
+          value={connected ? money(imp.commission) : '—'}
+          accent="text-gold"
+          sub={connected ? `${Number(imp.clicks || 0).toLocaleString()} clicks` : 'Not connected'}
+        />
+      </div>
+
+      {/* Kit pipeline + Impact performance */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div className="card p-6">
+          <h3 className="font-heading text-xl text-espresso mb-1">Kit pipeline</h3>
+          <p className="text-xs text-espresso/45 mb-4">
+            {totalKits} kit{totalKits === 1 ? '' : 's'} across {partners.length} partner
+            {partners.length === 1 ? '' : 's'}
+          </p>
+          <div className="space-y-2.5">
+            {KIT_STATUSES.map((s) => (
+              <div key={s} className="flex items-center justify-between">
+                <Badge status={s} />
+                <span className="text-sm font-medium text-espresso">{kitByStatus[s]}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 pt-4 border-t border-espresso/10 flex items-center justify-between">
+            <span
+              className="text-sm text-espresso/60"
+              title="Partners with a delivered kit but no logged content"
+            >
+              Outstanding deliverables
+            </span>
+            <span className="text-sm font-medium text-espresso">{outstanding}</span>
+          </div>
+        </div>
+
+        <div className="card p-6">
+          <h3 className="font-heading text-xl text-espresso mb-1">Affiliate performance</h3>
+          <p className="text-xs text-espresso/45 mb-4">Impact · last 30 days</p>
+          {impact.loading ? (
+            <div className="flex items-center gap-3 text-espresso/50 text-sm py-6">
+              <Spinner /> Loading Impact…
+            </div>
+          ) : impact.error ? (
+            <p className="text-sm text-espresso/50 py-6">
+              Couldn't load Impact right now. {impact.error}
+            </p>
+          ) : !connected ? (
+            <ConnectImpact message={imp?.message} />
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <MiniStat label="Sales" value={money(imp.sales)} />
+              <MiniStat label="Commission" value={money(imp.commission)} />
+              <MiniStat label="Orders" value={imp.orders} />
+              <MiniStat label="Clicks" value={Number(imp.clicks || 0).toLocaleString()} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Recent activity */}
+      <div className="card p-6">
+        <h3 className="font-heading text-xl text-espresso mb-1">Recent sales &amp; activity</h3>
+        <p className="text-xs text-espresso/45 mb-4">Latest Impact conversions</p>
+        {impact.loading ? (
+          <div className="flex items-center gap-3 text-espresso/50 text-sm py-4">
+            <Spinner /> Loading…
+          </div>
+        ) : !connected ? (
+          <p className="text-sm text-espresso/45">Connect Impact to see recent sales here.</p>
+        ) : (imp.recentActions || []).length === 0 ? (
+          <EmptyState title="No recent activity" hint="New Impact sales will show up here." />
+        ) : (
+          <div className="divide-y divide-espresso/5">
+            {imp.recentActions.map((a, i) => (
+              <div key={i} className="flex items-center justify-between py-3 gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm text-espresso font-medium truncate">{a.partner}</p>
+                  <p className="text-xs text-espresso/45">{a.date || '—'}</p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-sm text-espresso font-medium">{money(a.amount)}</span>
+                  <Badge status={a.status}>{a.status}</Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
