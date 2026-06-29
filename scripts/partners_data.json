@@ -144,9 +144,9 @@
 
     { "id": "b0000000-0000-4000-8000-000000000201", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Nylon Big Pocket Pants", "color": "Mint", "partner_decision": "Return" },
     { "id": "b0000000-0000-4000-8000-000000000202", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Nylon Cropped Asymmetrical Jacket", "color": "Mint", "partner_decision": "Return" },
-    { "id": "b0000000-0000-4000-8000-000000000203", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Nylon Triple Collar Jacket", "color": "Black", "partner_decision": "Keep", "purchase_amount": null },
+    { "id": "b0000000-0000-4000-8000-000000000203", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Nylon Triple Collar Jacket", "color": "Black", "partner_decision": "Keep", "purchase_amount": 336, "purchase_status": "paid" },
     { "id": "b0000000-0000-4000-8000-000000000204", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Pima Cotton Jackie O Top", "color": "White", "partner_decision": "Return" },
-    { "id": "b0000000-0000-4000-8000-000000000205", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Pima Cotton Metallic Mini Seed Stitch", "color": "White/Silver", "partner_decision": "Keep", "purchase_amount": null },
+    { "id": "b0000000-0000-4000-8000-000000000205", "kit_id": "a0000000-0000-4000-8000-000000000002", "piece_name": "Pima Cotton Metallic Mini Seed Stitch", "color": "White/Silver", "partner_decision": "Keep", "purchase_amount": null, "purchase_status": "paid" },
 
     { "id": "b0000000-0000-4000-8000-000000000301", "kit_id": "a0000000-0000-4000-8000-000000000003", "piece_name": "Cotton Flood Pants", "color": "White", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000000302", "kit_id": "a0000000-0000-4000-8000-000000000003", "piece_name": "Cotton Half Moon Shirt", "color": "Chambray Stripe", "partner_decision": null },
@@ -161,7 +161,7 @@
     { "id": "b0000000-0000-4000-8000-000000000405", "kit_id": "a0000000-0000-4000-8000-000000000004", "piece_name": "Tee (035T)", "color": "White [confirm]", "partner_decision": null },
 
     { "id": "b0000000-0000-4000-8000-000000000501", "kit_id": "a0000000-0000-4000-8000-000000000005", "piece_name": "Pima Cotton Cool Hoodie", "color": "Putty", "partner_decision": null },
-    { "id": "b0000000-0000-4000-8000-000000000502", "kit_id": "a0000000-0000-4000-8000-000000000005", "piece_name": "Pima Cotton Mini Seed Stitch", "color": "Peony", "partner_decision": "Keep", "purchase_amount": null },
+    { "id": "b0000000-0000-4000-8000-000000000502", "kit_id": "a0000000-0000-4000-8000-000000000005", "piece_name": "Pima Cotton Mini Seed Stitch", "color": "Peony", "partner_decision": "Keep", "purchase_amount": 138, "purchase_status": "paid" },
     { "id": "b0000000-0000-4000-8000-000000000503", "kit_id": "a0000000-0000-4000-8000-000000000005", "piece_name": "Crushed Nylon Cropped Gaucho", "color": "Guacamole (size 2)", "partner_decision": "Return" },
 
     { "id": "b0000000-0000-4000-8000-000000000601", "kit_id": "a0000000-0000-4000-8000-000000000006", "piece_name": "Nylon Chic Bomber", "color": "Sky", "partner_decision": null },
@@ -170,7 +170,7 @@
     { "id": "b0000000-0000-4000-8000-000000000604", "kit_id": "a0000000-0000-4000-8000-000000000006", "piece_name": "Organza Jackie O Top", "color": "Mint", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000000605", "kit_id": "a0000000-0000-4000-8000-000000000006", "piece_name": "Pima Cotton Frayed Tank", "color": "White", "partner_decision": null },
 
-    { "id": "b0000000-0000-4000-8000-000000000701", "kit_id": "a0000000-0000-4000-8000-000000000007", "piece_name": "Cotton Metallic Crochet Boatneck Sweater", "color": "Stone/Gold", "partner_decision": "Keep", "purchase_amount": null },
+    { "id": "b0000000-0000-4000-8000-000000000701", "kit_id": "a0000000-0000-4000-8000-000000000007", "piece_name": "Cotton Metallic Crochet Boatneck Sweater", "color": "Stone/Gold", "partner_decision": "Keep", "purchase_amount": 156, "purchase_status": "pending" },
     { "id": "b0000000-0000-4000-8000-000000000702", "kit_id": "a0000000-0000-4000-8000-000000000007", "piece_name": "Pima Cotton Groovy Stripe Crewneck Sweater", "color": "Lava/Chartreuse", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000000703", "kit_id": "a0000000-0000-4000-8000-000000000007", "piece_name": "Pima Cotton Jackie O Top", "color": "Peacock", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000000704", "kit_id": "a0000000-0000-4000-8000-000000000007", "piece_name": "Vegan Leather Bell Bottom Pants", "color": "Black", "partner_decision": null },

@@ -182,10 +182,23 @@ function OverviewTab({ partners, kits, pieces, content }) {
   // Stylist purchases — kit pieces a partner chose to keep (= buy), grouped by
   // partner. Source: kit_pieces.partner_decision === 'keep' (case-insensitive,
   // since the DB stores 'Keep'). purchase_amount is nullable → renders "—".
+  // purchase_status ('paid' | 'pending') drives the money-made headline:
+  // only PAID counts as money made; pending is surfaced separately.
+  //
+  // The test account (Sofia Piniella TEST) is excluded entirely — it's a
+  // sandbox partner and must never count toward kept-item totals.
+  const TEST_PARTNER_EMAIL = 'sofiaapiniella12@gmail.com'
+  const excludedPartnerIds = new Set(
+    partners
+      .filter((p) => (p.email || '').toLowerCase() === TEST_PARTNER_EMAIL)
+      .map((p) => p.id)
+  )
   const partnerNameById = Object.fromEntries(partners.map((p) => [p.id, p.name]))
   const partnerIdByKit = Object.fromEntries(kits.map((k) => [k.id, k.partner_id]))
   const keptPieces = (pieces || []).filter(
-    (pc) => (pc.partner_decision || '').toLowerCase() === 'keep'
+    (pc) =>
+      (pc.partner_decision || '').toLowerCase() === 'keep' &&
+      !excludedPartnerIds.has(partnerIdByKit[pc.kit_id])
   )
   const keptByPartner = []
   for (const pc of keptPieces) {
@@ -198,7 +211,14 @@ function OverviewTab({ partners, kits, pieces, content }) {
     group.items.push(pc)
   }
   keptByPartner.sort((a, b) => a.name.localeCompare(b.name))
-  const totalKeptSales = keptPieces.reduce((s, pc) => s + Number(pc.purchase_amount || 0), 0)
+  const isPaid = (pc) => (pc.purchase_status || '').toLowerCase() === 'paid'
+  const isPending = (pc) => (pc.purchase_status || '').toLowerCase() === 'pending'
+  const paidTotal = keptPieces
+    .filter(isPaid)
+    .reduce((s, pc) => s + Number(pc.purchase_amount || 0), 0)
+  const pendingTotal = keptPieces
+    .filter(isPending)
+    .reduce((s, pc) => s + Number(pc.purchase_amount || 0), 0)
 
   const imp = impact.data
   const connected = Boolean(imp?.connected)
@@ -295,12 +315,17 @@ function OverviewTab({ partners, kits, pieces, content }) {
             </p>
           </div>
           <div className="text-right">
-            <p className="font-heading text-2xl text-gold leading-none">
-              {money(totalKeptSales)}
+            <p className="font-heading text-3xl text-green-700 leading-none">
+              {money(paidTotal)}
             </p>
             <p className="text-[10px] uppercase tracking-widest text-espresso/40 mt-1">
-              Total kept-item sales
+              Money made · paid
             </p>
+            {pendingTotal > 0 && (
+              <p className="text-[11px] text-amber-600 font-medium mt-1.5">
+                {money(pendingTotal)} pending
+              </p>
+            )}
           </div>
         </div>
         {keptByPartner.length === 0 ? (
@@ -314,17 +339,38 @@ function OverviewTab({ partners, kits, pieces, content }) {
               <div key={g.name} className="py-3 first:pt-0 last:pb-0">
                 <p className="text-sm text-espresso font-medium mb-1.5">{g.name}</p>
                 <div className="space-y-1.5">
-                  {g.items.map((pc) => (
-                    <div key={pc.id} className="flex items-center justify-between gap-4">
-                      <span className="text-sm text-espresso/70 min-w-0 truncate">
-                        {pc.piece_name}
-                        {pc.color && <span className="text-espresso/40"> · {pc.color}</span>}
-                      </span>
-                      <span className="text-sm font-medium text-espresso shrink-0">
-                        {pc.purchase_amount == null ? '—' : money(pc.purchase_amount)}
-                      </span>
-                    </div>
-                  ))}
+                  {g.items.map((pc) => {
+                    const pending = isPending(pc)
+                    const paid = isPaid(pc)
+                    return (
+                      <div key={pc.id} className="flex items-center justify-between gap-4">
+                        <span className="text-sm text-espresso/70 min-w-0 truncate">
+                          {pc.piece_name}
+                          {pc.color && <span className="text-espresso/40"> · {pc.color}</span>}
+                        </span>
+                        <span className="flex items-center gap-2 shrink-0">
+                          {(paid || pending) && (
+                            <span
+                              className={`text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded ${
+                                pending
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-green-100 text-green-700'
+                              }`}
+                            >
+                              {pending ? 'Pending' : 'Paid'}
+                            </span>
+                          )}
+                          <span
+                            className={`text-sm font-medium ${
+                              pending ? 'text-amber-600' : 'text-espresso'
+                            }`}
+                          >
+                            {pc.purchase_amount == null ? '—' : money(pc.purchase_amount)}
+                          </span>
+                        </span>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             ))}

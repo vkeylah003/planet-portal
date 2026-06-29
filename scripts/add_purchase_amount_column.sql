@@ -1,5 +1,7 @@
 -- ════════════════════════════════════════════════════════════════════
--- Migration: add `purchase_amount` to kit_pieces  (nullable USD amount)
+-- Migration: add `purchase_amount` + `purchase_status` to kit_pieces
+--   • purchase_amount  numeric  — nullable USD sale price of a kept piece
+--   • purchase_status  text     — nullable payment state: 'paid' | 'pending'
 --
 -- HOW TO RUN (one time):
 --   Supabase Dashboard → SQL Editor → New query → paste → Run.
@@ -17,3 +19,6 @@
 
 alter table public.kit_pieces
   add column if not exists purchase_amount numeric;
+
+alter table public.kit_pieces
+  add column if not exists purchase_status text;
