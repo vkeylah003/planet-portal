@@ -6,6 +6,7 @@
       "business": "Carol Davidson",
       "category": "stylist",
       "status": "active",
+      "channel": "email",
       "email": "carol@caroldavidson.com"
     },
     {
@@ -13,6 +14,7 @@
       "business": "Total Image Consultants",
       "category": "stylist",
       "status": "active",
+      "channel": "email",
       "email": "ginger@totalimageconsultants.com"
     },
     {
@@ -20,6 +22,7 @@
       "business": "Hello I'm 50ish",
       "category": "blogger-influencer",
       "status": "active",
+      "channel": "email",
       "email": "admin@helloim50ish.com"
     },
     {
@@ -27,6 +30,7 @@
       "business": "Marcia Crivorot",
       "category": "stylist",
       "status": "active",
+      "channel": "email",
       "email": "hello@marciacrivorot.com"
     },
     {
@@ -34,6 +38,7 @@
       "business": "jtouchofstyle",
       "category": "blogger-influencer",
       "status": "active",
+      "channel": "email",
       "email": "jtouchofstyle@gmail.com"
     },
     {
@@ -41,6 +46,7 @@
       "business": "House of Possum",
       "category": "blogger-influencer",
       "status": "active",
+      "channel": "email",
       "email": "houseofpossum@gmail.com"
     },
     {
@@ -48,6 +54,7 @@
       "business": "Jenny Pancoast Styling",
       "category": "stylist",
       "status": "active",
+      "channel": "email",
       "email": "jenny.pancoast@gmail.com"
     },
     {
@@ -55,6 +62,7 @@
       "business": "Image Matters SWFL",
       "category": "stylist",
       "status": "active",
+      "channel": "email",
       "email": "debie@imagemattersswfl.com"
     },
     {
@@ -62,6 +70,7 @@
       "business": "Silver is the New Blonde",
       "category": "blogger-influencer",
       "status": "active",
+      "channel": "email",
       "email": "jan@silveristhenewblonde.com"
     },
     {
@@ -69,6 +78,7 @@
       "business": "Styled by Emily Caroline",
       "category": "stylist",
       "status": "active",
+      "channel": "email",
       "email": "styledbyemilycaroline@gmail.com"
     },
     {
@@ -76,6 +86,7 @@
       "business": "Client kit (contact: Leslie Phelps)",
       "category": "blogger-influencer",
       "status": "active",
+      "channel": "email",
       "email": "lesliehphelps@gmail.com"
     },
     {
@@ -83,6 +94,7 @@
       "business": "The Style Shop",
       "category": "stylist",
       "status": "active",
+      "channel": "email",
       "email": "hello@sandimele.com"
     },
     {
@@ -90,6 +102,7 @@
       "business": "Method Style",
       "category": "stylist",
       "status": "active",
+      "channel": "email",
       "email": "method.style.jojo@gmail.com"
     },
     {
@@ -97,6 +110,7 @@
       "business": "HD Social Media Solutions",
       "category": "stylist",
       "status": "yes-awaiting",
+      "channel": "email",
       "email": "hello@hdsocialmediasolutions.com"
     },
     {
@@ -104,6 +118,7 @@
       "business": "Megan's Lifestyle",
       "category": "blogger-influencer",
       "status": "gifted",
+      "channel": "email",
       "email": "megan@meganslifestyle.com"
     },
     {
@@ -111,6 +126,7 @@
       "business": "Deborah Sorlie",
       "category": "stylist",
       "status": "gifted",
+      "channel": "email",
       "email": "info@deborahsorlie.com"
     },
     {
@@ -118,6 +134,7 @@
       "business": "The Unexpected Someone",
       "category": "blogger-influencer",
       "status": "gifted",
+      "channel": "email",
       "email": "cynthia@theunexpectedsomeone.com"
     },
     {
@@ -125,6 +142,7 @@
       "business": "Roxanne Carne",
       "category": "stylist",
       "status": "needs-follow-up",
+      "channel": "email",
       "email": "roxanne@roxannecarne.com"
     },
     {
@@ -132,6 +150,7 @@
       "business": "In Style by Magda",
       "category": "stylist",
       "status": "no-show",
+      "channel": "email",
       "email": "instylebymagda@gmail.com"
     },
     {
@@ -139,6 +158,7 @@
       "business": "Fashion Survived Over 55",
       "category": "blogger-influencer",
       "status": "interested",
+      "channel": "email",
       "email": "fashionsurvivedover55@gmail.com"
     },
     {
@@ -146,6 +166,7 @@
       "business": "Silver Lining",
       "category": "blogger-influencer",
       "status": "interested",
+      "channel": "email",
       "email": "jillssilverlining66@outlook.com"
     },
     {
@@ -153,6 +174,7 @@
       "business": "Jiwon Kim Style",
       "category": "blogger-influencer",
       "status": "interested",
+      "channel": "email",
       "email": "jiwonkimstylefolder@hotmail.com"
     },
     {
@@ -160,6 +182,7 @@
       "business": "Iris May Style",
       "category": "stylist",
       "status": "interested",
+      "channel": "email",
       "email": "theirismaystyle@gmail.com"
     },
     {
@@ -167,6 +190,7 @@
       "business": "Story Worthy Styles",
       "category": "stylist",
       "status": "interested",
+      "channel": "email",
       "email": "swsbymichelle@gmail.com"
     },
     {
@@ -174,6 +198,7 @@
       "business": "Modelling by Mards",
       "category": "UGC",
       "status": "interested",
+      "channel": "email",
       "email": "mards@hotmail.com"
     },
     {
@@ -181,6 +206,7 @@
       "business": "@thebaldgirl",
       "category": "UGC",
       "status": "contacted",
+      "channel": "email",
       "email": "baldgirl@thebaldgirl.com"
     },
     {
@@ -188,6 +214,7 @@
       "business": "collection2c",
       "category": "blogger-influencer",
       "status": "declined",
+      "channel": "email",
       "email": "collection2c@yahoo.com.au"
     },
     {
@@ -195,6 +222,7 @@
       "business": "The SheShe Show",
       "category": "blogger-influencer",
       "status": "declined",
+      "channel": "email",
       "email": "sheshe@shesheshow.com"
     },
     {
@@ -202,6 +230,7 @@
       "business": "Chic Over 50",
       "category": "blogger-influencer",
       "status": "declined",
+      "channel": "email",
       "email": "shauna@chicover50.com"
     },
     {
@@ -209,6 +238,7 @@
       "business": "A Great New Look",
       "category": "blogger-influencer",
       "status": "declined",
+      "channel": "email",
       "email": "susan@agreatnewlook.com"
     },
     {
@@ -216,6 +246,7 @@
       "business": "Stride Social",
       "category": "blogger-influencer",
       "status": "declined",
+      "channel": "email",
       "email": "alicia@stride-social.com"
     },
     {
@@ -223,6 +254,7 @@
       "business": "The Look Editor",
       "category": "stylist",
       "status": "declined",
+      "channel": "email",
       "email": "camila@thelookeditor.net"
     },
     {
@@ -230,6 +262,7 @@
       "business": "JGP Styled Me",
       "category": "stylist",
       "status": "declined",
+      "channel": "email",
       "email": "jgpstyledme@gmail.com"
     },
     {
@@ -237,6 +270,7 @@
       "business": "Jas Chana",
       "category": "stylist",
       "status": "declined",
+      "channel": "email",
       "email": "hello@jaschana.com"
     },
     {
@@ -244,6 +278,7 @@
       "business": "Yifat Jovani",
       "category": "stylist",
       "status": "declined",
+      "channel": "email",
       "email": "info@yifatjovani.com"
     },
     {
@@ -251,6 +286,7 @@
       "business": "Style Ambition",
       "category": "stylist",
       "status": "declined",
+      "channel": "email",
       "email": "style@styleambition.com.au"
     },
     {
@@ -258,6 +294,7 @@
       "business": "Awed by Monica",
       "category": "blogger-influencer",
       "status": "declined",
+      "channel": "email",
       "email": "awedbymonica@gmail.com"
     },
     {
@@ -265,6 +302,7 @@
       "business": "Empty Nest Blessed",
       "category": "blogger-influencer",
       "status": "declined",
+      "channel": "email",
       "email": "suzy@emptynestblessed.com"
     },
     {
@@ -272,6 +310,7 @@
       "business": "Grateful Gardenia",
       "category": "blogger-influencer",
       "status": "declined",
+      "channel": "email",
       "email": "janet@gratefulgardenia.com"
     },
     {
@@ -279,6 +318,7 @@
       "business": "ShopMy",
       "category": "platform-partner",
       "status": "active",
+      "channel": "email",
       "email": "affiliates@shopmy.us"
     },
     {
@@ -286,6 +326,7 @@
       "business": "LTK / rewardStyle",
       "category": "platform-partner",
       "status": "contacted",
+      "channel": "email",
       "email": "networks@rewardstyle.com"
     },
     {
@@ -293,6 +334,7 @@
       "business": "LTK",
       "category": "platform-partner",
       "status": "contacted",
+      "channel": "email",
       "email": "anabelle.ward@ltk.com"
     },
     {
@@ -300,6 +342,7 @@
       "business": "Phia",
       "category": "platform-partner",
       "status": "active",
+      "channel": "email",
       "email": "partners@phia.co"
     },
     {
@@ -307,6 +350,7 @@
       "business": "Hue & Stripe (Sierra)",
       "category": "platform-partner",
       "status": "active",
+      "channel": "email",
       "email": "sierra@hueandstripe.com"
     },
     {
@@ -314,6 +358,7 @@
       "business": "Awin",
       "category": "platform-partner",
       "status": "declined",
+      "channel": "email",
       "email": "onboarding@awin.com"
     },
     {
@@ -321,6 +366,7 @@
       "business": "Indyx",
       "category": "platform-partner",
       "status": "contacted",
+      "channel": "email",
       "email": "help@myindyx.com"
     },
     {
@@ -328,6 +374,7 @@
       "business": "Moda Operandi",
       "category": "platform-partner",
       "status": "contacted",
+      "channel": "email",
       "email": "designers@modaoperandi.com"
     },
     {
@@ -335,6 +382,7 @@
       "business": "AMDX Solutions",
       "category": "platform-partner",
       "status": "contacted",
+      "channel": "email",
       "email": "k.lind@amdxsolutions.com"
     },
     {
@@ -342,6 +390,7 @@
       "business": "House of Blair Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "nicole@houseofblairstyle.com"
     },
     {
@@ -349,6 +398,7 @@
       "business": "Wardrobe Therapy",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "elizabeth@wardrobetherapyllc.com"
     },
     {
@@ -356,6 +406,7 @@
       "business": "Raffaella Moda",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "rm@raffaellamoda.com"
     },
     {
@@ -363,6 +414,7 @@
       "business": "Adorned by Kelley",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "kelley@adornedbykelley.com"
     },
     {
@@ -370,6 +422,7 @@
       "business": "A La Mode Wardrobe Consulting",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "sydnie@alamodewc.com"
     },
     {
@@ -377,6 +430,7 @@
       "business": "Alexandra Eve",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "alexandra@alexandraeve.net"
     },
     {
@@ -384,6 +438,7 @@
       "business": "Styled by Candee",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "clausencandee@gmail.com"
     },
     {
@@ -391,6 +446,7 @@
       "business": "Rachel Michael Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "rachel@rachelmichael.com"
     },
     {
@@ -398,6 +454,7 @@
       "business": "Stilista Boston",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@stilistaboston.com"
     },
     {
@@ -405,6 +462,7 @@
       "business": "Kyle Alexandra",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "kyle@kylealexandra.com"
     },
     {
@@ -412,6 +470,7 @@
       "business": "Styling Out Loud",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "nevdipetrillo@gmail.com"
     },
     {
@@ -419,6 +478,7 @@
       "business": "Accessible Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@accessiblestyle.net"
     },
     {
@@ -426,6 +486,7 @@
       "business": "GinaTheFashionista",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "ginalkantor@gmail.com"
     },
     {
@@ -433,6 +494,7 @@
       "business": "Trousseau Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "lauren@trousseaustyle.com"
     },
     {
@@ -440,6 +502,7 @@
       "business": "Natty Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "natalie@nattystyle.com"
     },
     {
@@ -447,6 +510,7 @@
       "business": "CT Style Insight",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "jess.miller.jm@gmail.com"
     },
     {
@@ -454,6 +518,7 @@
       "business": "Vallozzi Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "rachel@rachelvallozzi.com"
     },
     {
@@ -461,6 +526,7 @@
       "business": "Image by Lauren",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "schugar@mac.com"
     },
     {
@@ -468,6 +534,7 @@
       "business": "Scottsdale Style Concierge",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "nikki@scottsdalestyleconcierge.com"
     },
     {
@@ -475,6 +542,7 @@
       "business": "Casey Matheny Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "caseymathenystyle@gmail.com"
     },
     {
@@ -482,6 +550,7 @@
       "business": "E. Caldwell Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "ellen@ecaldwellstyle.com"
     },
     {
@@ -489,6 +558,7 @@
       "business": "Shelley White Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "shelley@shelleywhitestyle.com"
     },
     {
@@ -496,6 +566,7 @@
       "business": "LifeStyleByDrea",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "andrea@lifestylebydrea.co"
     },
     {
@@ -503,6 +574,7 @@
       "business": "Blocks of Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "kara@blocksofstyle.com"
     },
     {
@@ -510,6 +582,7 @@
       "business": "Lisa Bisagni Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "lisabisagni@gmail.com"
     },
     {
@@ -517,6 +590,7 @@
       "business": "Refined by Theresa",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@refinedbytheresa.com"
     },
     {
@@ -524,6 +598,7 @@
       "business": "A Creative Cliche",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "contact@acreativecliche.com"
     },
     {
@@ -531,6 +606,7 @@
       "business": "Styled with Witt",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "styledwithwitt@gmail.com"
     },
     {
@@ -538,6 +614,7 @@
       "business": "StylFwrd",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "amy@stylfwrd.com"
     },
     {
@@ -545,6 +622,7 @@
       "business": "The Ideal Closet",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "katie@theidealcloset.com"
     },
     {
@@ -552,6 +630,7 @@
       "business": "Molly Russell Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "mr@mollyrussellstyling.com"
     },
     {
@@ -559,6 +638,7 @@
       "business": "Stacey Manning Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "stacey@staceymanning.com"
     },
     {
@@ -566,6 +646,7 @@
       "business": "Dana Konick Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "danakonick@gmail.com"
     },
     {
@@ -573,6 +654,7 @@
       "business": "Victoria Hathaway Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "vlynhathaway@gmail.com"
     },
     {
@@ -580,6 +662,7 @@
       "business": "Love Marlow",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "nadine@lovemarlow.com"
     },
     {
@@ -587,6 +670,7 @@
       "business": "Catherine Horgan",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "catherine.horgan@gmail.com"
     },
     {
@@ -594,6 +678,7 @@
       "business": "Arden Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "arden@ardenstyle.com"
     },
     {
@@ -601,6 +686,7 @@
       "business": "Claire Roberts Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "claire@clairerobertsstyle.com"
     },
     {
@@ -608,6 +694,7 @@
       "business": "A. Wooten Wardrobe",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "a.wootenwardrobe@gmail.com"
     },
     {
@@ -615,6 +702,7 @@
       "business": "The New York Stylist",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@thenewyorkstylist.com"
     },
     {
@@ -622,6 +710,7 @@
       "business": "Turnkey Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "elisa@turnkeystyle.com"
     },
     {
@@ -629,6 +718,7 @@
       "business": "BUILD by Janel",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "janel@buildbyjanel.com"
     },
     {
@@ -636,6 +726,7 @@
       "business": "Capsule Wardrobe Stylist",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "katherine@capsulewardrobestylist.com"
     },
     {
@@ -643,6 +734,7 @@
       "business": "Builtgracefully",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "grace@builtgracefully.com"
     },
     {
@@ -650,6 +742,7 @@
       "business": "Naina Singla",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@nainasingla.com"
     },
     {
@@ -657,6 +750,7 @@
       "business": "Styled Seattle",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "frontdesk@styledseattle.com"
     },
     {
@@ -664,6 +758,7 @@
       "business": "The Fearless Fashionista",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "lauren@thefearlessfashionista.com"
     },
     {
@@ -671,6 +766,7 @@
       "business": "Image Success by Mallory",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "mallory@mallorysills.com"
     },
     {
@@ -678,6 +774,7 @@
       "business": "KS Style Consulting",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "katie@fashionstylingchicago.com"
     },
     {
@@ -685,6 +782,7 @@
       "business": "Erica Ball Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "erica@ericaballstyle.com"
     },
     {
@@ -692,6 +790,7 @@
       "business": "Charline Zeroual",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "contact@charlinezeroual.com"
     },
     {
@@ -699,6 +798,7 @@
       "business": "Amanda Styles LA",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "amandastylesla@gmail.com"
     },
     {
@@ -706,6 +806,7 @@
       "business": "Elizabeth Kosich Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "ek@elizabethkosich.com"
     },
     {
@@ -713,6 +814,7 @@
       "business": "Emily Burnette Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "style@emilyburnette.com"
     },
     {
@@ -720,6 +822,7 @@
       "business": "Kay Hunter Image",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "kay@kayhunterimage.com"
     },
     {
@@ -727,6 +830,7 @@
       "business": "Style at a Certain Age",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "beth@styleatacertainage.com"
     },
     {
@@ -734,6 +838,7 @@
       "business": "A Well Styled Life",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "jennifer@awellstyledlife.com"
     },
     {
@@ -741,6 +846,7 @@
       "business": "BHS Image Consulting",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@bhsimageconsulting.com"
     },
     {
@@ -748,6 +854,7 @@
       "business": "Simply Beautiful Image Consulting",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "jill@jillswanson.com"
     },
     {
@@ -755,6 +862,7 @@
       "business": "Angela Howenstein",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@anghow.com"
     },
     {
@@ -762,6 +870,7 @@
       "business": "Rachel Nicole Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "support@rachel-nicole.com"
     },
     {
@@ -769,6 +878,7 @@
       "business": "Mindful Closet",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "dacy@mindfulcloset.com"
     },
     {
@@ -776,6 +886,7 @@
       "business": "Poplin Style Direction",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "hello@poplinstyle.com"
     },
     {
@@ -783,6 +894,7 @@
       "business": "Rachel Dee Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "rachel@racheldee.com"
     },
     {
@@ -790,6 +902,7 @@
       "business": "Beth Divine Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "beth@bethdivinestyle.com"
     },
     {
@@ -797,6 +910,7 @@
       "business": "Scarlett Image",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "scarlett@scarlettimage.com"
     },
     {
@@ -804,6 +918,7 @@
       "business": "Live Like You Green It",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "dani@livelikeyougreenit.com"
     },
     {
@@ -811,6 +926,7 @@
       "business": "Lauren Messiah",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "info@laurenmessiah.com"
     },
     {
@@ -818,6 +934,7 @@
       "business": "Une Femme",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "info@unefemme.net"
     },
     {
@@ -825,6 +942,7 @@
       "business": "B Jones Style",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "beth@bjonesstyle.com"
     },
     {
@@ -832,6 +950,7 @@
       "business": "What Would V Wear",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "hello@whatwouldvwear.net"
     },
     {
@@ -839,6 +958,7 @@
       "business": "50 Is Not Old",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "tania@50isnotold.com"
     },
     {
@@ -846,6 +966,7 @@
       "business": "Sasha Simon",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "collaborations@sashasimon.com"
     },
     {
@@ -853,6 +974,7 @@
       "business": "Vicky's Style",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "partnerships@vickysstyle.com"
     },
     {
@@ -860,6 +982,7 @@
       "business": "The Style Scribe",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "partnerships@merrittbeck.com"
     },
     {
@@ -867,6 +990,7 @@
       "business": "Could I Have That",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "partnerships@couldihavethat.com"
     },
     {
@@ -874,6 +998,7 @@
       "business": "Sarah Christine",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "business@sarahchristine.com"
     },
     {
@@ -881,6 +1006,7 @@
       "business": "Beautifully Seaside",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "beautifullyseaside@gmail.com"
     },
     {
@@ -888,6 +1014,7 @@
       "business": "Palm Beach Lately",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "hello@palmbeachlately.com"
     },
     {
@@ -895,6 +1022,7 @@
       "business": "VeryVera",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "veryvera@gmail.com"
     },
     {
@@ -902,6 +1030,7 @@
       "business": "Lunch With A Girlfriend",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "lunchwithagirlfriend@gmail.com"
     },
     {
@@ -909,6 +1038,7 @@
       "business": "Hi Sugarplum",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "hisugarplumblog@gmail.com"
     },
     {
@@ -916,6 +1046,7 @@
       "business": "Chronicles of Frivolity",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "kateymcfarlan@gmail.com"
     },
     {
@@ -923,6 +1054,7 @@
       "business": "Peace Love Glam",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "jo.peaceloveglam@gmail.com"
     },
     {
@@ -930,6 +1062,7 @@
       "business": "Ashley Hargrove (Austin)",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "ashleyharg@gmail.com"
     },
     {
@@ -937,6 +1070,7 @@
       "business": "Busbee Style",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "info@busbeestyle.com"
     },
     {
@@ -944,6 +1078,7 @@
       "business": "Honey We're Home",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "honeywerehomeblog@gmail.com"
     },
     {
@@ -951,6 +1086,7 @@
       "business": "Kelly in the City",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "kelly@kellyinthecity.com"
     },
     {
@@ -958,6 +1094,7 @@
       "business": "The Glow Girl Life",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "melissa@theglowgirllife.com"
     },
     {
@@ -965,6 +1102,7 @@
       "business": "Her Midlife Style",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "hermidlifestyle@gmail.com"
     },
     {
@@ -972,6 +1110,7 @@
       "business": "The Gray Details",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "thegraydetails@gmail.com"
     },
     {
@@ -979,6 +1118,7 @@
       "business": "Karla Reed",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "karla.reed@me.com"
     },
     {
@@ -986,6 +1126,7 @@
       "business": "J Cathell",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "jess@jcathell.com"
     },
     {
@@ -993,6 +1134,7 @@
       "business": "Pencil and Paper Co",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "hello@pencilandpaperco.com"
     },
     {
@@ -1000,6 +1142,7 @@
       "business": "Style Charade",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "stylecharade@gmail.com"
     },
     {
@@ -1007,6 +1150,7 @@
       "business": "The Tennille Life",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "info@thetennillelife.com"
     },
     {
@@ -1014,6 +1158,7 @@
       "business": "Beth Chappo",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "beth@bethchappo.com"
     },
     {
@@ -1021,6 +1166,7 @@
       "business": "The Stripe",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "grace@thestripe.com"
     },
     {
@@ -1028,6 +1174,7 @@
       "business": "Fashion Fix MN",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@fashionfixmn.com"
     },
     {
@@ -1035,6 +1182,7 @@
       "business": "Ty Alexander",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "hello@tyalexander.co"
     },
     {
@@ -1042,6 +1190,7 @@
       "business": "Yolanda Edwards",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "info@yolandaedwards.com"
     },
     {
@@ -1049,6 +1198,7 @@
       "business": "All The Pretty Birds",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "hello@alltheprettybirds.com"
     },
     {
@@ -1056,6 +1206,7 @@
       "business": "Maria Turkel",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "maria@mariaturkel.com"
     },
     {
@@ -1063,6 +1214,7 @@
       "business": "Senior Style Bible",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "jodi.jacobson@gmail.com"
     },
     {
@@ -1070,6 +1222,7 @@
       "business": "The Wardrobe Consultant",
       "category": "stylist",
       "status": "declined",
+      "channel": "email",
       "email": "hallie@thewardrobeconsultant.com"
     },
     {
@@ -1077,6 +1230,7 @@
       "business": "Jennifer Powell (team)",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "team@jenniferpowell.com"
     },
     {
@@ -1084,6 +1238,7 @@
       "business": "Ristyled",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "rita@ristyled.com"
     },
     {
@@ -1091,6 +1246,7 @@
       "business": "Emily Elliott Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "emily@emilyelliottstyle.com"
     },
     {
@@ -1098,6 +1254,7 @@
       "business": "Kathy Friend",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "kathy@kathyfriend.com"
     },
     {
@@ -1105,6 +1262,7 @@
       "business": "Polished Image & Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "robinfisher@polishedimageandstyle.com"
     },
     {
@@ -1112,6 +1270,7 @@
       "business": "Meg Gallagher",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "meg@meggallagher.com"
     },
     {
@@ -1119,6 +1278,7 @@
       "business": "Confessions of a Superager",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "it@confessionsofasuperager.com"
     },
     {
@@ -1126,6 +1286,7 @@
       "business": "Elsab Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@elsabstyling.com"
     },
     {
@@ -1133,6 +1294,7 @@
       "business": "Dressed for My Day",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "admin@dressedformyday.com"
     },
     {
@@ -1140,6 +1302,7 @@
       "business": "Sweet Fringe Benefits",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "sweetfringebenefits@gmail.com"
     },
     {
@@ -1147,6 +1310,7 @@
       "business": "Amanda Sanders",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "amanda@amandasanders.com"
     },
     {
@@ -1154,6 +1318,7 @@
       "business": "Fashion Should Be Fun",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "dawn@fashionshouldbefun.com"
     },
     {
@@ -1161,6 +1326,7 @@
       "business": "By Samantha Dawn",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@bysamanthadawn.com"
     },
     {
@@ -1168,6 +1334,7 @@
       "business": "Life and Style After 50",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "cheryl@lifeandstyleafter50.com"
     },
     {
@@ -1175,6 +1342,7 @@
       "business": "Chic at Any Age",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "josephine@chicatanyage.com"
     },
     {
@@ -1182,6 +1350,7 @@
       "business": "Aire NY",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "lm@aire-ny.com"
     },
     {
@@ -1189,6 +1358,7 @@
       "business": "Nikol Beauty",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "mgmt@nikolbeauty.com"
     },
     {
@@ -1196,6 +1366,7 @@
       "business": "Lady K Style",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "ladykstyle.info@gmail.com"
     },
     {
@@ -1203,6 +1374,7 @@
       "business": "Lady Di Creator",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "ladydicreator@gmail.com"
     },
     {
@@ -1210,6 +1382,7 @@
       "business": "Suebelle Palm Beach",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "partnerships@suebellepalmbeach.com"
     },
     {
@@ -1217,6 +1390,7 @@
       "business": "Elements of Image",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "dana@elementsofimage.com"
     },
     {
@@ -1224,6 +1398,7 @@
       "business": "The Elise Edit",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "christine@theeliseedit.com"
     },
     {
@@ -1231,6 +1406,7 @@
       "business": "Southern Hospitality",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "rhodasouthernhospitality@yahoo.com"
     },
     {
@@ -1238,6 +1414,7 @@
       "business": "Tamika Christy",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "collabs@tamikachristy.com"
     },
     {
@@ -1245,6 +1422,7 @@
       "business": "Shelley Loves",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "shelleyloves78@gmail.com"
     },
     {
@@ -1252,6 +1430,7 @@
       "business": "Abby Wood Stylist",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "abby@abbywoodstylist.com"
     },
     {
@@ -1259,6 +1438,7 @@
       "business": "Sherry Grossi (via Nathan)",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "nathan.pilandd@gmail.com"
     },
     {
@@ -1266,6 +1446,7 @@
       "business": "50 So What",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "editor@50sowhat.com.au"
     },
     {
@@ -1273,6 +1454,7 @@
       "business": "Style Loving",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "karensuzanne@styleloving2.com"
     },
     {
@@ -1280,6 +1462,7 @@
       "business": "FiFi",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "fifi@fifi.com.au"
     },
     {
@@ -1287,6 +1470,7 @@
       "business": "Party Til Dawn Style",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "partytildawnstyle@gmail.com"
     },
     {
@@ -1294,6 +1478,7 @@
       "business": "Gift of Style 50s",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "giftofstyle50s@hotmail.com"
     },
     {
@@ -1301,6 +1486,7 @@
       "business": "Styled by Cara",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "styledbycara@gmail.com"
     },
     {
@@ -1308,6 +1494,7 @@
       "business": "Idiosyncratic Fashionistas",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "mono.crone@gmail.com"
     },
     {
@@ -1315,6 +1502,7 @@
       "business": "Bag and a Beret",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "mizbagg@hotmail.com"
     },
     {
@@ -1322,6 +1510,7 @@
       "business": "The Joye",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "media@thejoye.com"
     },
     {
@@ -1329,6 +1518,7 @@
       "business": "Miura",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "jsgarcia@miura.gi"
     },
     {
@@ -1336,6 +1526,7 @@
       "business": "Be Styled Co.",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "blair@bestyledco.com"
     },
     {
@@ -1343,6 +1534,7 @@
       "business": "Edited by Elizabeth",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "elizabeth@editedbyelizabeth.com"
     },
     {
@@ -1350,6 +1542,7 @@
       "business": "Alexandra Styles",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "alexandra@alexandrastyles.com"
     },
     {
@@ -1357,6 +1550,7 @@
       "business": "Style by Sonja",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "sonja@stylebysonja.com"
     },
     {
@@ -1364,6 +1558,7 @@
       "business": "Well Dressed CHS",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "stylist@welldressedchs.com"
     },
     {
@@ -1371,6 +1566,7 @@
       "business": "Susan Bigsby",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "susan@susanbigsby.com"
     },
     {
@@ -1378,6 +1574,7 @@
       "business": "Club Forty",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "claire@clubforty.co.uk"
     },
     {
@@ -1385,6 +1582,7 @@
       "business": "Style Me Stephanie",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@stylemestephaniear.com"
     },
     {
@@ -1392,6 +1590,7 @@
       "business": "Fashionable Fifties",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "fashionablefifties@gmail.com"
     },
     {
@@ -1399,13 +1598,16 @@
       "business": "Rachel Eden Solomon",
       "category": "blogger-influencer",
       "status": "contacted",
-      "email": "racheledensolomon@gmail.com"
+      "channel": "email",
+      "email": "racheledensolomon@gmail.com",
+      "instagram": "@heymrssolomon"
     },
     {
       "name": "Shelby",
       "business": "All Set Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "shelby@allsetstyle.com"
     },
     {
@@ -1413,6 +1615,7 @@
       "business": "Putting It Together",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "michelle@puttingittogether.ca"
     },
     {
@@ -1420,6 +1623,7 @@
       "business": "Rochelle York",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@rochelleyork.com"
     },
     {
@@ -1427,6 +1631,7 @@
       "business": "Styling Insider",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "lila@stylinginsider.com"
     },
     {
@@ -1434,6 +1639,7 @@
       "business": "Jen Smith Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "jen@jensmithstyle.com"
     },
     {
@@ -1441,6 +1647,7 @@
       "business": "Dresscode by Julia",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "hello@dresscodebyjulia.com"
     },
     {
@@ -1448,6 +1655,7 @@
       "business": "Forever Styled",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@foreverstyled.com"
     },
     {
@@ -1455,6 +1663,7 @@
       "business": "Megan Brandle",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "meganrbrandle@gmail.com"
     },
     {
@@ -1462,6 +1671,7 @@
       "business": "Paige Richardson Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "paige@paigerichardsonstyling.com"
     },
     {
@@ -1469,6 +1679,7 @@
       "business": "KR Personal Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "kim@krpersonalstyle.com"
     },
     {
@@ -1476,6 +1687,7 @@
       "business": "Tracy Cyprow",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "cyprowtracy@gmail.com"
     },
     {
@@ -1483,6 +1695,7 @@
       "business": "Samantha Dowson",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@samanthadowson.com"
     },
     {
@@ -1490,6 +1703,7 @@
       "business": "An Eye For Detail",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "pam@eyefordetailnj.com"
     },
     {
@@ -1497,6 +1711,7 @@
       "business": "Phyllis Leibowitz",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "phylleib@gmail.com"
     },
     {
@@ -1504,6 +1719,7 @@
       "business": "ImageDesign Consulting",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@imagedesignconsulting.com"
     },
     {
@@ -1511,6 +1727,7 @@
       "business": "Antidote Styles",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "wendy@antidotestyles.com"
     },
     {
@@ -1518,6 +1735,7 @@
       "business": "by Constance Rose",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "stylist@byconstancerose.uk"
     },
     {
@@ -1525,6 +1743,7 @@
       "business": "Penny Bennett Style Consultancy",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@penny-bennett.com"
     },
     {
@@ -1532,6 +1751,7 @@
       "business": "Stylist Minimalist",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "services@stylistminimalist.com"
     },
     {
@@ -1539,6 +1759,7 @@
       "business": "Real Life Style",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@real-life-style.com"
     },
     {
@@ -1546,6 +1767,7 @@
       "business": "Wardrobe Nerd",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "yourwardrobenerd@gmail.com"
     },
     {
@@ -1553,6 +1775,7 @@
       "business": "Visual Curator",
       "category": "stylist",
       "status": "active",
+      "channel": "email",
       "email": "info@sharonwarten.com"
     },
     {
@@ -1560,6 +1783,7 @@
       "business": "Hina Low Studio",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "hello@hinalowstudio.com"
     },
     {
@@ -1567,6 +1791,7 @@
       "business": "Claudia Hackman",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "claudia@claudiahackman.com.au"
     },
     {
@@ -1574,6 +1799,7 @@
       "business": "MsBStyling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "cindy@msbstyling.com"
     },
     {
@@ -1581,6 +1807,7 @@
       "business": "Lynda Jean",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "lynda@lyndajean.com"
     },
     {
@@ -1588,6 +1815,7 @@
       "business": "Fashion Translated",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "admin@fashiontranslated.com"
     },
     {
@@ -1595,6 +1823,7 @@
       "business": "Fabulous After 40",
       "category": "blogger-influencer",
       "status": "contacted",
+      "channel": "email",
       "email": "info@fabulousafter40.com"
     },
     {
@@ -1602,6 +1831,7 @@
       "business": "Style Angel",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@styleangel.com"
     },
     {
@@ -1609,6 +1839,7 @@
       "business": "Lisa Talbot",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@lisatalbot.co.uk"
     },
     {
@@ -1616,6 +1847,7 @@
       "business": "Megan LaRussa",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "schedule@meganlarussa.com"
     },
     {
@@ -1623,6 +1855,7 @@
       "business": "Capsule Closet Stylist",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "michelle@capsuleclosetstylist.com"
     },
     {
@@ -1630,6 +1863,7 @@
       "business": "Color and Image Insight",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "anne@colorandimageinsight.com"
     },
     {
@@ -1637,6 +1871,7 @@
       "business": "Wardrobe Detectives",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "gabi@wardrobedetectives.ca"
     },
     {
@@ -1644,6 +1879,7 @@
       "business": "Colour me Kate",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "kate@colourmekate.com.au"
     },
     {
@@ -1651,6 +1887,7 @@
       "business": "Karina Taylor",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "karina@karinataylor.co.uk"
     },
     {
@@ -1658,6 +1895,7 @@
       "business": "The Wardrobe Editor",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "molly@thewardrobeeditor.com"
     },
     {
@@ -1665,6 +1903,7 @@
       "business": "Best Dressed (Rachel Nachmias)",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "rachel@rachelnachmias.com"
     },
     {
@@ -1672,6 +1911,7 @@
       "business": "Schafer Image Consulting",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "styledbyschafer@gmail.com"
     },
     {
@@ -1679,6 +1919,7 @@
       "business": "Natalie Chemaine Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "ataliechemaine@icloud.com"
     },
     {
@@ -1686,6 +1927,7 @@
       "business": "Lili Henry Stylist",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "lili@lilihenrystylist.com"
     },
     {
@@ -1693,6 +1935,7 @@
       "business": "Cynthia Kennedy Stylist",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "tact@cynthiakennedystylist.com"
     },
     {
@@ -1700,6 +1943,7 @@
       "business": "Here's Looking at You",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "anne@hereslookingatyou.ca"
     },
     {
@@ -1707,6 +1951,7 @@
       "business": "Style with Cindy",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@stylewithcindy.com.au"
     },
     {
@@ -1714,6 +1959,7 @@
       "business": "Gabrielle Teare",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "gabrielle@gabrielleteare.com"
     },
     {
@@ -1721,6 +1967,7 @@
       "business": "Carilyn Eglee",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@carilyneglee.com"
     },
     {
@@ -1728,6 +1975,7 @@
       "business": "Laurel Kinney Personal Styling",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "hello@laurelkinney.com"
     },
     {
@@ -1735,6 +1983,7 @@
       "business": "Valerie Dittner",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "valerie@valeriedittner.com"
     },
     {
@@ -1742,6 +1991,7 @@
       "business": "Nancy Dilts Wardrobe Consulting",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "nancy@nancydilts.com"
     },
     {
@@ -1749,6 +1999,7 @@
       "business": "Styled By Maria",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "maria@styledbymaria.com"
     },
     {
@@ -1756,6 +2007,7 @@
       "business": "Style by Kara Allan",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "kara@karaallan.com"
     },
     {
@@ -1763,7 +2015,166 @@
       "business": "Locke Management",
       "category": "stylist",
       "status": "contacted",
+      "channel": "email",
       "email": "info@lockemanagement.com"
+    },
+    {
+      "name": "Danielle",
+      "business": "@styledbydanielleny",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "DM",
+      "instagram": "@styledbydanielleny",
+      "email": ""
+    },
+    {
+      "name": "Stephanie",
+      "business": "@stephmarie.7",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "DM",
+      "instagram": "@stephmarie.7",
+      "email": ""
+    },
+    {
+      "name": "Michele",
+      "business": "@seechele_styles",
+      "category": "blogger-influencer",
+      "status": "interested",
+      "channel": "DM",
+      "instagram": "@seechele_styles",
+      "email": ""
+    },
+    {
+      "name": "Susan",
+      "business": "@fashionablyfifty",
+      "category": "blogger-influencer",
+      "status": "interested",
+      "channel": "DM",
+      "instagram": "@fashionablyfifty",
+      "email": ""
+    },
+    {
+      "name": "@adventuresinlifeandtravel",
+      "business": "@adventuresinlifeandtravel",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "DM",
+      "instagram": "@adventuresinlifeandtravel",
+      "email": ""
+    },
+    {
+      "name": "Sonia",
+      "business": "@stylebeyondage",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "DM",
+      "instagram": "@stylebeyondage",
+      "email": ""
+    },
+    {
+      "name": "Cathy",
+      "business": "@themiddlepageblog",
+      "category": "blogger-influencer",
+      "status": "interested",
+      "channel": "DM",
+      "instagram": "@themiddlepageblog",
+      "email": ""
+    },
+    {
+      "name": "Annie Vazquez",
+      "business": "@thefashionpoet",
+      "category": "blogger-influencer",
+      "status": "interested",
+      "channel": "DM",
+      "instagram": "@thefashionpoet",
+      "email": ""
+    },
+    {
+      "name": "Amy",
+      "business": "@shopinstyle.me",
+      "category": "blogger-influencer",
+      "status": "declined",
+      "channel": "DM",
+      "instagram": "@shopinstyle.me",
+      "email": ""
+    },
+    {
+      "name": "Alison",
+      "business": "@wardrobe_o…",
+      "category": "blogger-influencer",
+      "status": "declined",
+      "channel": "DM",
+      "instagram": "@wardrobe_o…",
+      "email": ""
+    },
+    {
+      "name": "@fitnesssaunders",
+      "business": "@fitnesssaunders",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "DM",
+      "instagram": "@fitnesssaunders",
+      "email": ""
+    },
+    {
+      "name": "Melinda",
+      "business": "@MK",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "DM",
+      "instagram": "@MK",
+      "email": ""
+    },
+    {
+      "name": "@my.styled.life",
+      "business": "@my.styled.life",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "DM",
+      "instagram": "@my.styled.life",
+      "email": ""
+    },
+    {
+      "name": "@carolem_beauty",
+      "business": "@carolem_beauty",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "DM",
+      "instagram": "@carolem_beauty",
+      "email": ""
+    },
+    {
+      "name": "Sheena Cole",
+      "business": "",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "DM",
+      "email": ""
+    },
+    {
+      "name": "Eva Song",
+      "business": "",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "DM",
+      "email": ""
+    },
+    {
+      "name": "Priscilla Claire Hirt",
+      "business": "",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "DM",
+      "email": ""
+    },
+    {
+      "name": "Lyndsey Zorich",
+      "business": "",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "DM",
+      "email": ""
     }
   ]
 }
