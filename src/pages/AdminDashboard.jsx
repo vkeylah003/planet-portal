@@ -4,6 +4,15 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Badge, PlatformBadge, Spinner, FullPageLoader, EmptyState, Field } from '../components/ui'
 import { fetchImpactSummary } from '../lib/impact'
+import contactedRoster from '../../scripts/contacted_data.json'
+import {
+  downloadContactedPDF,
+  downloadContactedCSV,
+  summarize,
+  sortRows,
+  catLabel,
+  statusLabel,
+} from '../lib/report'
 
 function money(n) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
@@ -15,6 +24,42 @@ const PARTNER_STATUSES = ['Contacted', 'Interested', 'Active Partner', 'Passed']
 const KIT_STATUSES = ['Preparing', 'Shipped', 'Delivered', 'Return Pending', 'Returned']
 const CONTENT_TYPES = ['Reel', 'Feed Post', 'Story', 'Blog Post']
 const PLATFORMS = ['GoAffPro', 'Impact']
+
+// Partners we explicitly GIFTED product to (no return expected) — distinct
+// from the normal sample-kit partners who send the kit back. The `gifted`
+// boolean on the partners table is the source of truth; this email set is a
+// fallback so the Gifted view renders immediately even before that column is
+// migrated/synced. See scripts/add_gifted_column.sql.
+const GIFTED_EMAILS = new Set([
+  'megan@meganslifestyle.com',
+  'info@deborahsorlie.com',
+  'cynthia@theunexpectedsomeone.com',
+])
+function isGifted(p) {
+  return p?.gifted === true || GIFTED_EMAILS.has((p?.email || '').toLowerCase())
+}
+
+// Outreach roster statuses → on-brand pill tones (lowercase keys match
+// scripts/contacted_data.json). Kept here so the Outreach view and any future
+// status chips stay consistent.
+const OUTREACH_STATUS_TONE = {
+  active: 'bg-gold/20 text-gold',
+  gifted: 'bg-purple-100 text-purple-700',
+  interested: 'bg-gold-soft/40 text-espresso',
+  contacted: 'bg-espresso/10 text-espresso/60',
+  declined: 'bg-espresso/5 text-espresso/40',
+}
+
+function StatusPill({ status }) {
+  const tone = OUTREACH_STATUS_TONE[status] || 'bg-espresso/10 text-espresso/70'
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium tracking-wide ${tone}`}
+    >
+      {statusLabel(status)}
+    </span>
+  )
+}
 
 // Lavie's recommended prospects (not partners in the kit pipeline).
 // Edit this list to add/remove names. business + email are optional.
@@ -59,6 +104,7 @@ export default function AdminDashboard() {
   const tabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'partners', label: 'Partners' },
+    { id: 'outreach', label: 'Everyone Contacted' },
     { id: 'kits', label: 'Kit Tracker' },
     { id: 'content', label: 'Content Tracker' },
     { id: 'recommendations', label: 'Recommendations' },
@@ -103,6 +149,7 @@ export default function AdminDashboard() {
           <OverviewTab partners={partners} kits={kits} pieces={pieces} content={content} />
         )}
         {tab === 'partners' && <PartnersTab partners={partners} onChange={load} />}
+        {tab === 'outreach' && <OutreachTab />}
         {tab === 'kits' && (
           <KitsTab partners={partners} kits={kits} pieces={pieces} onChange={load} />
         )}
@@ -179,6 +226,21 @@ function OverviewTab({ partners, kits, pieces, content }) {
     if (!loggedPartnerIds.has(pid)) outstanding += 1
   })
 
+  // Gifted partners — explicitly gifted product, no return expected. Attach
+  // each one's kit pieces so the Overview can show WHAT was gifted.
+  const kitByPartnerId = Object.fromEntries(kits.map((k) => [k.partner_id, k]))
+  const piecesByKitId = pieces.reduce((acc, pc) => {
+    ;(acc[pc.kit_id] = acc[pc.kit_id] || []).push(pc)
+    return acc
+  }, {})
+  const giftedPartners = partners
+    .filter(isGifted)
+    .map((p) => {
+      const kit = kitByPartnerId[p.id]
+      return { ...p, pieces: kit ? piecesByKitId[kit.id] || [] : [] }
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
+
   // Stylist purchases — kit pieces a partner chose to keep (= buy), grouped by
   // partner. Source: kit_pieces.partner_decision === 'keep' (case-insensitive,
   // since the DB stores 'Keep'). purchase_amount is nullable → renders "—".
@@ -250,6 +312,51 @@ function OverviewTab({ partners, kits, pieces, content }) {
           accent="text-gold"
           sub={connected ? `${Number(imp.clicks || 0).toLocaleString()} clicks` : 'Not connected'}
         />
+      </div>
+
+      {/* Gifted partners */}
+      <div className="card p-6">
+        <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
+          <div>
+            <h3 className="font-heading text-xl text-espresso mb-1">Gifted Partners</h3>
+            <p className="text-xs text-espresso/45">
+              Explicitly gifted product — no return expected (distinct from the
+              sample-kit partners who send the kit back)
+            </p>
+          </div>
+          <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-purple-100 text-purple-700">
+            {giftedPartners.length} gifted
+          </span>
+        </div>
+        {giftedPartners.length === 0 ? (
+          <EmptyState
+            title="No gifted partners"
+            hint="Mark a partner as gifted from the Partners tab."
+          />
+        ) : (
+          <div className="divide-y divide-espresso/5">
+            {giftedPartners.map((p) => (
+              <div key={p.id} className="py-3 first:pt-0 last:pb-0">
+                <p className="text-sm text-espresso font-medium mb-1.5">{p.name}</p>
+                {p.pieces.length === 0 ? (
+                  <p className="text-xs text-espresso/40">Kit in progress — pieces TBD</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {p.pieces.map((pc) => (
+                      <span
+                        key={pc.id}
+                        className="inline-flex items-center gap-1.5 bg-white rounded-full pl-3 pr-2.5 py-1 text-xs border border-espresso/5"
+                      >
+                        <span className="text-espresso">{pc.piece_name}</span>
+                        {pc.color && <span className="text-espresso/40">· {pc.color}</span>}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Kit pipeline + Impact performance */}
@@ -440,6 +547,7 @@ function Modal({ title, children, onClose }) {
 function PartnersTab({ partners, onChange }) {
   const [editing, setEditing] = useState(null) // partner object or {} for new
   const [platformFilter, setPlatformFilter] = useState('All') // All | GoAffPro | Impact
+  const [giftedFilter, setGiftedFilter] = useState('All') // All | Gifted | Standard
 
   const counts = partners.reduce(
     (acc, p) => {
@@ -448,15 +556,24 @@ function PartnersTab({ partners, onChange }) {
     },
     { GoAffPro: 0, Impact: 0 }
   )
-  const filtered =
+  const giftedCount = partners.filter(isGifted).length
+
+  let filtered =
     platformFilter === 'All'
       ? partners
       : partners.filter((p) => p.platform === platformFilter)
+  if (giftedFilter === 'Gifted') filtered = filtered.filter(isGifted)
+  else if (giftedFilter === 'Standard') filtered = filtered.filter((p) => !isGifted(p))
 
   const filterTabs = [
     { id: 'All', label: `All (${partners.length})` },
     { id: 'GoAffPro', label: `GoAffPro (${counts.GoAffPro})` },
     { id: 'Impact', label: `Impact (${counts.Impact})` },
+  ]
+  const giftedTabs = [
+    { id: 'All', label: `Everyone (${partners.length})` },
+    { id: 'Gifted', label: `Gifted (${giftedCount})` },
+    { id: 'Standard', label: `Sample-kit (${partners.length - giftedCount})` },
   ]
 
   return (
@@ -470,29 +587,52 @@ function PartnersTab({ partners, onChange }) {
         </button>
       </div>
 
-      {/* Platform filter */}
-      <div className="flex flex-wrap gap-2 mb-5">
-        {filterTabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setPlatformFilter(t.id)}
-            className={`rounded-full px-4 py-1.5 text-xs font-medium tracking-wide border transition ${
-              platformFilter === t.id
-                ? 'border-gold bg-gold/15 text-espresso'
-                : 'border-espresso/15 text-espresso/55 hover:border-espresso/40'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* Filters */}
+      <div className="space-y-3 mb-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] uppercase tracking-widest text-espresso/40 mr-1">
+            Type
+          </span>
+          {giftedTabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setGiftedFilter(t.id)}
+              className={`rounded-full px-4 py-1.5 text-xs font-medium tracking-wide border transition ${
+                giftedFilter === t.id
+                  ? 'border-gold bg-gold/15 text-espresso'
+                  : 'border-espresso/15 text-espresso/55 hover:border-espresso/40'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] uppercase tracking-widest text-espresso/40 mr-1">
+            Platform
+          </span>
+          {filterTabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setPlatformFilter(t.id)}
+              className={`rounded-full px-4 py-1.5 text-xs font-medium tracking-wide border transition ${
+                platformFilter === t.id
+                  ? 'border-gold bg-gold/15 text-espresso'
+                  : 'border-espresso/15 text-espresso/55 hover:border-espresso/40'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {partners.length === 0 ? (
         <EmptyState title="No partners yet" hint="Add your first partner to get started." />
       ) : filtered.length === 0 ? (
         <EmptyState
-          title={`No ${platformFilter} partners`}
-          hint="Try a different platform filter, or set a partner's platform when editing them."
+          title="No partners match these filters"
+          hint="Try a different Type or Platform filter."
         />
       ) : (
         <div className="card overflow-hidden">
@@ -511,7 +651,16 @@ function PartnersTab({ partners, onChange }) {
             <tbody>
               {filtered.map((p) => (
                 <tr key={p.id} className="border-b border-espresso/5 last:border-0">
-                  <td className="px-5 py-3 font-medium text-espresso">{p.name}</td>
+                  <td className="px-5 py-3 font-medium text-espresso">
+                    <span className="inline-flex items-center gap-2">
+                      {p.name}
+                      {isGifted(p) && (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide bg-purple-100 text-purple-700">
+                          Gifted
+                        </span>
+                      )}
+                    </span>
+                  </td>
                   <td className="px-5 py-3 text-espresso/60">{p.email}</td>
                   <td className="px-5 py-3">
                     {p.platform ? (
@@ -574,6 +723,7 @@ function PartnerModal({ partner, onClose, onSaved }) {
     status: partner.status || 'Contacted',
     platform: partner.platform || 'GoAffPro',
     commission_link: partner.commission_link || '',
+    gifted: isGifted(partner),
   })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -586,10 +736,24 @@ function PartnerModal({ partner, onClose, onSaved }) {
     e.preventDefault()
     setBusy(true)
     setError('')
-    const payload = { ...form, email: form.email.trim().toLowerCase() }
+    // Keep `gifted` out of the core payload and persist it separately so a
+    // not-yet-migrated `gifted` column (run scripts/add_gifted_column.sql)
+    // never blocks saving the rest of a partner's details.
+    const { gifted, ...core } = form
+    const payload = { ...core, email: core.email.trim().toLowerCase() }
     const { error } = isNew
-      ? await supabase.from('partners').insert(payload)
+      ? await supabase.from('partners').insert({ ...payload, gifted })
       : await supabase.from('partners').update(payload).eq('id', partner.id)
+    if (!error && !isNew && gifted !== Boolean(partner.gifted)) {
+      const g = await supabase.from('partners').update({ gifted }).eq('id', partner.id)
+      if (g.error) {
+        setBusy(false)
+        setError(
+          `Details saved, but the Gifted flag didn't stick — run scripts/add_gifted_column.sql in the Supabase SQL Editor first. (${g.error.message})`
+        )
+        return
+      }
+    }
     setBusy(false)
     if (error) setError(error.message)
     else onSaved()
@@ -661,6 +825,20 @@ function PartnerModal({ partner, onClose, onSaved }) {
             onChange={(e) => set('commission_link', e.target.value)}
           />
         </Field>
+        <label className="flex items-start gap-2.5 cursor-pointer select-none rounded-xl border border-espresso/10 bg-white px-3 py-2.5">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 rounded border-espresso/30 accent-gold"
+            checked={form.gifted}
+            onChange={(e) => set('gifted', e.target.checked)}
+          />
+          <span className="text-sm text-espresso">
+            Gifted partner
+            <span className="block text-xs text-espresso/45">
+              Explicitly gifted product — no return expected (not a sample-kit partner)
+            </span>
+          </span>
+        </label>
 
         {partner.partner_message && (
           <div className="bg-white rounded-xl p-3 border border-espresso/5">
@@ -689,6 +867,142 @@ function PartnerModal({ partner, onClose, onSaved }) {
         </div>
       </form>
     </Modal>
+  )
+}
+
+/* ───────────────────────── Everyone Contacted ───────────────────── */
+
+function OutreachTab() {
+  const roster = contactedRoster.contacted || []
+  const [statusFilter, setStatusFilter] = useState('All')
+  const [categoryFilter, setCategoryFilter] = useState('All')
+
+  const { total, byStatus, byCategory } = summarize(roster)
+
+  const STATUS_KEYS = ['active', 'gifted', 'interested', 'contacted', 'declined']
+  const CATEGORY_KEYS = ['stylist', 'blogger-influencer', 'platform-partner', 'UGC']
+
+  let rows = roster
+  if (statusFilter !== 'All') rows = rows.filter((r) => r.status === statusFilter)
+  if (categoryFilter !== 'All') rows = rows.filter((r) => r.category === categoryFilter)
+  rows = sortRows(rows)
+
+  const statusTabs = [
+    { id: 'All', label: `All (${total})` },
+    ...STATUS_KEYS.filter((s) => byStatus[s]).map((s) => ({
+      id: s,
+      label: `${statusLabel(s)} (${byStatus[s]})`,
+    })),
+  ]
+  const categoryTabs = [
+    { id: 'All', label: `All (${total})` },
+    ...CATEGORY_KEYS.filter((c) => byCategory[c]).map((c) => ({
+      id: c,
+      label: `${catLabel(c)} (${byCategory[c]})`,
+    })),
+  ]
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h2 className="font-heading text-3xl text-espresso">Everyone Contacted</h2>
+          <p className="text-sm text-espresso/55 mt-1 max-w-xl">
+            The full PLANET Style Collective outreach list — everyone reached out to,
+            with category and status. No dates by design.
+          </p>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <button onClick={() => downloadContactedPDF(roster)} className="btn-gold">
+            ⬇ Pull report (PDF)
+          </button>
+          <button onClick={() => downloadContactedCSV(roster)} className="btn-outline text-xs">
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      {/* Summary counts */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+        <MiniStat label="Total" value={total} />
+        {STATUS_KEYS.map((s) => (
+          <MiniStat key={s} label={statusLabel(s)} value={byStatus[s] || 0} />
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] uppercase tracking-widest text-espresso/40 mr-1">
+            Status
+          </span>
+          {statusTabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setStatusFilter(t.id)}
+              className={`rounded-full px-4 py-1.5 text-xs font-medium tracking-wide border transition ${
+                statusFilter === t.id
+                  ? 'border-gold bg-gold/15 text-espresso'
+                  : 'border-espresso/15 text-espresso/55 hover:border-espresso/40'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] uppercase tracking-widest text-espresso/40 mr-1">
+            Category
+          </span>
+          {categoryTabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setCategoryFilter(t.id)}
+              className={`rounded-full px-4 py-1.5 text-xs font-medium tracking-wide border transition ${
+                categoryFilter === t.id
+                  ? 'border-gold bg-gold/15 text-espresso'
+                  : 'border-espresso/15 text-espresso/55 hover:border-espresso/40'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="text-xs text-espresso/45">
+        Showing {rows.length} of {total}
+      </div>
+
+      {rows.length === 0 ? (
+        <EmptyState title="No one matches these filters" hint="Try a different status or category." />
+      ) : (
+        <div className="card overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-espresso/50 text-xs uppercase tracking-widest border-b border-espresso/10">
+                <th className="px-5 py-3 font-medium">Name</th>
+                <th className="px-5 py-3 font-medium">Business</th>
+                <th className="px-5 py-3 font-medium">Category</th>
+                <th className="px-5 py-3 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={`${r.name}-${i}`} className="border-b border-espresso/5 last:border-0">
+                  <td className="px-5 py-3 font-medium text-espresso">{r.name}</td>
+                  <td className="px-5 py-3 text-espresso/60">{r.business || '—'}</td>
+                  <td className="px-5 py-3 text-espresso/60">{catLabel(r.category)}</td>
+                  <td className="px-5 py-3">
+                    <StatusPill status={r.status} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   )
 }
 
