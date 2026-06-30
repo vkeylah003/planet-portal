@@ -39,6 +39,14 @@ function isGifted(p) {
   return p?.gifted === true || GIFTED_EMAILS.has((p?.email || '').toLowerCase())
 }
 
+// Gifted partners who keep only ONE gifted piece (the other kit pieces are
+// returned/bought at 50%), so the Gifted card shows "1 piece (gifted)" rather
+// than enumerating their full sample kit.
+const GIFTED_SINGLE_PIECE_EMAILS = new Set([
+  'megan@meganslifestyle.com',
+  'info@deborahsorlie.com',
+])
+
 // Outreach roster statuses → on-brand pill tones (lowercase keys match
 // scripts/contacted_data.json). Kept here so the Outreach view and any future
 // status chips stay consistent.
@@ -338,26 +346,39 @@ function OverviewTab({ partners, kits, pieces, content }) {
           />
         ) : (
           <div className="divide-y divide-espresso/5">
-            {giftedPartners.map((p) => (
-              <div key={p.id} className="py-3 first:pt-0 last:pb-0">
-                <p className="text-sm text-espresso font-medium mb-1.5">{p.name}</p>
-                {p.pieces.length === 0 ? (
-                  <p className="text-xs text-espresso/40">Kit in progress — pieces TBD</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {p.pieces.map((pc) => (
-                      <span
-                        key={pc.id}
-                        className="inline-flex items-center gap-1.5 bg-white rounded-full pl-3 pr-2.5 py-1 text-xs border border-espresso/5"
-                      >
-                        <span className="text-espresso">{pc.piece_name}</span>
-                        {pc.color && <span className="text-espresso/40">· {pc.color}</span>}
+            {giftedPartners.map((p) => {
+              // Megan & Deborah keep only the single gifted piece, not the
+              // full kit — show "1 piece (gifted)" rather than every piece.
+              const singlePiece = GIFTED_SINGLE_PIECE_EMAILS.has(
+                (p.email || '').toLowerCase()
+              )
+              return (
+                <div key={p.id} className="py-3 first:pt-0 last:pb-0">
+                  <p className="text-sm text-espresso font-medium mb-1.5">{p.name}</p>
+                  {singlePiece ? (
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex items-center bg-white rounded-full px-3 py-1 text-xs border border-espresso/5 text-espresso">
+                        1 piece (gifted)
                       </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+                    </div>
+                  ) : p.pieces.length === 0 ? (
+                    <p className="text-xs text-espresso/40">Kit in progress — pieces TBD</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {p.pieces.map((pc) => (
+                        <span
+                          key={pc.id}
+                          className="inline-flex items-center gap-1.5 bg-white rounded-full pl-3 pr-2.5 py-1 text-xs border border-espresso/5"
+                        >
+                          <span className="text-espresso">{pc.piece_name}</span>
+                          {pc.color && <span className="text-espresso/40">· {pc.color}</span>}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
@@ -566,7 +587,6 @@ function PartnersTab({ partners, onChange }) {
       ? partners
       : partners.filter((p) => p.platform === platformFilter)
   if (giftedFilter === 'Gifted') filtered = filtered.filter(isGifted)
-  else if (giftedFilter === 'Standard') filtered = filtered.filter((p) => !isGifted(p))
 
   const filterTabs = [
     { id: 'All', label: `All (${partners.length})` },
@@ -576,7 +596,6 @@ function PartnersTab({ partners, onChange }) {
   const giftedTabs = [
     { id: 'All', label: `Everyone (${partners.length})` },
     { id: 'Gifted', label: `Gifted (${giftedCount})` },
-    { id: 'Standard', label: `Sample-kit (${partners.length - giftedCount})` },
   ]
 
   return (
