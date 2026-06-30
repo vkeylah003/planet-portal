@@ -17,13 +17,25 @@ export const CATEGORY_LABELS = {
 export const STATUS_LABELS = {
   active: 'Active',
   gifted: 'Gifted',
+  'yes-awaiting': 'Yes, awaiting response',
+  'needs-follow-up': 'Needs follow-up',
+  'no-show': 'No-show, followed up',
   interested: 'Interested',
   contacted: 'Contacted',
   declined: 'Declined',
 }
 
 // Display order — most engaged first.
-const STATUS_ORDER = ['active', 'gifted', 'interested', 'contacted', 'declined']
+const STATUS_ORDER = [
+  'active',
+  'gifted',
+  'yes-awaiting',
+  'needs-follow-up',
+  'no-show',
+  'interested',
+  'contacted',
+  'declined',
+]
 const CATEGORY_ORDER = ['stylist', 'blogger-influencer', 'platform-partner', 'UGC']
 
 export function catLabel(c) {

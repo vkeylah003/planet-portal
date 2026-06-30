@@ -45,6 +45,9 @@ function isGifted(p) {
 const OUTREACH_STATUS_TONE = {
   active: 'bg-gold/20 text-gold',
   gifted: 'bg-purple-100 text-purple-700',
+  'yes-awaiting': 'bg-teal-100 text-teal-700',
+  'needs-follow-up': 'bg-amber-100 text-amber-700',
+  'no-show': 'bg-orange-100 text-orange-700',
   interested: 'bg-gold-soft/40 text-espresso',
   contacted: 'bg-espresso/10 text-espresso/60',
   declined: 'bg-espresso/5 text-espresso/40',
@@ -879,7 +882,16 @@ function OutreachTab() {
 
   const { total, byStatus, byCategory } = summarize(roster)
 
-  const STATUS_KEYS = ['active', 'gifted', 'interested', 'contacted', 'declined']
+  const STATUS_KEYS = [
+    'active',
+    'gifted',
+    'yes-awaiting',
+    'needs-follow-up',
+    'no-show',
+    'interested',
+    'contacted',
+    'declined',
+  ]
   const CATEGORY_KEYS = ['stylist', 'blogger-influencer', 'platform-partner', 'UGC']
 
   let rows = roster
