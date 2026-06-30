@@ -2175,6 +2175,166 @@
       "status": "contacted",
       "channel": "DM",
       "email": ""
+    },
+    {
+      "name": "Anne Liebman",
+      "business": "SheStylesCo",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "anne@shestylesco.com"
+    },
+    {
+      "name": "Callie Crosby",
+      "business": "The Styling Co.",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "callie@the-styling-co.com"
+    },
+    {
+      "name": "Sheena",
+      "business": "Onyx Styling Co.",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "sheena@onyxstylingco.com"
+    },
+    {
+      "name": "Jessica Burns",
+      "business": "Jessica B Styling",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "jessicaburns@jessicabstyling.com"
+    },
+    {
+      "name": "Jaquelyn Wahidi",
+      "business": "Jaquelyn Wahidi Styling",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "info@jaquelynwahidi.com"
+    },
+    {
+      "name": "Sana Randhawa",
+      "business": "Style by Sana",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "sana.randhawa@stylebysana.com"
+    },
+    {
+      "name": "Amy",
+      "business": "The Style Stylist",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "amy@thestylestylist.com"
+    },
+    {
+      "name": "Shannon April",
+      "business": "Shannon April Styling",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "shannon@aprilstyling.com"
+    },
+    {
+      "name": "Amanda Massi",
+      "business": "Amanda Styles Las Vegas",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "amandastyleslv@gmail.com"
+    },
+    {
+      "name": "CoCapsules",
+      "business": "CoCapsules",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "hello@cocapsules.com"
+    },
+    {
+      "name": "Ryan Roberts",
+      "business": "Ryan Roberts",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "ryan@ryanroberts.com"
+    },
+    {
+      "name": "Paula Newlands",
+      "business": "Styled by Paula",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "info@styledbypaula.com"
+    },
+    {
+      "name": "Ana Harris",
+      "business": "Style by Ana Harris",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "ana@stylebyanaharris.com"
+    },
+    {
+      "name": "Julia Nauer",
+      "business": "Sort & Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "julia@sortandstyleco.com"
+    },
+    {
+      "name": "Amy Moatz",
+      "business": "Project Your Best",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "pybstyle@gmail.com"
+    },
+    {
+      "name": "Cheryl Wadlington",
+      "business": "Evoluer Image Consultants",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "info@evoluerconsultants.com"
+    },
+    {
+      "name": "Allison",
+      "business": "Style Made Simple",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "info@stylemadesimple.com"
+    },
+    {
+      "name": "Anastassia Ivanova",
+      "business": "Intermezzo Styling",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "info@intermezzostyling.com"
+    },
+    {
+      "name": "Mollie Milano",
+      "business": "CT Style Spies",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "mollie@stylespies.com"
+    },
+    {
+      "name": "Lisa Emelo",
+      "business": "Lisa Emelo Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "lemelostyle@gmail.com"
     }
   ]
 }
