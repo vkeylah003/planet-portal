@@ -2551,6 +2551,158 @@
       "status": "contacted",
       "channel": "email",
       "email": "style@alarnahope.com.au"
+    },
+    {
+      "name": "Lynn Cesaria",
+      "business": "Lynn Cesaria Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "lynn@lynncesariastyle.com"
+    },
+    {
+      "name": "Monica Barnett",
+      "business": "Blueprint for Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "barnettm@blueprintforstyle.com"
+    },
+    {
+      "name": "Laura Tully",
+      "business": "Laura Tully Wardrobe Stylist",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "fashion@lauratully.co"
+    },
+    {
+      "name": "Rachel Williams",
+      "business": "Eugene Stylist",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "rachel@eugenestylist.com"
+    },
+    {
+      "name": "Elena Taggart",
+      "business": "The Closet Stylist",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "elena@closetstylist.co.uk"
+    },
+    {
+      "name": "Gianna Nucci",
+      "business": "Gianna Nucci Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "gianna@giannanucci.com"
+    },
+    {
+      "name": "Maria Serena",
+      "business": "Spaghetti Wardrobe",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "ciao@spaghettiwardrobe.com"
+    },
+    {
+      "name": "Dana Hammond",
+      "business": "Colorful Style by Dana",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "dana@colorfulstylebydana.com"
+    },
+    {
+      "name": "Laura Solin-Valdina",
+      "business": "NYCSTYLIST",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "laura@nycstylist.com"
+    },
+    {
+      "name": "Tavia Sharp",
+      "business": "Styled Sharp",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "tavia@styledsharp.com"
+    },
+    {
+      "name": "Audrey",
+      "business": "Flourish Styling Co.",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "audrey@flourishstyling.co"
+    },
+    {
+      "name": "Jodi Skorupski",
+      "business": "JS Personal Styling",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "jodi@jsstyling.com"
+    },
+    {
+      "name": "Caitlyn",
+      "business": "Styled By Caitlyn",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "caitlyn@styledbycaitlyn.com"
+    },
+    {
+      "name": "Edie O'Brien",
+      "business": "Edie Styles",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "edie@ediestyles.com"
+    },
+    {
+      "name": "Brandy Morgan",
+      "business": "BrandWhy Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "brandy@brandwhy.style"
+    },
+    {
+      "name": "Laurel Lund",
+      "business": "LL Style Studio",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "laurel@llstylestudio.com"
+    },
+    {
+      "name": "Anne Morrissey",
+      "business": "Morrissey Style Consulting",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "anne@morrisseystyle.com"
+    },
+    {
+      "name": "Brooke Williams",
+      "business": "The Tony Townie",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "brooke@thetonytownie.com"
+    },
+    {
+      "name": "Alisa Neely",
+      "business": "Style Scout",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "alisa@stylescout.net"
     }
   ]
 }
