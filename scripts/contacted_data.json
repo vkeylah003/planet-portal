@@ -2495,6 +2495,62 @@
       "status": "contacted",
       "channel": "email",
       "email": "contact@styleconsultantgroup.com"
+    },
+    {
+      "name": "Clare Watkins",
+      "business": "Clare Watkins Personal Styling",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "hello@clarewatkins.com"
+    },
+    {
+      "name": "Lindsay Barry",
+      "business": "Styling L.A.B.",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "lindsay@stylinglab.co.uk"
+    },
+    {
+      "name": "Zoë Rodrigues",
+      "business": "Zoë Rodrigues Personal Stylist",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "zoe@zoerodrigues.com"
+    },
+    {
+      "name": "Barbara Aleks",
+      "business": "Barbara Aleks",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "inquiries@barbaraaleks.com"
+    },
+    {
+      "name": "Paulina Ramis",
+      "business": "Paulina Ramis",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "info@paulinaramis.com"
+    },
+    {
+      "name": "Donna Cameron",
+      "business": "dc colour and style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "hello@donna-cameron.com.au"
+    },
+    {
+      "name": "Alarna Hope",
+      "business": "Alarna Hope",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "style@alarnahope.com.au"
     }
   ]
 }
