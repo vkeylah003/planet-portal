@@ -584,6 +584,49 @@ function Modal({ title, children, onClose }) {
 
 /* ──────────────────────────── Partners ───────────────────────────── */
 
+// Copy a partner's private selection link (/partner/<select_token>). Tokens
+// are created by supabase/partner_selections.sql — until that runs, a partner
+// has no token and we prompt to run the migration.
+function partnerLink(p) {
+  return p.select_token ? `${window.location.origin}/partner/${p.select_token}` : null
+}
+
+function CopyLinkButton({ partner, className = '' }) {
+  const [copied, setCopied] = useState(false)
+  const link = partnerLink(partner)
+
+  async function copy() {
+    if (!link) return
+    try {
+      await navigator.clipboard.writeText(link)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      /* clipboard blocked — the modal still shows the full link to copy by hand */
+    }
+  }
+
+  if (!link) {
+    return (
+      <span
+        className={`text-xs text-espresso/30 ${className}`}
+        title="Run supabase/partner_selections.sql to generate partner links"
+      >
+        No link yet
+      </span>
+    )
+  }
+  return (
+    <button
+      onClick={copy}
+      className={`btn-ghost text-xs ${className}`}
+      title={link}
+    >
+      {copied ? '✓ Copied' : 'Copy link'}
+    </button>
+  )
+}
+
 function PartnersTab({ partners, onChange }) {
   const [editing, setEditing] = useState(null) // partner object or {} for new
   const [platformFilter, setPlatformFilter] = useState('All') // All | GoAffPro | Impact
@@ -683,6 +726,7 @@ function PartnersTab({ partners, onChange }) {
                 <th className="px-5 py-3 font-medium">Instagram</th>
                 <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium">Note</th>
+                <th className="px-5 py-3 font-medium">Private link</th>
                 <th className="px-5 py-3"></th>
               </tr>
             </thead>
@@ -722,6 +766,9 @@ function PartnersTab({ partners, onChange }) {
                     ) : (
                       <span className="text-espresso/25">—</span>
                     )}
+                  </td>
+                  <td className="px-5 py-3">
+                    <CopyLinkButton partner={p} />
                   </td>
                   <td className="px-5 py-3 text-right">
                     <button
@@ -877,6 +924,24 @@ function PartnerModal({ partner, onClose, onSaved }) {
             </span>
           </span>
         </label>
+
+        {!isNew && (
+          <div className="bg-white rounded-xl p-3 border border-espresso/5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="label mb-0">Private selection link</p>
+              <CopyLinkButton partner={partner} />
+            </div>
+            {partnerLink(partner) ? (
+              <p className="mt-1.5 text-xs text-espresso/60 break-all">
+                {partnerLink(partner)}
+              </p>
+            ) : (
+              <p className="mt-1.5 text-xs text-espresso/40">
+                Run supabase/partner_selections.sql to generate this partner's link.
+              </p>
+            )}
+          </div>
+        )}
 
         {partner.partner_message && (
           <div className="bg-white rounded-xl p-3 border border-espresso/5">

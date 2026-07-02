@@ -6,9 +6,8 @@ export default function Landing() {
   const { session, isAdmin, loading } = useAuth()
 
   if (loading) return <FullPageLoader />
-  // If already signed in, send them to the right place.
+  // Admins land on their dashboard; partners arrive via their private link.
   if (session && isAdmin) return <Navigate to="/admin" replace />
-  if (session) return <Navigate to="/portal" replace />
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
@@ -16,14 +15,18 @@ export default function Landing() {
         <Logo subtitle="Style Collective" />
 
         <p className="mt-8 text-espresso/60 leading-relaxed font-light">
-          An elevated space for our partners and our collective. Choose how you'd like to
-          enter.
+          An elevated space for our partners and our collective.
         </p>
 
-        <div className="mt-10 space-y-3">
-          <Link to="/login" className="btn-primary w-full">
-            Partner Sign In
-          </Link>
+        <div className="mt-8 rounded-2xl border border-espresso/10 bg-white/60 px-6 py-5">
+          <p className="text-sm text-espresso/70 leading-relaxed">
+            <span className="font-medium text-espresso">Partners:</span> use the private
+            link we sent you to open your portal — no password needed. Need a new one? Just
+            reach out to the PLANET team.
+          </p>
+        </div>
+
+        <div className="mt-8">
           <Link to="/admin/login" className="btn-outline w-full">
             Internal Dashboard
           </Link>

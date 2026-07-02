@@ -43,29 +43,63 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1 + 2: identify the partner from their Supabase session.
-    const authHeader = req.headers.authorization || ''
-    const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
-    if (!bearer || !supabaseUrl) {
-      return res.status(401).json({ error: 'Not authenticated' })
-    }
+    // 1 + 2: identify the partner. Two supported modes:
+    //   (a) Private-link token  → ?token=…  (current partner pages)
+    //   (b) Supabase session    → Authorization: Bearer …  (legacy/admin)
+    const token = (req.query?.token || '').trim()
+    let email = ''
 
-    const userResp = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      headers: {
-        Authorization: `Bearer ${bearer}`,
-        // Supabase's GoTrue endpoint requires an apikey header. Prefer the
-        // anon key when configured; the user's JWT also works as a fallback.
-        apikey: supabaseKey || bearer,
-      },
-    })
+    if (token) {
+      // Resolve the partner's email from their token via the security-definer
+      // RPC. The GoAffPro admin token still never leaves the server.
+      if (!supabaseUrl || !supabaseKey) {
+        return res.status(500).json({ error: 'Supabase not configured' })
+      }
+      const rpcResp = await fetch(`${supabaseUrl}/rest/v1/rpc/get_partner_by_token`, {
+        method: 'POST',
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ p_token: token }),
+      })
+      if (rpcResp.ok) {
+        const payload = await rpcResp.json()
+        email = (payload?.partner?.email || '').toLowerCase()
+      }
+      if (!email) {
+        // Unknown token → no earnings, but don't leak whether it exists.
+        return res.status(200).json({
+          configured: true,
+          found: false,
+          message: 'No commission account is linked to this partner yet.',
+        })
+      }
+    } else {
+      const authHeader = req.headers.authorization || ''
+      const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
+      if (!bearer || !supabaseUrl) {
+        return res.status(401).json({ error: 'Not authenticated' })
+      }
 
-    if (!userResp.ok) {
-      return res.status(401).json({ error: 'Invalid session' })
-    }
-    const user = await userResp.json()
-    const email = (user?.email || '').toLowerCase()
-    if (!email) {
-      return res.status(401).json({ error: 'No email on session' })
+      const userResp = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        headers: {
+          Authorization: `Bearer ${bearer}`,
+          // Supabase's GoTrue endpoint requires an apikey header. Prefer the
+          // anon key when configured; the user's JWT also works as a fallback.
+          apikey: supabaseKey || bearer,
+        },
+      })
+
+      if (!userResp.ok) {
+        return res.status(401).json({ error: 'Invalid session' })
+      }
+      const user = await userResp.json()
+      email = (user?.email || '').toLowerCase()
+      if (!email) {
+        return res.status(401).json({ error: 'No email on session' })
+      }
     }
 
     // 3: fetch affiliates from GoAffPro admin API and match by email.

@@ -4,20 +4,10 @@ import { FullPageLoader } from './components/ui'
 import { isSupabaseConfigured } from './lib/supabase'
 
 import Landing from './pages/Landing'
-import PartnerLogin from './pages/PartnerLogin'
-import PartnerPortal from './pages/PartnerPortal'
-import PartnerCatalog from './pages/PartnerCatalog'
+import PartnerHome from './pages/PartnerHome'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 import SetupNotice from './pages/SetupNotice'
-
-// Guard: must be signed in (any partner) to view children.
-function RequirePartner({ children }) {
-  const { session, loading } = useAuth()
-  if (loading) return <FullPageLoader />
-  if (!session) return <Navigate to="/login" replace />
-  return children
-}
 
 // Guard: must be signed in AND an admin.
 function RequireAdmin({ children }) {
@@ -33,23 +23,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<PartnerLogin />} />
-      <Route
-        path="/portal"
-        element={
-          <RequirePartner>
-            <PartnerPortal />
-          </RequirePartner>
-        }
-      />
-      <Route
-        path="/catalog"
-        element={
-          <RequirePartner>
-            <PartnerCatalog />
-          </RequirePartner>
-        }
-      />
+      {/* Partners enter via their unguessable private link — no login. */}
+      <Route path="/partner/:token" element={<PartnerHome />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route
         path="/admin"

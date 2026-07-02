@@ -1,34 +1,44 @@
 -- ════════════════════════════════════════════════════════════════════
--- PLANET Style Collective Portal — Partner Selections migration
+-- PLANET Style Collective Portal — Partner Private Links + Selections
 -- Run this in: Supabase Dashboard → SQL Editor → New query → Run
--- Safe to re-run (uses IF NOT EXISTS / drop-then-create like schema.sql).
+-- Safe to re-run (IF NOT EXISTS / drop-then-create, like schema.sql).
+--
+-- Approach: NO partner login. Each partner gets an unguessable private
+-- link /partner/<select_token>. The token identifies the partner. All
+-- reads/writes for that page go through SECURITY DEFINER functions that
+-- validate the token, so the anon key never needs broad table access.
 --
 -- Adds:
---   1) public.is_partner_email(text)   — anon-callable gate for the login
---   2) public.partner_selections table — a partner's chosen pieces
---   3) RLS so a partner can insert/read only their OWN selection, and the
---      admin (Sofia) can read/update everything.
+--   1) partners.select_token            — per-partner secret (backfilled)
+--   2) public.partner_selections table  — a partner's chosen pieces
+--   3) get_partner_by_token()           — partner + kit + pieces for the page
+--   4) submit_partner_selection()       — token-validated insert
+--   5) RLS so only the admin (Sofia) can read/manage selections directly
 -- ════════════════════════════════════════════════════════════════════
 
--- ─────────────────────────────────────────────────────────────
--- 1) LOGIN GATE — is this email a known partner?
---    security definer so it can read partners past RLS; granted to anon
---    so PartnerLogin can check BEFORE sending a magic link (and reject
---    non-partners cleanly, without ever creating an auth user).
--- ─────────────────────────────────────────────────────────────
-create or replace function public.is_partner_email(check_email text)
-returns boolean
-language sql
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1 from public.partners
-    where lower(email) = lower(trim(check_email))
-  );
-$$;
+create extension if not exists pgcrypto;  -- for gen_random_bytes()
 
-grant execute on function public.is_partner_email(text) to anon, authenticated;
+-- Old login-gate helper from the previous approach — no longer used.
+drop function if exists public.is_partner_email(text);
+
+-- ─────────────────────────────────────────────────────────────
+-- 1) PRIVATE LINK TOKEN on partners
+--    48 hex chars (24 random bytes = 192 bits) — unguessable.
+-- ─────────────────────────────────────────────────────────────
+alter table public.partners
+  add column if not exists select_token text;
+
+-- Backfill any existing partners that don't have a token yet.
+update public.partners
+  set select_token = encode(gen_random_bytes(24), 'hex')
+  where select_token is null;
+
+-- New partners get one automatically.
+alter table public.partners
+  alter column select_token set default encode(gen_random_bytes(24), 'hex');
+
+create unique index if not exists idx_partners_select_token
+  on public.partners(select_token);
 
 -- ─────────────────────────────────────────────────────────────
 -- 2) PARTNER SELECTIONS — pieces a partner chose from the live catalog
@@ -45,32 +55,119 @@ create table if not exists public.partner_selections (
   created_at    timestamptz not null default now()
 );
 
-create index if not exists idx_partner_selections_email
-  on public.partner_selections(lower(partner_email));
 create index if not exists idx_partner_selections_status
   on public.partner_selections(status);
 
 -- ─────────────────────────────────────────────────────────────
--- 3) ROW LEVEL SECURITY
---    Reuses the public.is_admin() and public.current_email() helpers
---    already defined in schema.sql.
+-- 3) READ: partner home payload for a valid token (or null)
+--    security definer so it can read partners/kits/kit_pieces past RLS.
+--    The caller already holds the secret token, so returning that
+--    partner's own data is expected.
+-- ─────────────────────────────────────────────────────────────
+create or replace function public.get_partner_by_token(p_token text)
+returns json
+language sql
+security definer
+set search_path = public
+as $$
+  with p as (
+    select * from public.partners
+    where select_token = p_token
+    limit 1
+  ),
+  k as (
+    select * from public.kits
+    where partner_id = (select id from p)
+    order by created_at desc
+    limit 1
+  )
+  select case
+    when (select id from p) is null then null
+    else json_build_object(
+      'partner', json_build_object(
+        'id',              (select id from p),
+        'name',            (select name from p),
+        'email',           (select email from p),
+        'commission_link', (select commission_link from p),
+        'platform',        (select platform from p)
+      ),
+      'kit', (select row_to_json(k) from k),
+      'pieces', coalesce(
+        (select json_agg(row_to_json(kp) order by kp.created_at)
+           from public.kit_pieces kp
+          where kp.kit_id = (select id from k)),
+        '[]'::json
+      )
+    )
+  end;
+$$;
+
+grant execute on function public.get_partner_by_token(text) to anon, authenticated;
+
+-- ─────────────────────────────────────────────────────────────
+-- 4) WRITE: submit a selection, keyed to a valid token
+--    security definer validates the token and stamps the row with the
+--    correct partner — the anon client can only ever submit as itself.
+-- ─────────────────────────────────────────────────────────────
+create or replace function public.submit_partner_selection(
+  p_token text,
+  p_items jsonb,
+  p_note  text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_partner public.partners;
+  v_id      uuid;
+begin
+  select * into v_partner
+  from public.partners
+  where select_token = p_token
+  limit 1;
+
+  if v_partner.id is null then
+    raise exception 'Invalid or expired link';
+  end if;
+
+  insert into public.partner_selections
+    (partner_id, partner_email, partner_name, items, note, status)
+  values
+    (v_partner.id,
+     lower(v_partner.email),
+     v_partner.name,
+     coalesce(p_items, '[]'::jsonb),
+     nullif(btrim(coalesce(p_note, '')), ''),
+     'new')
+  returning id into v_id;
+
+  return v_id;
+end;
+$$;
+
+grant execute on function public.submit_partner_selection(text, jsonb, text) to anon, authenticated;
+
+-- ─────────────────────────────────────────────────────────────
+-- 5) ROW LEVEL SECURITY on partner_selections
+--    Inserts happen ONLY through submit_partner_selection() above
+--    (which bypasses RLS as definer), so there is NO anon insert policy.
+--    Reuses public.is_admin() from schema.sql.
 -- ─────────────────────────────────────────────────────────────
 alter table public.partner_selections enable row level security;
 
--- Admin (Sofia) — full read/write.
+-- Admin (Sofia) — full read/write (list pending, mark reviewed).
 drop policy if exists selections_admin_all on public.partner_selections;
 create policy selections_admin_all on public.partner_selections
   for all using (public.is_admin()) with check (public.is_admin());
 
--- Partner — may read only their own submissions.
-drop policy if exists selections_self_select on public.partner_selections;
-create policy selections_self_select on public.partner_selections
-  for select using (lower(partner_email) = public.current_email());
-
--- Partner — may insert only a selection stamped with THEIR OWN email.
-drop policy if exists selections_self_insert on public.partner_selections;
-create policy selections_self_insert on public.partner_selections
-  for insert with check (lower(partner_email) = public.current_email());
-
--- (No partner update/delete policy: once submitted, only the admin can
---  change status 'new' -> 'reviewed'. That's covered by selections_admin_all.)
+-- ════════════════════════════════════════════════════════════════════
+-- AFTER RUNNING THIS SCRIPT:
+--   • Every partner now has a private link:
+--       https://<your-domain>/partner/<select_token>
+--     View/copy each one from the Internal Dashboard → Partners tab.
+--   • Partners open their link (no login), see their affiliate link,
+--     commissions, kit status, and the "pick your box" catalog.
+--   • Their submissions land in Dashboard → Selections (with a count badge).
+-- ════════════════════════════════════════════════════════════════════
