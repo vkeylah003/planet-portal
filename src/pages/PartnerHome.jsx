@@ -370,6 +370,7 @@ function PickerBody({ token }) {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [confirmOpen, setConfirmOpen] = useState(false) // note + confirm modal
 
   useEffect(() => {
     let active = true
@@ -411,6 +412,7 @@ function PickerBody({ token }) {
     }))
     try {
       await submitSelection(token, items, note.trim())
+      setConfirmOpen(false)
       setSubmitted(true)
     } catch (e) {
       setError(e.message)
@@ -418,6 +420,10 @@ function PickerBody({ token }) {
       setSubmitting(false)
     }
   }
+
+  // Only show the sticky bar once the catalog is actually pickable.
+  const showBar =
+    !submitted && !catalog.loading && !catalog.error && (catalog.items?.length || 0) > 0
 
   if (submitted) {
     return (
@@ -473,58 +479,155 @@ function PickerBody({ token }) {
         </div>
       )}
 
-      {/* Sticky selection bar */}
-      {selectedCount > 0 && (
+      {/* Always-visible sticky submit bar (compact — stays reachable while
+          scrolling ~900 products). Disabled until at least one pick. */}
+      {showBar && (
         <div className="fixed bottom-0 inset-x-0 z-20 border-t border-espresso/10 bg-cream/95 backdrop-blur">
-          <div className="max-w-4xl mx-auto px-6 py-4">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-gold/20 text-gold">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <span
+                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap ${
+                  selectedCount > 0 ? 'bg-gold/20 text-gold' : 'bg-espresso/10 text-espresso/50'
+                }`}
+              >
                 {selectedCount} / {MAX_SELECTIONS} selected
               </span>
-              {Object.values(selected).map((it) => (
-                <span
-                  key={it.product_id}
-                  className="inline-flex items-center gap-1.5 bg-white rounded-full pl-3 pr-2 py-1 text-xs border border-espresso/10"
+              {selectedCount > 0 && (
+                <button
+                  onClick={() => setSelected({})}
+                  className="text-xs text-espresso/45 hover:text-espresso/70 hidden sm:inline"
                 >
-                  <span className="text-espresso truncate max-w-[140px]">{it.title}</span>
-                  <button
-                    onClick={() => toggle(it)}
-                    className="text-espresso/30 hover:text-red-600"
-                    aria-label={`Remove ${it.title}`}
-                  >
-                    ✕
-                  </button>
-                </span>
-              ))}
+                  Clear
+                </button>
+              )}
+              <span className="text-xs text-espresso/45 truncate hidden sm:inline">
+                {selectedCount === 0
+                  ? 'Tap pieces to add them to your box'
+                  : atMax
+                  ? `Max of ${MAX_SELECTIONS} reached`
+                  : ''}
+              </span>
             </div>
-            <div className="mt-3 flex items-end gap-3 flex-wrap">
-              <label className="flex-1 min-w-[240px]">
-                <span className="label">Note (sizes, preferences — optional)</span>
-                <input
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="e.g. Size M, prefer the espresso tones"
-                  className="input"
-                />
-              </label>
-              <button onClick={submit} disabled={submitting} className="btn-primary">
-                {submitting ? (
-                  <Spinner />
-                ) : (
-                  `Submit ${selectedCount} pick${selectedCount === 1 ? '' : 's'}`
-                )}
-              </button>
-            </div>
-            {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
-            {atMax && (
-              <p className="text-xs text-gold mt-2">
-                That's the max of {MAX_SELECTIONS} — remove one to swap in something else.
-              </p>
-            )}
+            <button
+              onClick={() => {
+                setError('')
+                setConfirmOpen(true)
+              }}
+              disabled={selectedCount === 0}
+              className="btn-primary shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Submit selection
+            </button>
           </div>
         </div>
       )}
+
+      {/* Confirm + note modal, reached via the sticky Submit button. */}
+      {confirmOpen && (
+        <SubmitModal
+          items={Object.values(selected)}
+          note={note}
+          setNote={setNote}
+          onRemove={toggle}
+          onCancel={() => !submitting && setConfirmOpen(false)}
+          onSubmit={submit}
+          submitting={submitting}
+          error={error}
+        />
+      )}
     </>
+  )
+}
+
+// Lightweight confirm dialog: review picks, add an optional note, submit.
+function SubmitModal({ items, note, setNote, onRemove, onCancel, onSubmit, submitting, error }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-espresso/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-cream w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl shadow-soft max-h-[88vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-espresso/10 sticky top-0 bg-cream">
+          <h3 className="font-heading text-2xl text-espresso">
+            Submit your {items.length} pick{items.length === 1 ? '' : 's'}
+          </h3>
+          <button
+            onClick={onCancel}
+            className="text-espresso/40 hover:text-espresso text-xl"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div className="space-y-2">
+            {items.map((it) => (
+              <div
+                key={it.product_id}
+                className="flex items-center gap-3 bg-white rounded-xl px-3 py-2 border border-espresso/5"
+              >
+                <div className="w-10 h-12 rounded-lg bg-cream overflow-hidden shrink-0">
+                  {it.image && (
+                    <img src={it.image} alt="" className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-espresso truncate">{it.title}</p>
+                  {it.color && <p className="text-xs text-espresso/45">{it.color}</p>}
+                </div>
+                <button
+                  onClick={() => onRemove(it)}
+                  disabled={submitting}
+                  className="text-espresso/30 hover:text-red-600 text-sm px-1"
+                  aria-label={`Remove ${it.title}`}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            {items.length === 0 && (
+              <p className="text-sm text-espresso/50">
+                You've removed everything — close this and pick a few pieces.
+              </p>
+            )}
+          </div>
+
+          <label className="block">
+            <span className="label">Note (sizes, preferences — optional)</span>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
+              placeholder="e.g. Size M, prefer the espresso tones"
+              className="input resize-none"
+            />
+          </label>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          <div className="flex items-center justify-end gap-3 pt-1">
+            <button
+              onClick={onCancel}
+              disabled={submitting}
+              className="btn-ghost text-xs"
+            >
+              Keep browsing
+            </button>
+            <button
+              onClick={onSubmit}
+              disabled={submitting || items.length === 0}
+              className="btn-primary disabled:opacity-40"
+            >
+              {submitting ? <Spinner /> : 'Submit selection'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
