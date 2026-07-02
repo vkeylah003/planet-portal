@@ -83,7 +83,7 @@
       "ship_date": "2026-06-16",
       "tracking_number": "1Z11JR320307656983",
       "return_by_date": "2026-07-20",
-      "notes": "Total Image Consultants (Stylist). UPS 1Z11JR320307656983. Shipped 2026-06-16, delivered Sat 2026-06-20. Confirmed against typed stock transfer TR-00198. Feedback: LOVES the groovy striped crewneck + the metallic crochet boatneck (both look and feel great); was surprised she did not love a couple of the others. Matches the picks Sofia emailed her. Keeping/purchasing the gold boatneck; payment pending."
+      "notes": "Total Image Consultants (Stylist). UPS 1Z11JR320307656983. Shipped 2026-06-16, delivered Sat 2026-06-20. Confirmed against typed stock transfer TR-00198. Feedback: LOVES the groovy striped crewneck + the metallic crochet boatneck (both look and feel great); was surprised she did not love a couple of the others. Matches the picks Sofia emailed her. Keeping/purchasing the gold boatneck; paid ($156)."
     },
     {
       "id": "a0000000-0000-4000-8000-000000000008",
@@ -175,7 +175,7 @@
     { "id": "b0000000-0000-4000-8000-000000000604", "kit_id": "a0000000-0000-4000-8000-000000000006", "piece_name": "Organza Jackie O Top", "color": "Mint", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000000605", "kit_id": "a0000000-0000-4000-8000-000000000006", "piece_name": "Pima Cotton Frayed Tank", "color": "White", "partner_decision": null },
 
-    { "id": "b0000000-0000-4000-8000-000000000701", "kit_id": "a0000000-0000-4000-8000-000000000007", "piece_name": "Cotton Metallic Crochet Boatneck Sweater", "color": "Stone/Gold", "partner_decision": "Keep", "purchase_amount": 156, "purchase_status": "pending" },
+    { "id": "b0000000-0000-4000-8000-000000000701", "kit_id": "a0000000-0000-4000-8000-000000000007", "piece_name": "Cotton Metallic Crochet Boatneck Sweater", "color": "Stone/Gold", "partner_decision": "Keep", "purchase_amount": 156, "purchase_status": "paid" },
     { "id": "b0000000-0000-4000-8000-000000000702", "kit_id": "a0000000-0000-4000-8000-000000000007", "piece_name": "Pima Cotton Groovy Stripe Crewneck Sweater", "color": "Lava/Chartreuse", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000000703", "kit_id": "a0000000-0000-4000-8000-000000000007", "piece_name": "Pima Cotton Jackie O Top", "color": "Peacock", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000000704", "kit_id": "a0000000-0000-4000-8000-000000000007", "piece_name": "Vegan Leather Bell Bottom Pants", "color": "Black", "partner_decision": null },
