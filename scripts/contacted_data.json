@@ -2703,6 +2703,166 @@
       "status": "contacted",
       "channel": "email",
       "email": "alisa@stylescout.net"
+    },
+    {
+      "name": "Dani",
+      "business": "Style By Dani",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "dani@stylebydani.com"
+    },
+    {
+      "name": "Marian",
+      "business": "Look Good Now Image Consulting",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "marian@marianrothschild.com"
+    },
+    {
+      "name": "Kim Mathisen",
+      "business": "House of Colour Seattle Magnolia",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "kim.mathisen@houseofcolour.com"
+    },
+    {
+      "name": "Heather Hope",
+      "business": "House of Colour Central Denver",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "heather.hope@houseofcolour.com"
+    },
+    {
+      "name": "Clarisse",
+      "business": "InChic Style, LLC",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "clarisse@inchic.style"
+    },
+    {
+      "name": "Judith",
+      "business": "Conselle Institute of Image Management",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "judith@conselle.com"
+    },
+    {
+      "name": "Iwona",
+      "business": "Curated Wardrobe",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "contact@curatedwardrobe.co"
+    },
+    {
+      "name": "Lisa",
+      "business": "Vermont Wardrobe Styling",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "lisa@vtwardrobestyling.com"
+    },
+    {
+      "name": "Fathia",
+      "business": "Fathia Savory Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "stylist@fathiasavory.com"
+    },
+    {
+      "name": "Jamie",
+      "business": "JK Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "jamie@jkstyle.com"
+    },
+    {
+      "name": "Annie",
+      "business": "Annie Frances Style Consulting",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "contact@notjustanniestyle.com"
+    },
+    {
+      "name": "Erin",
+      "business": "Style Thief Fashion",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "hello@stylethieffashion.com"
+    },
+    {
+      "name": "Lauren",
+      "business": "Styled by LD",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "ld@styledbyld.com"
+    },
+    {
+      "name": "Kim Armga",
+      "business": "Jacksonville Color & Style (House of Colour)",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "kim.armga@houseofcolour.com"
+    },
+    {
+      "name": "Daysia",
+      "business": "fashionably dressed, by DG.",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "daysialooper@fashionablydressedbydg.com"
+    },
+    {
+      "name": "Amanda",
+      "business": "Beyond the Closet",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "amanda@beyondtheclosetnaples.com"
+    },
+    {
+      "name": "Drew",
+      "business": "Curated by Drew",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "info@curatedbydrew.com"
+    },
+    {
+      "name": "Lesa Miller",
+      "business": "Lesa Miller Stylist",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "lesa@lesamillerstyle.com"
+    },
+    {
+      "name": "Kerry Finlay",
+      "business": "Kerry Finlay Style Coach",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "hello@kerryfinlay.com"
+    },
+    {
+      "name": "Kerrie Ellis",
+      "business": "Kerrie Ellis Image Consultant & Stylist",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "kerrie@kerrieellis.co.uk"
     }
   ]
 }
