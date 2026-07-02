@@ -98,7 +98,7 @@
       "email": "hello@sandimele.com"
     },
     {
-      "name": "Jonelle Graziosi",
+      "name": "Jonelle \"Jojo\" Graziosi",
       "business": "Method Style",
       "category": "stylist",
       "status": "active",
@@ -189,12 +189,12 @@
       "name": "Michelle Matera",
       "business": "Story Worthy Styles",
       "category": "stylist",
-      "status": "interested",
+      "status": "active",
       "channel": "email",
       "email": "swsbymichelle@gmail.com"
     },
     {
-      "name": "Mardi",
+      "name": "Mardi Wysman-Blunt",
       "business": "Modelling by Mards",
       "category": "UGC",
       "status": "interested",
@@ -2428,7 +2428,7 @@
       "name": "Jessica Hilde",
       "business": "Jessica Hilde Style",
       "category": "stylist",
-      "status": "contacted",
+      "status": "interested",
       "channel": "email",
       "email": "jessicahildestyle@gmail.com"
     },
@@ -2660,7 +2660,7 @@
       "name": "Edie O'Brien",
       "business": "Edie Styles",
       "category": "stylist",
-      "status": "contacted",
+      "status": "interested",
       "channel": "email",
       "email": "edie@ediestyles.com"
     },
