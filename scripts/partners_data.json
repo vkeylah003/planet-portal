@@ -62,10 +62,10 @@
       "id": "a0000000-0000-4000-8000-000000000014",
       "partner_email": "jtouchofstyle@gmail.com",
       "status": "Shipped",
-      "ship_date": null,
-      "tracking_number": null,
+      "ship_date": "2026-07-01",
+      "tracking_number": "1Z11JR320333844417",
       "return_by_date": null,
-      "notes": "2nd box — on the way to her. No tracking number yet (pending) — add it once we have it and live tracking will start. (confirm pieces) — carry over / confirm what's actually in this box."
+      "notes": "2nd box — UPS Ground, tracking 1Z11JR320333844417, shipped 2026-07-01. Ship to: Jodie Filogomo, 17414 N Lime Rock Dr, Sun City, AZ 85373-2224. 4 pieces."
     },
     {
       "id": "a0000000-0000-4000-8000-000000000005",
@@ -182,6 +182,11 @@
     { "id": "b0000000-0000-4000-8000-000000000403", "kit_id": "a0000000-0000-4000-8000-000000000004", "piece_name": "Cotton Flood Pants (4098CT)", "color": "Cameo [confirm]", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000000404", "kit_id": "a0000000-0000-4000-8000-000000000004", "piece_name": "Knit Sweater (292K)", "color": "White/Midnight [confirm]", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000000405", "kit_id": "a0000000-0000-4000-8000-000000000004", "piece_name": "Tee (035T)", "color": "White [confirm]", "partner_decision": null },
+
+    { "id": "b0000000-0000-4000-8000-000000001401", "kit_id": "a0000000-0000-4000-8000-000000000014", "piece_name": "Cotton Lycra Ruched Tank Dress", "color": "Sky", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001402", "kit_id": "a0000000-0000-4000-8000-000000000014", "piece_name": "Cropped Swing Jacket", "color": "Chartreuse (O/S)", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001403", "kit_id": "a0000000-0000-4000-8000-000000000014", "piece_name": "Nylon Signature Architectural Skirt", "color": "Chartreuse", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001404", "kit_id": "a0000000-0000-4000-8000-000000000014", "piece_name": "Pima Cotton Jackie O Top", "color": "Peacock (One Size)", "partner_decision": null },
 
     { "id": "b0000000-0000-4000-8000-000000000501", "kit_id": "a0000000-0000-4000-8000-000000000005", "piece_name": "Pima Cotton Cool Hoodie", "color": "Putty", "partner_decision": "Return" },
     { "id": "b0000000-0000-4000-8000-000000000502", "kit_id": "a0000000-0000-4000-8000-000000000005", "piece_name": "Pima Cotton Mini Seed Stitch", "color": "Peony", "partner_decision": "Keep", "purchase_amount": 138, "purchase_status": "paid" },
