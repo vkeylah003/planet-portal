@@ -2216,18 +2216,24 @@ function SocialTab() {
       <div>
         <h2 className="font-heading text-3xl text-espresso">Social</h2>
         <p className="text-sm text-espresso/55 mt-1 max-w-2xl">
-          Partner Instagram posts featuring PLANET and their engagement. Numbers are the
-          visible IG counts at capture time. A blank cell means that metric wasn’t shown on
-          the post — different from zero.
+          Partner content featuring PLANET — Instagram posts, blog features, and email
+          blasts — with engagement where it applies. Numbers are the visible counts at
+          capture time. A blank cell means that metric wasn’t shown or doesn’t apply
+          (common on blogs/emails) — different from zero.
         </p>
       </div>
 
       {/* Headline roll-ups */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Metric
-          label="Partner posts"
+          label="Partner content"
           value={social.totalPosts}
-          sub={`${social.partners.length} partner${social.partners.length === 1 ? '' : 's'}`}
+          sub={
+            Object.entries(social.byType)
+              .map(([t, n]) => `${n} ${t}`)
+              .join(' · ') ||
+            `${social.partners.length} partner${social.partners.length === 1 ? '' : 's'}`
+          }
         />
         <Metric
           label="Total engagement"
@@ -2299,13 +2305,31 @@ function SocialTab() {
                 {g.posts.map((p, i) => (
                   <tr key={i} className="align-top">
                     <td className="px-2 py-2.5 max-w-md">
-                      <p className="text-espresso/80 leading-snug">{p.caption}</p>
-                      <p className="text-[11px] text-espresso/40 mt-0.5">
-                        {p.platform}
-                        {' · '}
-                        {p.posted_date || 'date unknown'}
-                        {p.date_note ? ` (${p.date_note})` : ''}
-                      </p>
+                      <div className="flex items-start gap-2">
+                        <span className="mt-0.5 shrink-0 inline-block rounded-full bg-espresso/5 px-2 py-0.5 text-[10px] uppercase tracking-widest text-espresso/55 font-medium">
+                          {p.type || 'Other'}
+                        </span>
+                        <div className="min-w-0">
+                          {p.permalink ? (
+                            <a
+                              href={p.permalink}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-espresso/80 leading-snug hover:text-gold underline decoration-espresso/15 underline-offset-2"
+                            >
+                              {p.caption}
+                            </a>
+                          ) : (
+                            <p className="text-espresso/80 leading-snug">{p.caption}</p>
+                          )}
+                          <p className="text-[11px] text-espresso/40 mt-0.5">
+                            {p.platform}
+                            {' · '}
+                            {p.posted_date || 'date unknown'}
+                            {p.date_note ? ` (${p.date_note})` : ''}
+                          </p>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-2 py-2.5 text-right tabular-nums text-espresso/70">
                       {nfmt(p.likes)}

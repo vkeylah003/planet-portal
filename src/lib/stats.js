@@ -114,6 +114,17 @@ export function computeSocial() {
   const posts = socialData.posts || []
   const totalPosts = posts.length
 
+  // Content mix by type (Instagram | Blog | Email | …). Blogs and email blasts
+  // often carry no engagement numbers — they still count as content, they just
+  // contribute nothing to the metric sums below.
+  const byType = {}
+  for (const p of posts) {
+    const t = p.type || 'Other'
+    byType[t] = (byType[t] || 0) + 1
+  }
+
+  // Null means "not shown / not applicable" (common on blogs/emails), so it's
+  // skipped rather than counted as 0 — sums stay honest across content types.
   const sum = (key) => posts.reduce((s, p) => s + (p[key] || 0), 0)
   const totalLikes = sum('likes')
   const totalComments = sum('comments')
@@ -164,6 +175,7 @@ export function computeSocial() {
 
   return {
     totalPosts,
+    byType,
     totalLikes,
     totalComments,
     totalShares,
