@@ -3038,6 +3038,87 @@
       "channel": "ShopMy",
       "email": "partnerships@littlewhitelooks.com",
       "instagram": "@littlewhitelooks"
+    },
+    {
+      "name": "Susie Wright",
+      "business": "So Susie",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "ShopMy",
+      "email": "susie@sosusie.com",
+      "instagram": "@susie.wright"
+    },
+    {
+      "name": "Kara Mendelsohn",
+      "business": "Kara Mendelsohn (via Underscore Talent)",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "ShopMy",
+      "email": "kara@underscoretalent.com",
+      "instagram": "@kara_a_mendelsohn"
+    },
+    {
+      "name": "Kim Mitchell",
+      "business": "J'adore Couture",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "ShopMy",
+      "email": "jadorecoutureblog@gmail.com",
+      "instagram": "@kimair"
+    },
+    {
+      "name": "Carla Rockmore",
+      "business": "Carla Rockmore",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "ShopMy",
+      "email": "info@carlarockmore.com",
+      "instagram": "@carla.rockmore"
+    },
+    {
+      "name": "Samantha Stewart",
+      "business": "Style of Sam",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "ShopMy",
+      "email": "pr@styleofsam.com",
+      "instagram": "@styleofsam"
+    },
+    {
+      "name": "Elaine Davis",
+      "business": "Square Pearls",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "ShopMy",
+      "email": "squarepearls@mail.com",
+      "instagram": "@squarepearls"
+    },
+    {
+      "name": "Grece Ghanem",
+      "business": "Grece Ghanem (via Storm Management)",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "ShopMy",
+      "email": "talentenquiries@stormmanagement.com",
+      "instagram": "@greceghanem"
+    },
+    {
+      "name": "Carolyn Arentson",
+      "business": "My Chic Obsession",
+      "category": "blogger-influencer",
+      "status": "needs-email",
+      "channel": "ShopMy",
+      "instagram": "@mychicobsession",
+      "note": "ShopMy outreach pending — email address still needed before contacting."
+    },
+    {
+      "name": "Lyn Slater",
+      "business": "Accidental Icon",
+      "category": "blogger-influencer",
+      "status": "needs-email",
+      "channel": "ShopMy",
+      "instagram": "@iconaccidental",
+      "note": "ShopMy outreach pending — email address still needed before contacting."
     }
   ]
 }
