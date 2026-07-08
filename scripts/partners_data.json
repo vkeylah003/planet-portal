@@ -19,7 +19,8 @@
     { "name": "Jonelle \"Jojo\" Graziosi", "email": "method.style.jojo@gmail.com", "status": "Active Partner", "platform": "GoAffPro", "gifted": false },
     { "name": "Mardi Wysman-Blunt", "email": "mards@hotmail.com", "status": "Active Partner", "platform": "GoAffPro", "gifted": false },
     { "name": "Edie O'Brien", "email": "edie@ediestyles.com", "status": "Interested", "platform": "GoAffPro", "gifted": false },
-    { "name": "Jessica Hilde", "email": "jessicahildestyle@gmail.com", "status": "Interested", "platform": "GoAffPro", "gifted": false }
+    { "name": "Jessica Hilde", "email": "jessicahildestyle@gmail.com", "status": "Interested", "platform": "GoAffPro", "gifted": false },
+    { "name": "Courtney Smith", "email": "surrealstylewithcourtney@gmail.com", "status": "Active Partner", "platform": "GoAffPro", "gifted": false }
   ],
   "kits": [
     {
@@ -165,6 +166,15 @@
       "tracking_number": "1Z11JR320315482137",
       "return_by_date": null,
       "notes": "UPS Ground, tracking 1Z11JR320315482137, shipped 2026-07-06. Ship to: Michelle Mateva, 3525 W Paul Ave, Tampa, FL 33611-3625. 5 pieces."
+    },
+    {
+      "id": "a0000000-0000-4000-8000-000000000017",
+      "partner_email": "surrealstylewithcourtney@gmail.com",
+      "status": "Shipped",
+      "ship_date": "2026-07-07",
+      "tracking_number": "1Z11JR320338836775",
+      "return_by_date": null,
+      "notes": "Sur(real) Style with Courtney (Stylist). Stock transfer TR-00224. UPS Ground, tracking 1Z11JR320338836775, shipped 2026-07-07. Ship to: Courtney Smith, 378 E North St, Worthington, OH 43085-3200. 5 pieces."
     }
   ],
   "kit_pieces": [
@@ -244,6 +254,12 @@
     { "id": "b0000000-0000-4000-8000-000000001602", "kit_id": "a0000000-0000-4000-8000-000000000016", "piece_name": "Cotton Flood Pants", "color": "Nautical Stripe", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000001603", "kit_id": "a0000000-0000-4000-8000-000000000016", "piece_name": "Nylon Big Pocket Pants", "color": "Butter", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000001604", "kit_id": "a0000000-0000-4000-8000-000000000016", "piece_name": "Pima Cotton Bateau Cable Knit Top", "color": "White", "partner_decision": null },
-    { "id": "b0000000-0000-4000-8000-000000001605", "kit_id": "a0000000-0000-4000-8000-000000000016", "piece_name": "Sateen E-Z Pants", "color": "Putty", "partner_decision": null }
+    { "id": "b0000000-0000-4000-8000-000000001605", "kit_id": "a0000000-0000-4000-8000-000000000016", "piece_name": "Sateen E-Z Pants", "color": "Putty", "partner_decision": null },
+
+    { "id": "b0000000-0000-4000-8000-000000001701", "kit_id": "a0000000-0000-4000-8000-000000000017", "piece_name": "Cotton Lycra Ruched Tank Dress", "color": "Titanium (Size 1)", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001702", "kit_id": "a0000000-0000-4000-8000-000000000017", "piece_name": "Cotton Mini Man Shirt", "color": "Cherry (Size 1)", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001703", "kit_id": "a0000000-0000-4000-8000-000000000017", "piece_name": "Nylon Big Pocket Pants", "color": "Midnight (Size 1)", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001704", "kit_id": "a0000000-0000-4000-8000-000000000017", "piece_name": "Nylon Triple Collar Jacket", "color": "Midnight (O/S)", "partner_decision": null },
+    { "id": "b0000000-0000-4000-8000-000000001705", "kit_id": "a0000000-0000-4000-8000-000000000017", "piece_name": "Pima Cotton Luxury Boxy T-Shirt", "color": "Bleached Black (O/S)", "partner_decision": null }
   ]
 }
