@@ -201,8 +201,30 @@ export function computeStats() {
 /* ─────────────────────────── EOD draft ──────────────────────────── */
 
 const pct = (n) => `${(n * 100).toFixed(1)}%`
-// A metric with no value renders as an explicit blank — never a fabricated 0.
-const val = (n) => (n === null || n === undefined || n === '' ? '(no data)' : String(n))
+
+// Capitalize the first letter of a string, leaving the rest untouched.
+const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s)
+
+// Split a free-text field into individual items. Handles the common ways someone
+// jots several things into one box: separate lines, semicolons, a leading bullet
+// character, or run-on sentences broken by a period/!/?. Strips list markers and
+// blanks so each item comes back clean.
+function splitItems(text) {
+  if (!text) return []
+  return String(text)
+    .split(/\r?\n|;|•|(?<=[.!?])\s+(?=[A-Za-z0-9"'(])/)
+    .map((s) => s.replace(/^[\s\-*•·]+/, '').trim())
+    .filter(Boolean)
+}
+
+// Present a fragment as a complete, readable sentence: capitalized and closed
+// with terminal punctuation.
+function asSentence(s) {
+  const t = String(s || '').trim()
+  if (!t) return ''
+  const c = cap(t)
+  return /[.!?]$/.test(c) ? c : `${c}.`
+}
 
 // Build the copy-paste end-of-day update Darien wants: context on every bullet,
 // quantified wherever the data allows, blanks clearly marked. `log` is today's
@@ -275,17 +297,40 @@ export function buildEodDraft({ log, dateLabel }) {
   push('')
 
   // ── Today's manual content + DM metrics ──
+  // Each number is only voiced if it was actually logged — a blank field is
+  // skipped, never printed as "null"/"(no data)". Fragments are stitched into
+  // one readable sentence per topic.
   push('TODAY — CONTENT & DMs')
   if (log) {
-    push(
-      `• Partners published ${val(log.reels_posted)} reels/posts today; ${val(
-        log.reposts
-      )} reposted to PLANET’s channels.`
-    )
-    push(
-      `• Sent ${val(log.dms_sent)} IG/FB DMs; ${val(log.dms_unread)} still unread / awaiting a reply.`
-    )
-    if (log.notes) push(`• Notes: ${log.notes}`)
+    const content = []
+    if (log.reels_posted != null)
+      content.push(
+        `partners published ${log.reels_posted} ${
+          log.reels_posted === 1 ? 'reel/post' : 'reels/posts'
+        } today`
+      )
+    if (log.reposts != null)
+      content.push(`${log.reposts} reposted to PLANET’s channels`)
+    if (content.length) push(`• ${cap(content.join('; '))}.`)
+
+    const dms = []
+    if (log.dms_sent != null)
+      dms.push(`${log.dms_sent} IG/FB ${log.dms_sent === 1 ? 'DM' : 'DMs'} sent`)
+    if (log.dms_unread != null)
+      dms.push(`${log.dms_unread} still unread / awaiting a reply`)
+    if (dms.length) push(`• ${cap(dms.join('; '))}.`)
+
+    if (!content.length && !dms.length)
+      push('• No content or DM numbers logged for today yet.')
+
+    // Ops notes: one clean sentence, or a tidy list if several were jotted down.
+    const notes = splitItems(log.notes)
+    if (notes.length === 1) {
+      push(`• Ops notes: ${asSentence(notes[0])}`)
+    } else if (notes.length > 1) {
+      push('• Ops notes:')
+      for (const n of notes) push(`    – ${asSentence(n)}`)
+    }
   } else {
     push('• No manual metrics logged for today yet — add them in the Daily Log tab.')
   }
@@ -293,19 +338,31 @@ export function buildEodDraft({ log, dateLabel }) {
 
   // ── Weekly goal ──
   push('WEEKLY GOAL')
-  push(`• ${log?.weekly_goal ? log.weekly_goal : '(not set)'}`)
+  push(
+    log?.weekly_goal
+      ? `• This week is aiming at: ${log.weekly_goal.trim()}`
+      : '• Weekly goal: not set yet.'
+  )
   push('')
 
-  // ── On track / blockers ──
-  push('ON TRACK?')
+  // ── On track vs blockers ──
+  push('ON TRACK & BLOCKERS')
   const ot = log?.on_track
-  const otLabel = ot === null || ot === undefined ? '(not set)' : ot ? 'Yes' : 'No'
-  const blockers = log?.blockers
-    ? ` — ${log.blockers}`
-    : ot === false
-    ? ' — (blockers not specified)'
-    : ''
-  push(`• ${otLabel}${blockers}`)
+  if (ot === true) push('• On track: Yes.')
+  else if (ot === false) push('• Off track.')
+  else push('• On track: not set.')
+
+  // Blockers get formatted, never dumped: multiple items become a tidy bullet
+  // list of complete sentences; an empty field reads as "No blockers."
+  const blockers = splitItems(log?.blockers)
+  if (blockers.length === 1) {
+    push(`• Blockers / speed bumps: ${asSentence(blockers[0])}`)
+  } else if (blockers.length > 1) {
+    push('• Blockers / speed bumps:')
+    for (const b of blockers) push(`    – ${asSentence(b)}`)
+  } else {
+    push('• No blockers.')
+  }
 
   return L.join('\n')
 }
