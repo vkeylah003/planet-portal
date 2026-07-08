@@ -50,6 +50,7 @@ create table if not exists public.partner_selections (
   partner_name  text,
   items         jsonb not null default '[]'::jsonb,  -- [{product_id,title,variant_id,color,price,image}]
   note          text,                                 -- optional sizes / preferences
+  shipping_address jsonb,                             -- {name,line1,line2,city,state,zip}
   status        text not null default 'new'
                   check (status in ('new','reviewed')),
   created_at    timestamptz not null default now()
@@ -57,6 +58,11 @@ create table if not exists public.partner_selections (
 
 create index if not exists idx_partner_selections_status
   on public.partner_selections(status);
+
+-- Re-runnable on an existing deployment: add the ship-to column if it's not
+-- there yet (installs created before this feature won't have it).
+alter table public.partner_selections
+  add column if not exists shipping_address jsonb;
 
 -- ─────────────────────────────────────────────────────────────
 -- 3) READ: partner home payload for a valid token (or null)
@@ -109,10 +115,16 @@ grant execute on function public.get_partner_by_token(text) to anon, authenticat
 --    security definer validates the token and stamps the row with the
 --    correct partner — the anon client can only ever submit as itself.
 -- ─────────────────────────────────────────────────────────────
+-- The signature gains p_shipping, so drop the older 3-arg version first —
+-- otherwise this would create a second overload rather than replacing it,
+-- leaving the RPC ambiguous. Safe to run whether or not the old one exists.
+drop function if exists public.submit_partner_selection(text, jsonb, text);
+
 create or replace function public.submit_partner_selection(
-  p_token text,
-  p_items jsonb,
-  p_note  text
+  p_token    text,
+  p_items    jsonb,
+  p_note     text,
+  p_shipping jsonb default null
 )
 returns uuid
 language plpgsql
@@ -133,13 +145,21 @@ begin
   end if;
 
   insert into public.partner_selections
-    (partner_id, partner_email, partner_name, items, note, status)
+    (partner_id, partner_email, partner_name, items, note, shipping_address, status)
   values
     (v_partner.id,
      lower(v_partner.email),
      v_partner.name,
      coalesce(p_items, '[]'::jsonb),
      nullif(btrim(coalesce(p_note, '')), ''),
+     -- Store only when at least one field is filled; otherwise leave null.
+     case
+       when p_shipping is null then null
+       when coalesce(btrim(concat(
+              p_shipping->>'name', p_shipping->>'line1', p_shipping->>'line2',
+              p_shipping->>'city', p_shipping->>'state', p_shipping->>'zip')), '') = '' then null
+       else p_shipping
+     end,
      'new')
   returning id into v_id;
 
@@ -147,7 +167,7 @@ begin
 end;
 $$;
 
-grant execute on function public.submit_partner_selection(text, jsonb, text) to anon, authenticated;
+grant execute on function public.submit_partner_selection(text, jsonb, text, jsonb) to anon, authenticated;
 
 -- ─────────────────────────────────────────────────────────────
 -- 5) ROW LEVEL SECURITY on partner_selections

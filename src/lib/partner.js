@@ -13,12 +13,14 @@ export async function fetchPartnerByToken(token) {
 
 // Submits the partner's selected pieces via the token-validated RPC. The
 // server stamps the row with the correct partner, so the anon client can
-// only ever submit as itself. Returns the new selection id.
-export async function submitSelection(token, items, note) {
+// only ever submit as itself. `shipping` is the ship-to address object
+// ({name,line1,line2,city,state,zip}) or null. Returns the new selection id.
+export async function submitSelection(token, items, note, shipping) {
   const { data, error } = await supabase.rpc('submit_partner_selection', {
     p_token: token,
     p_items: items,
     p_note: note || null,
+    p_shipping: shipping || null,
   })
   if (error) throw new Error(error.message)
   return data

@@ -1224,12 +1224,36 @@ function SelectionCard({ selection, onChange }) {
         ))}
       </div>
 
-      {selection.note && (
-        <div className="mt-4 bg-cream rounded-xl px-4 py-3 border border-espresso/5">
-          <p className="label">Note from partner</p>
-          <p className="text-sm text-espresso/75 italic">“{selection.note}”</p>
-        </div>
-      )}
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {selection.shipping_address && (
+          <ShipTo address={selection.shipping_address} />
+        )}
+        {selection.note && (
+          <div className="bg-cream rounded-xl px-4 py-3 border border-espresso/5">
+            <p className="label">Note from partner</p>
+            <p className="text-sm text-espresso/75 italic">“{selection.note}”</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Renders a partner's ship-to address. Tolerant of partial data (older rows,
+// or a field the partner left blank).
+function ShipTo({ address }) {
+  const a = address || {}
+  const cityLine = [a.city, a.state].filter(Boolean).join(', ')
+  const cityZip = [cityLine, a.zip].filter(Boolean).join(' ')
+  return (
+    <div className="bg-cream rounded-xl px-4 py-3 border border-espresso/5">
+      <p className="label">Ship to</p>
+      <address className="not-italic text-sm text-espresso/75 leading-snug">
+        {a.name && <div className="font-medium text-espresso">{a.name}</div>}
+        {a.line1 && <div>{a.line1}</div>}
+        {a.line2 && <div>{a.line2}</div>}
+        {cityZip && <div>{cityZip}</div>}
+      </address>
     </div>
   )
 }

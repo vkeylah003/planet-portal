@@ -18,6 +18,14 @@ function money(n) {
   )
 }
 
+// Ship-to fields the partner must fill before submitting. `line2` is optional.
+const EMPTY_SHIPPING = { name: '', line1: '', line2: '', city: '', state: '', zip: '' }
+
+// True once every required ship-to field has content.
+function shippingComplete(s) {
+  return ['name', 'line1', 'city', 'state', 'zip'].every((k) => (s[k] || '').trim())
+}
+
 function formatLongDate(dateStr) {
   if (!dateStr) return null
   const [y, m, d] = String(dateStr).split('-').map(Number)
@@ -367,6 +375,7 @@ function PickerBody({ token }) {
   const [catalog, setCatalog] = useState({ loading: true })
   const [selected, setSelected] = useState({})
   const [note, setNote] = useState('')
+  const [ship, setShip] = useState(EMPTY_SHIPPING)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -403,6 +412,12 @@ function PickerBody({ token }) {
 
   async function submit() {
     if (selectedCount === 0) return
+    // Require a complete ship-to before submitting — Sofia needs somewhere
+    // to send the box.
+    if (!shippingComplete(ship)) {
+      setError('Please fill in your shipping address so we know where to send your box.')
+      return
+    }
     setSubmitting(true)
     setError('')
     const items = Object.values(selected).map((it) => ({
@@ -413,8 +428,16 @@ function PickerBody({ token }) {
       price: it.price,
       image: it.image,
     }))
+    const shipping = {
+      name: ship.name.trim(),
+      line1: ship.line1.trim(),
+      line2: ship.line2.trim(),
+      city: ship.city.trim(),
+      state: ship.state.trim(),
+      zip: ship.zip.trim(),
+    }
     try {
-      await submitSelection(token, items, note.trim())
+      await submitSelection(token, items, note.trim(), shipping)
       setConfirmOpen(false)
       setSubmitted(true)
     } catch (e) {
@@ -456,6 +479,7 @@ function PickerBody({ token }) {
             setSubmitted(false)
             setSelected({})
             setNote('')
+            setShip(EMPTY_SHIPPING)
           }}
           className="btn-ghost text-xs mt-5 mx-auto"
         >
@@ -584,6 +608,8 @@ function PickerBody({ token }) {
           items={Object.values(selected)}
           note={note}
           setNote={setNote}
+          ship={ship}
+          setShip={setShip}
           onRemove={toggle}
           onCancel={() => !submitting && setConfirmOpen(false)}
           onSubmit={submit}
@@ -596,7 +622,8 @@ function PickerBody({ token }) {
 }
 
 // Lightweight confirm dialog: review picks, add an optional note, submit.
-function SubmitModal({ items, note, setNote, onRemove, onCancel, onSubmit, submitting, error }) {
+function SubmitModal({ items, note, setNote, ship, setShip, onRemove, onCancel, onSubmit, submitting, error }) {
+  const setField = (key) => (e) => setShip((prev) => ({ ...prev, [key]: e.target.value }))
   return (
     <div
       className="fixed inset-0 z-50 bg-espresso/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
@@ -650,6 +677,58 @@ function SubmitModal({ items, note, setNote, onRemove, onCancel, onSubmit, submi
                 You've removed everything — close this and pick a few pieces.
               </p>
             )}
+          </div>
+
+          <div className="pt-1">
+            <p className="label">Shipping address</p>
+            <p className="text-xs text-espresso/45 mb-2">Where should we send your box?</p>
+            <div className="space-y-2">
+              <input
+                value={ship.name}
+                onChange={setField('name')}
+                placeholder="Full name"
+                autoComplete="name"
+                className="input"
+              />
+              <input
+                value={ship.line1}
+                onChange={setField('line1')}
+                placeholder="Street address"
+                autoComplete="address-line1"
+                className="input"
+              />
+              <input
+                value={ship.line2}
+                onChange={setField('line2')}
+                placeholder="Apt, suite, etc. (optional)"
+                autoComplete="address-line2"
+                className="input"
+              />
+              <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+                <input
+                  value={ship.city}
+                  onChange={setField('city')}
+                  placeholder="City"
+                  autoComplete="address-level2"
+                  className="input sm:col-span-3"
+                />
+                <input
+                  value={ship.state}
+                  onChange={setField('state')}
+                  placeholder="State"
+                  autoComplete="address-level1"
+                  className="input sm:col-span-1"
+                />
+                <input
+                  value={ship.zip}
+                  onChange={setField('zip')}
+                  placeholder="ZIP"
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  className="input sm:col-span-2"
+                />
+              </div>
+            </div>
           </div>
 
           <label className="block">
