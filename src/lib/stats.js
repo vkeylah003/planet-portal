@@ -10,6 +10,7 @@
 
 import partnersData from '../../scripts/partners_data.json'
 import contactedData from '../../scripts/contacted_data.json'
+import socialData from '../../scripts/social_posts.json'
 import { catLabel } from './report'
 
 // A contact counts as "replied / responded" once their status moves off the
@@ -102,11 +103,86 @@ export function computePartners() {
   return { total, onboarded, byStatus }
 }
 
+// Partner social posts featuring PLANET. Pure function of the bundled
+// scripts/social_posts.json snapshot. Engagement counts are the visible IG
+// numbers; a null count means it wasn't shown on the post (not zero), so it's
+// excluded from totals rather than counted as 0. `views` is tracked as a
+// first-class field but is null on every post today — we report both the sum
+// (across posts that have a value) and how many posts still lack one, so the
+// column reads honestly until Sofia fills the numbers in.
+export function computeSocial() {
+  const posts = socialData.posts || []
+  const totalPosts = posts.length
+
+  const sum = (key) => posts.reduce((s, p) => s + (p[key] || 0), 0)
+  const totalLikes = sum('likes')
+  const totalComments = sum('comments')
+  const totalShares = sum('shares')
+  const totalSends = sum('sends')
+
+  // Views: only posts with a real number count toward the total.
+  const withViews = posts.filter((p) => p.views !== null && p.views !== undefined)
+  const totalViews = withViews.reduce((s, p) => s + p.views, 0)
+
+  // Engagement = the four interaction counts. Average is per post so it stays
+  // comparable as the roster grows.
+  const totalEngagement = totalLikes + totalComments + totalShares + totalSends
+  const avgEngagement = totalPosts ? Math.round(totalEngagement / totalPosts) : 0
+
+  // Group by partner (keyed by handle, which is stable even when we can't match
+  // a partner name). Each group carries its own roll-ups plus the raw posts.
+  const groupsByHandle = {}
+  for (const p of posts) {
+    const key = p.partner_handle
+    if (!groupsByHandle[key]) {
+      groupsByHandle[key] = {
+        handle: key,
+        name: p.partner_name || null,
+        posts: [],
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        sends: 0,
+        views: 0,
+        viewsCount: 0,
+      }
+    }
+    const g = groupsByHandle[key]
+    g.posts.push(p)
+    g.likes += p.likes || 0
+    g.comments += p.comments || 0
+    g.shares += p.shares || 0
+    g.sends += p.sends || 0
+    if (p.views !== null && p.views !== undefined) {
+      g.views += p.views
+      g.viewsCount += 1
+    }
+  }
+  const partners = Object.values(groupsByHandle)
+    .map((g) => ({ ...g, engagement: g.likes + g.comments + g.shares + g.sends }))
+    .sort((a, b) => b.engagement - a.engagement)
+
+  return {
+    totalPosts,
+    totalLikes,
+    totalComments,
+    totalShares,
+    totalSends,
+    totalEngagement,
+    avgEngagement,
+    totalViews,
+    viewsCount: withViews.length,
+    missingViews: totalPosts - withViews.length,
+    partners,
+  }
+}
+
 export function computeStats() {
   return {
     outreach: computeOutreach(),
     boxes: computeBoxes(),
     partners: computePartners(),
+    social: computeSocial(),
   }
 }
 

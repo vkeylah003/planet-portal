@@ -1,0 +1,89 @@
+{
+  "_note": "Partner social-media posts featuring PLANET, tracked for the internal dashboard's Social tab. Bundled snapshot (no backend) — same pattern as scripts/partners_data.json and scripts/contacted_data.json; edit this file to add posts, then redeploy. partner_handle is the IG @handle (leading @ kept). partner_name best-effort matches an existing partner in partners_data.json when the handle/name/domain lines up, else falls back to the handle. Engagement counts (likes/comments/shares/sends) are the visible IG numbers at capture time — null means the count wasn't shown on the post, which is different from 0. views is a first-class field but currently null on every post (IG view counts weren't visible in the source screenshots) — Sofia fills these in as they become available. posted_date is a best-effort ISO date; date_note carries the original relative/approximate wording when the exact date is uncertain. permalink is null until the post URLs are collected.",
+  "posts": [
+    {
+      "partner_handle": "@robinlamonte",
+      "partner_name": "Robin LaMonte",
+      "caption": "Kicking off the celebration of America's 250th anniversary…",
+      "posted_date": "2026-07-04",
+      "date_note": "approximate",
+      "platform": "Instagram",
+      "likes": 2031,
+      "comments": 104,
+      "shares": 2,
+      "sends": 102,
+      "views": null,
+      "permalink": null
+    },
+    {
+      "partner_handle": "@robinlamonte",
+      "partner_name": "Robin LaMonte",
+      "caption": "Meet @planetbylaureng 💚",
+      "posted_date": null,
+      "date_note": "date unknown",
+      "platform": "Instagram",
+      "likes": 1826,
+      "comments": 92,
+      "shares": null,
+      "sends": 81,
+      "views": null,
+      "permalink": null
+    },
+    {
+      "partner_handle": "@theunexpectedsomeone",
+      "partner_name": "Cynthia Sitcov",
+      "caption": "The older I get, the fewer clothes I own… my goal is one wardrobe",
+      "posted_date": "2026-07-08",
+      "date_note": "posted ~7 hours ago",
+      "platform": "Instagram",
+      "likes": 50,
+      "comments": 8,
+      "shares": null,
+      "sends": 1,
+      "views": null,
+      "permalink": null
+    },
+    {
+      "partner_handle": "@theunexpectedsomeone",
+      "partner_name": "Cynthia Sitcov",
+      "caption": "Black tie, summer wedding black tie-worthy? #summerweddings #megandpete",
+      "posted_date": "2026-07-03",
+      "date_note": "posted ~5 days ago",
+      "platform": "Instagram",
+      "likes": 255,
+      "comments": 135,
+      "shares": 2,
+      "sends": 9,
+      "views": null,
+      "permalink": null
+    },
+    {
+      "partner_handle": "@mitchell_christian_designs",
+      "partner_name": "Mitchell Christian",
+      "caption": "TGIF Possum Pals — thank you @vintageluxeup for the necklace and ring",
+      "posted_date": "2026-06-12",
+      "date_note": null,
+      "platform": "Instagram",
+      "likes": 1030,
+      "comments": 44,
+      "shares": 17,
+      "sends": 246,
+      "views": null,
+      "permalink": null
+    },
+    {
+      "partner_handle": "@mitchell_christian_designs",
+      "partner_name": "Mitchell Christian",
+      "caption": "Dearest Gentle Possums let me introduce you to @planetbylaureng",
+      "posted_date": null,
+      "date_note": "date unknown",
+      "platform": "Instagram",
+      "likes": 1118,
+      "comments": 69,
+      "shares": 9,
+      "sends": 161,
+      "views": null,
+      "permalink": null
+    }
+  ]
+}

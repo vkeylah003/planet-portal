@@ -14,7 +14,7 @@ import {
   catLabel,
   statusLabel,
 } from '../lib/report'
-import { computeStats, buildEodDraft } from '../lib/stats'
+import { computeStats, computeSocial, buildEodDraft } from '../lib/stats'
 
 function money(n) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
@@ -146,6 +146,7 @@ export default function AdminDashboard() {
   const tabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'stats', label: 'Stats' },
+    { id: 'social', label: 'Social' },
     { id: 'partners', label: 'Partners' },
     { id: 'selections', label: 'Selections', badge: newSelections },
     { id: 'outreach', label: 'Everyone Contacted' },
@@ -205,6 +206,7 @@ export default function AdminDashboard() {
           <OverviewTab partners={partners} kits={kits} pieces={pieces} content={content} />
         )}
         {tab === 'stats' && <StatsTab />}
+        {tab === 'social' && <SocialTab />}
         {tab === 'partners' && <PartnersTab partners={partners} onChange={load} />}
         {tab === 'selections' && <SelectionsTab selections={selections} onChange={load} />}
         {tab === 'outreach' && <OutreachTab />}
@@ -1447,6 +1449,33 @@ function ReturnCountdown({ date }) {
   )
 }
 
+// Live shipment-status pill (mirrors ReturnCountdown's styling). Driven by
+// kits.delivery_status, which AfterShip updates via webhook + 6h cron.
+//   in_transit / out_for_delivery → amber · delivered → green (with date)
+//   exception → red · pending → muted.
+function ShipmentPill({ status, deliveredAt }) {
+  const map = {
+    pending: { tone: 'bg-espresso/10 text-espresso/60', label: 'Tracking · pending' },
+    in_transit: { tone: 'bg-amber-100 text-amber-700', label: 'In transit' },
+    out_for_delivery: { tone: 'bg-amber-100 text-amber-700', label: 'Out for delivery' },
+    delivered: { tone: 'bg-green-100 text-green-700', label: 'Delivered' },
+    exception: { tone: 'bg-red-100 text-red-700', label: 'Delivery issue' },
+  }
+  const { tone, label } = map[status] || map.pending
+  const date =
+    status === 'delivered' && deliveredAt
+      ? new Date(deliveredAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      : null
+  return (
+    <span
+      title={`Shipment status: ${status || 'pending'}`}
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium tracking-wide ${tone}`}
+    >
+      {date ? `${label} · ${date}` : label}
+    </span>
+  )
+}
+
 // Chips listing a kit's pieces + each piece's Keep/Return decision. Shared by
 // the current and previous box panels (previous renders slightly muted).
 function PieceChips({ pieces, muted = false }) {
@@ -1470,19 +1499,37 @@ function PieceChips({ pieces, muted = false }) {
 }
 
 // The CURRENT box: the active kit a partner has in hand (or being prepped),
-// shown prominently with status, return countdown, and its pieces.
+// shown prominently with status, return countdown, live shipment state, and
+// its pieces.
 function CurrentKitPanel({ kit, pieces }) {
   return (
     <div className="rounded-2xl bg-cream/60 border border-espresso/5 p-4">
       <div className="flex items-center gap-2 flex-wrap">
         <Badge status={kit.status} />
         {kit.return_by_date && <ReturnCountdown date={kit.return_by_date} />}
+        {kit.tracking_number && (
+          <ShipmentPill status={kit.delivery_status} deliveredAt={kit.delivered_at} />
+        )}
+        {kit.followup_drafted_at && !kit.followup_note && (
+          <span
+            title={`Follow-up drafted ${new Date(kit.followup_drafted_at).toLocaleString()}`}
+            className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium tracking-wide bg-green-100 text-green-700"
+          >
+            Follow-up drafted ✓
+          </span>
+        )}
       </div>
       <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2 text-xs text-espresso/55">
         <span>Ship: {kit.ship_date || '—'}</span>
         <span>Tracking: {kit.tracking_number || 'pending'}</span>
+        <span>Carrier: {kit.carrier || '—'}</span>
         <span>Return by: {kit.return_by_date || '—'}</span>
       </div>
+      {kit.followup_note && (
+        <p className="mt-2 inline-flex items-center rounded-lg bg-amber-50 px-3 py-1.5 text-xs text-amber-700">
+          {kit.followup_note}
+        </p>
+      )}
       <PieceChips pieces={pieces} />
       {kit.notes && <p className="mt-3 text-xs text-espresso/50 italic">{kit.notes}</p>}
     </div>
@@ -1631,6 +1678,7 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
   const [busy, setBusy] = useState(false)
   const [localPieces, setLocalPieces] = useState(pieces)
   const [newPiece, setNewPiece] = useState({ piece_name: '', color: '', photo_url: '' })
+  const [trackMsg, setTrackMsg] = useState('')
 
   function set(k, v) {
     setForm((f) => ({ ...f, [k]: v }))
@@ -1650,12 +1698,56 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
     return data.id
   }
 
+  // Register the tracking number with AfterShip (carrier auto-detected) so the
+  // portal tracks it live and drafts the delivery follow-up. Non-blocking:
+  // failures surface a note but never stop the kit from saving.
+  async function startTracking(kitId) {
+    const tn = (form.tracking_number || '').trim()
+    if (!tn) return false
+    // Only (re)register when the number is new or changed since it was opened.
+    const changed = tn !== (kit?.tracking_number || '').trim()
+    const neverRegistered = !kit?.aftership_tracking_id
+    if (!changed && !neverRegistered) return false
+
+    setTrackMsg('Starting live tracking…')
+    try {
+      const { data: sess } = await supabase.auth.getSession()
+      const token = sess?.session?.access_token
+      const resp = await fetch('/api/tracking/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ kit_id: kitId, tracking_number: tn }),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (resp.ok && data.ok) {
+        setTrackMsg(
+          data.dryRun
+            ? 'Tracking (dry run) — logged, no AfterShip call.'
+            : `Live tracking started${data.carrier ? ` · ${data.carrier}` : ''}.`
+        )
+      } else if (data.configured === false) {
+        setTrackMsg('Saved. AfterShip not configured yet — tracking will start once it is.')
+      } else {
+        setTrackMsg(`Saved, but tracking couldn’t start: ${data.error || data.message || 'unknown error'}`)
+      }
+    } catch (err) {
+      setTrackMsg(`Saved, but tracking couldn’t start: ${err.message}`)
+    }
+    return true
+  }
+
   async function saveKit() {
     setBusy(true)
-    await ensureKit()
+    const kitId = await ensureKit()
+    const attempted = await startTracking(kitId)
     setBusy(false)
     onChange()
-    onClose()
+    // If we kicked off tracking, give the admin a beat to read the result.
+    if (attempted) setTimeout(onClose, 1400)
+    else onClose()
   }
 
   async function addPiece() {
@@ -1716,9 +1808,16 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
         <Field label="Tracking number">
           <input
             className="input"
+            placeholder="Any carrier — auto-detected"
             value={form.tracking_number || ''}
             onChange={(e) => set('tracking_number', e.target.value)}
           />
+          <p className="mt-1 text-[11px] text-espresso/45">
+            Saving a tracking number starts live tracking. When it’s delivered, a
+            draft follow-up email is created in Outlook for you to review — never sent
+            automatically.
+          </p>
+          {trackMsg && <p className="mt-1 text-xs text-gold">{trackMsg}</p>}
         </Field>
         <Field label="Internal notes">
           <textarea
@@ -1977,9 +2076,10 @@ function ContentModal({ partners, onClose, onSaved }) {
 // Live internal metrics, recomputed from the bundled data snapshots on every
 // mount (see src/lib/stats.js). No backend — pure functions of the shipped JSON.
 function StatsTab() {
-  const { outreach, boxes, partners } = useMemo(() => computeStats(), [])
+  const { outreach, boxes, partners, social } = useMemo(() => computeStats(), [])
 
   const pct = (n) => `${(n * 100).toFixed(1)}%`
+  const nfmt = (n) => n.toLocaleString('en-US')
 
   return (
     <div className="space-y-8">
@@ -2014,6 +2114,17 @@ function StatsTab() {
           label="Boxes shipped"
           value={boxes.shipped}
           sub={`of ${boxes.total} built`}
+        />
+        <Metric
+          label="Partner posts"
+          value={social.totalPosts}
+          accent="text-gold"
+          sub="featuring PLANET"
+        />
+        <Metric
+          label="Post engagement"
+          value={nfmt(social.totalEngagement)}
+          sub="likes + comments + shares + sends"
         />
       </div>
 
@@ -2086,6 +2197,152 @@ function StatsTab() {
           </p>
         )}
       </div>
+    </div>
+  )
+}
+
+/* ────────────────────────────── Social ───────────────────────────── */
+
+// Partner social posts featuring PLANET, grouped by partner with per-post and
+// per-partner engagement roll-ups. Pure function of scripts/social_posts.json
+// (see computeSocial in src/lib/stats.js). Views is a first-class column but is
+// null on every post today — kept visible so it's ready once Sofia fills it in.
+function SocialTab() {
+  const social = useMemo(() => computeSocial(), [])
+  const nfmt = (n) => (n == null ? '—' : n.toLocaleString('en-US'))
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h2 className="font-heading text-3xl text-espresso">Social</h2>
+        <p className="text-sm text-espresso/55 mt-1 max-w-2xl">
+          Partner Instagram posts featuring PLANET and their engagement. Numbers are the
+          visible IG counts at capture time. A blank cell means that metric wasn’t shown on
+          the post — different from zero.
+        </p>
+      </div>
+
+      {/* Headline roll-ups */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Metric
+          label="Partner posts"
+          value={social.totalPosts}
+          sub={`${social.partners.length} partner${social.partners.length === 1 ? '' : 's'}`}
+        />
+        <Metric
+          label="Total engagement"
+          value={nfmt(social.totalEngagement)}
+          accent="text-gold"
+          sub="likes + comments + shares + sends"
+        />
+        <Metric
+          label="Avg engagement / post"
+          value={nfmt(social.avgEngagement)}
+          sub="across all posts"
+        />
+        <Metric
+          label="Total views"
+          value={social.viewsCount ? nfmt(social.totalViews) : '—'}
+          accent="text-green-700"
+          sub={
+            social.viewsCount
+              ? `${social.viewsCount} of ${social.totalPosts} posts have views`
+              : 'not captured yet'
+          }
+        />
+      </div>
+
+      {/* Engagement breakdown */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <MiniStat label="Likes" value={nfmt(social.totalLikes)} />
+        <MiniStat label="Comments" value={nfmt(social.totalComments)} />
+        <MiniStat label="Shares" value={nfmt(social.totalShares)} />
+        <MiniStat label="Sends" value={nfmt(social.totalSends)} />
+      </div>
+
+      {social.missingViews > 0 && (
+        <p className="text-[11px] text-espresso/40 -mt-4">
+          Views aren’t captured on {social.missingViews} of {social.totalPosts} post
+          {social.totalPosts === 1 ? '' : 's'} — IG view counts weren’t visible in the
+          source. The column is ready to fill in on scripts/social_posts.json.
+        </p>
+      )}
+
+      {/* Posts grouped by partner */}
+      {social.partners.map((g) => (
+        <div key={g.handle} className="card p-6">
+          <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
+            <div>
+              <h3 className="font-heading text-xl text-espresso mb-0.5">
+                {g.name || g.handle}
+              </h3>
+              <p className="text-xs text-espresso/45">
+                {g.handle} · {g.posts.length} post{g.posts.length === 1 ? '' : 's'} ·{' '}
+                {nfmt(g.engagement)} total engagement
+              </p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto -mx-2">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-[10px] uppercase tracking-widest text-espresso/40 text-left">
+                  <th className="font-medium px-2 pb-2">Post</th>
+                  <th className="font-medium px-2 pb-2 text-right tabular-nums">Likes</th>
+                  <th className="font-medium px-2 pb-2 text-right tabular-nums">Comments</th>
+                  <th className="font-medium px-2 pb-2 text-right tabular-nums">Shares</th>
+                  <th className="font-medium px-2 pb-2 text-right tabular-nums">Sends</th>
+                  <th className="font-medium px-2 pb-2 text-right tabular-nums">Views</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-espresso/5">
+                {g.posts.map((p, i) => (
+                  <tr key={i} className="align-top">
+                    <td className="px-2 py-2.5 max-w-md">
+                      <p className="text-espresso/80 leading-snug">{p.caption}</p>
+                      <p className="text-[11px] text-espresso/40 mt-0.5">
+                        {p.platform}
+                        {' · '}
+                        {p.posted_date || 'date unknown'}
+                        {p.date_note ? ` (${p.date_note})` : ''}
+                      </p>
+                    </td>
+                    <td className="px-2 py-2.5 text-right tabular-nums text-espresso/70">
+                      {nfmt(p.likes)}
+                    </td>
+                    <td className="px-2 py-2.5 text-right tabular-nums text-espresso/70">
+                      {nfmt(p.comments)}
+                    </td>
+                    <td className="px-2 py-2.5 text-right tabular-nums text-espresso/70">
+                      {nfmt(p.shares)}
+                    </td>
+                    <td className="px-2 py-2.5 text-right tabular-nums text-espresso/70">
+                      {nfmt(p.sends)}
+                    </td>
+                    <td className="px-2 py-2.5 text-right tabular-nums text-espresso/40">
+                      {nfmt(p.views)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-espresso/10 text-espresso font-semibold">
+                  <td className="px-2 pt-2.5 text-[11px] uppercase tracking-widest text-espresso/55">
+                    Partner total
+                  </td>
+                  <td className="px-2 pt-2.5 text-right tabular-nums">{nfmt(g.likes)}</td>
+                  <td className="px-2 pt-2.5 text-right tabular-nums">{nfmt(g.comments)}</td>
+                  <td className="px-2 pt-2.5 text-right tabular-nums">{nfmt(g.shares)}</td>
+                  <td className="px-2 pt-2.5 text-right tabular-nums">{nfmt(g.sends)}</td>
+                  <td className="px-2 pt-2.5 text-right tabular-nums text-espresso/55">
+                    {g.viewsCount ? nfmt(g.views) : '—'}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
