@@ -189,12 +189,27 @@ export function computeSocial() {
   }
 }
 
+// Manually-attributed generated sales — customer orders a partner drove that
+// did NOT auto-attribute in GoAffPro/Impact (e.g. the customer used a generic
+// store discount code instead of the partner's affiliate link). Those external
+// systems have no manual-entry path, so the attribution is recorded in the
+// bundled snapshot (scripts/partners_data.json → manual_sales) and surfaced
+// here. Commission uses the recorded rate × basis (net merchandise subtotal,
+// excluding tax & shipping) to match the 20% affiliate program convention.
+export function computeManualSales() {
+  const sales = partnersData.manual_sales || []
+  const totalSales = sales.reduce((s, x) => s + Number(x.net_subtotal || 0), 0)
+  const totalCommission = sales.reduce((s, x) => s + Number(x.commission_amount || 0), 0)
+  return { sales, count: sales.length, totalSales, totalCommission }
+}
+
 export function computeStats() {
   return {
     outreach: computeOutreach(),
     boxes: computeBoxes(),
     partners: computePartners(),
     social: computeSocial(),
+    manualSales: computeManualSales(),
   }
 }
 

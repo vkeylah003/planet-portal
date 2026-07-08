@@ -14,7 +14,7 @@ import {
   catLabel,
   statusLabel,
 } from '../lib/report'
-import { computeStats, computeSocial, buildEodDraft } from '../lib/stats'
+import { computeStats, computeSocial, computeManualSales, buildEodDraft } from '../lib/stats'
 
 function money(n) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
@@ -347,6 +347,11 @@ function OverviewTab({ partners, kits, pieces, content }) {
     .filter(isPending)
     .reduce((s, pc) => s + Number(pc.purchase_amount || 0), 0)
 
+  // Manually-attributed generated sales — customer orders a partner drove that
+  // didn't auto-attribute in GoAffPro/Impact (wrong/generic discount code used
+  // instead of the affiliate link). Recorded in scripts/partners_data.json.
+  const manualSales = computeManualSales()
+
   const imp = impact.data
   const connected = Boolean(imp?.connected)
 
@@ -556,6 +561,77 @@ function OverviewTab({ partners, kits, pieces, content }) {
                     )
                   })}
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Manually-attributed generated sales */}
+      <div className="card p-6">
+        <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
+          <div>
+            <h3 className="font-heading text-xl text-espresso mb-1">
+              Manually-Attributed Sales
+            </h3>
+            <p className="text-xs text-espresso/45 max-w-xl">
+              Customer orders a partner drove that didn't auto-attribute in
+              GoAffPro/Impact (e.g. a generic store discount code was used instead
+              of the partner's affiliate link). Credited here by hand.
+            </p>
+          </div>
+          {manualSales.count > 0 && (
+            <div className="text-right">
+              <p className="text-3xl font-semibold tabular-nums tracking-tight text-gold leading-none">
+                {money(manualSales.totalCommission)}
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-espresso/40 mt-1">
+                Commission credited
+              </p>
+              <p className="text-[11px] text-espresso/45 font-medium mt-1.5">
+                {money(manualSales.totalSales)} net sales
+              </p>
+            </div>
+          )}
+        </div>
+        {manualSales.count === 0 ? (
+          <EmptyState
+            title="No manual attributions"
+            hint="Sales credited to a partner by hand show up here."
+          />
+        ) : (
+          <div className="divide-y divide-espresso/5">
+            {manualSales.sales.map((s) => (
+              <div key={s.id} className="py-3 first:pt-0 last:pb-0">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm text-espresso font-medium">
+                      {s.partner_name}
+                      <span className="text-espresso/40 font-normal">
+                        {' '}· Order {s.order_number}
+                        {s.order_date ? ` · ${s.order_date}` : ''}
+                      </span>
+                    </p>
+                    <p className="text-xs text-espresso/60 mt-0.5 truncate">
+                      {s.item}
+                      {s.color && <span className="text-espresso/40"> · {s.color}</span>}
+                      {s.customer && (
+                        <span className="text-espresso/40"> · for {s.customer}</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-medium text-gold">
+                      {money(s.commission_amount)}
+                    </p>
+                    <p className="text-[11px] text-espresso/45">
+                      {money(s.net_subtotal)} net · {Math.round((s.commission_rate || 0) * 100)}%
+                    </p>
+                  </div>
+                </div>
+                {s.note && (
+                  <p className="text-[11px] text-espresso/50 italic mt-1.5">{s.note}</p>
+                )}
               </div>
             ))}
           </div>

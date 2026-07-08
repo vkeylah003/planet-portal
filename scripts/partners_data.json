@@ -261,5 +261,33 @@
     { "id": "b0000000-0000-4000-8000-000000001703", "kit_id": "a0000000-0000-4000-8000-000000000017", "piece_name": "Nylon Big Pocket Pants", "color": "Midnight (Size 1)", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000001704", "kit_id": "a0000000-0000-4000-8000-000000000017", "piece_name": "Nylon Triple Collar Jacket", "color": "Midnight (O/S)", "partner_decision": null },
     { "id": "b0000000-0000-4000-8000-000000001705", "kit_id": "a0000000-0000-4000-8000-000000000017", "piece_name": "Pima Cotton Luxury Boxy T-Shirt", "color": "Bleached Black (O/S)", "partner_decision": null }
+  ],
+  "_manual_sales_note": "Generated (customer) sales that a partner drove but did NOT auto-attribute in GoAffPro/Impact — e.g. the customer used a generic store discount code instead of the partner's affiliate link/coupon. Those external systems have no manual-entry path, so we record the attribution here. Display-only: read by src/lib/stats.js (computeManualSales) and shown on the admin Overview; NOT pushed to Supabase by sync_partners.mjs. commission_amount = commission_rate × commission_basis_amount (net merchandise subtotal, excluding tax & shipping), matching the 20% affiliate program rate.",
+  "manual_sales": [
+    {
+      "id": "c0000000-0000-4000-8000-000000000001",
+      "order_number": "OL65689",
+      "order_date": "2026-07-07",
+      "partner_name": "Ginger Burr",
+      "partner_email": "ginger@totalimageconsultants.com",
+      "customer": "Helen Harlow",
+      "item": "Cotton Metallic Crochet Boatneck Sweater",
+      "color": "Mint/Silver",
+      "sku": "166KT-975-OS",
+      "quantity": 1,
+      "item_price": 312.00,
+      "discount_code": "WELCOME15KMJGSPWB",
+      "discount_amount": 46.80,
+      "net_subtotal": 265.20,
+      "tax": 5.64,
+      "shipping": 0,
+      "total_paid": 270.84,
+      "commission_rate": 0.20,
+      "commission_basis": "net_subtotal",
+      "commission_basis_amount": 265.20,
+      "commission_amount": 53.04,
+      "attribution": "manual",
+      "note": "Manually attributed — order came in on WELCOME15 code, not Ginger's link; Ginger flagged via personal email. Attribution fix needed."
+    }
   ]
 }
