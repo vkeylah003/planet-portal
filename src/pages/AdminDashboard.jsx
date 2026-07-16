@@ -14,7 +14,7 @@ import {
   catLabel,
   statusLabel,
 } from '../lib/report'
-import { computeStats, computeSocial, computeManualSales, buildEodDraft } from '../lib/stats'
+import { computeStats, computeSocial, computeManualSales } from '../lib/stats'
 
 function money(n) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
@@ -91,11 +91,10 @@ export default function AdminDashboard() {
   const [pieces, setPieces] = useState([])
   const [content, setContent] = useState([])
   const [selections, setSelections] = useState([])
-  const [dailyLogs, setDailyLogs] = useState([])
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [p, k, pc, c, sel, dl] = await Promise.all([
+    const [p, k, pc, c, sel] = await Promise.all([
       supabase.from('partners').select('*').order('created_at', { ascending: false }),
       supabase.from('kits').select('*').order('created_at', { ascending: false }),
       supabase.from('kit_pieces').select('*').order('created_at', { ascending: true }),
@@ -104,7 +103,6 @@ export default function AdminDashboard() {
         .from('partner_selections')
         .select('*')
         .order('created_at', { ascending: false }),
-      supabase.from('daily_log').select('*').order('log_date', { ascending: false }),
     ])
     setPartners(p.data || [])
     setKits(k.data || [])
@@ -113,8 +111,6 @@ export default function AdminDashboard() {
     // Gracefully tolerate the table not existing yet (before Sofia runs the
     // migration) — sel.error is set and sel.data is null in that case.
     setSelections(sel.data || [])
-    // Same tolerance for daily_log until supabase/content_tracker.sql is run.
-    setDailyLogs(dl.data || [])
     setLoading(false)
   }, [])
 
@@ -153,8 +149,6 @@ export default function AdminDashboard() {
     { id: 'outreach', label: 'Everyone Contacted' },
     { id: 'kits', label: 'Kit Tracker' },
     { id: 'content', label: 'Content Tracker' },
-    { id: 'daily', label: 'Daily Log' },
-    { id: 'eod', label: 'EOD Draft' },
   ]
 
   return (
@@ -218,8 +212,6 @@ export default function AdminDashboard() {
         {tab === 'content' && (
           <ContentTab partners={partners} content={content} onChange={load} />
         )}
-        {tab === 'daily' && <DailyLogTab dailyLogs={dailyLogs} onChange={load} />}
-        {tab === 'eod' && <EodTab dailyLogs={dailyLogs} />}
       </main>
     </div>
   )
@@ -3048,333 +3040,6 @@ function SocialTab() {
           </div>
         </div>
       ))}
-    </div>
-  )
-}
-
-/* ───────────────────────────── Daily Log ─────────────────────────── */
-
-// Local YYYY-MM-DD for "today" (avoids UTC drift from toISOString()).
-function todayStr() {
-  const d = new Date()
-  const p = (n) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
-}
-
-// Manual daily metrics not in any system — one editable row per day, persisted
-// to Supabase (public.daily_log, see supabase/content_tracker.sql). Upserts on
-// log_date so re-saving a day edits it in place.
-function DailyLogTab({ dailyLogs, onChange }) {
-  const [date, setDate] = useState(todayStr())
-  const existing = dailyLogs.find((d) => d.log_date === date) || null
-
-  const blank = {
-    reels_posted: '',
-    reposts: '',
-    dms_sent: '',
-    dms_unread: '',
-    notes: '',
-    weekly_goal: '',
-    on_track: '',
-    blockers: '',
-  }
-  const toForm = (row) =>
-    row
-      ? {
-          reels_posted: row.reels_posted ?? '',
-          reposts: row.reposts ?? '',
-          dms_sent: row.dms_sent ?? '',
-          dms_unread: row.dms_unread ?? '',
-          notes: row.notes ?? '',
-          weekly_goal: row.weekly_goal ?? '',
-          on_track: row.on_track === true ? 'yes' : row.on_track === false ? 'no' : '',
-          blockers: row.blockers ?? '',
-        }
-      : blank
-
-  const [form, setForm] = useState(toForm(existing))
-  const [busy, setBusy] = useState(false)
-  const [msg, setMsg] = useState(null) // { ok } | { error }
-
-  // Re-sync the form whenever the selected day (or its saved row) changes.
-  useEffect(() => {
-    setForm(toForm(existing))
-    setMsg(null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [date, existing?.id])
-
-  function set(k, v) {
-    setForm((f) => ({ ...f, [k]: v }))
-  }
-
-  // Empty string → null; otherwise a non-negative integer.
-  const numOrNull = (v) => (v === '' || v === null ? null : Number(v))
-
-  async function save() {
-    setBusy(true)
-    setMsg(null)
-    const payload = {
-      log_date: date,
-      reels_posted: numOrNull(form.reels_posted),
-      reposts: numOrNull(form.reposts),
-      dms_sent: numOrNull(form.dms_sent),
-      dms_unread: numOrNull(form.dms_unread),
-      notes: form.notes.trim() || null,
-      weekly_goal: form.weekly_goal.trim() || null,
-      on_track: form.on_track === 'yes' ? true : form.on_track === 'no' ? false : null,
-      blockers: form.blockers.trim() || null,
-      updated_at: new Date().toISOString(),
-    }
-    const { error } = await supabase
-      .from('daily_log')
-      .upsert(payload, { onConflict: 'log_date' })
-    setBusy(false)
-    if (error) {
-      setMsg({
-        error: `Couldn't save — ${error.message}. If the table is missing, run supabase/content_tracker.sql in the Supabase SQL Editor.`,
-      })
-    } else {
-      setMsg({ ok: true })
-      onChange()
-    }
-  }
-
-  const numberFields = [
-    { label: 'Reels / posts published', k: 'reels_posted' },
-    { label: 'Reposted', k: 'reposts' },
-    { label: 'IG/FB DMs sent', k: 'dms_sent' },
-    { label: 'DMs unread', k: 'dms_unread' },
-  ]
-
-  const isToday = date === todayStr()
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <h2 className="font-heading text-3xl text-espresso">Daily Log</h2>
-          <p className="text-sm text-espresso/55 mt-1 max-w-xl">
-            Manual daily metrics that aren’t in any system. One entry per day —
-            re-saving a day updates it. Feeds the EOD Draft.
-          </p>
-        </div>
-        <Field label="Day">
-          <input
-            type="date"
-            className="input"
-            value={date}
-            max={todayStr()}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </Field>
-      </div>
-
-      <div className="card p-6 space-y-4">
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] uppercase tracking-widest text-espresso/40">
-            {isToday ? 'Today' : 'Editing'}
-          </span>
-          {existing && (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-green-100 text-green-700">
-              Saved entry
-            </span>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {numberFields.map(({ label, k }) => (
-            <Field key={k} label={label}>
-              <input
-                type="number"
-                min="0"
-                className="input"
-                placeholder="—"
-                value={form[k]}
-                onChange={(e) => set(k, e.target.value)}
-              />
-            </Field>
-          ))}
-        </div>
-
-        <Field label="Ops notes">
-          <textarea
-            rows={3}
-            className="input resize-none"
-            placeholder="Anything worth noting about today…"
-            value={form.notes}
-            onChange={(e) => set('notes', e.target.value)}
-          />
-        </Field>
-
-        <Field label="Weekly goal">
-          <input
-            className="input"
-            placeholder="What this week is aiming at"
-            value={form.weekly_goal}
-            onChange={(e) => set('weekly_goal', e.target.value)}
-          />
-        </Field>
-
-        <div className="grid sm:grid-cols-[auto_1fr] gap-3 items-start">
-          <Field label="On track?">
-            <select
-              className="input"
-              value={form.on_track}
-              onChange={(e) => set('on_track', e.target.value)}
-            >
-              <option value="">—</option>
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
-            </select>
-          </Field>
-          <Field label="Blockers">
-            <input
-              className="input"
-              placeholder="What's in the way, if anything"
-              value={form.blockers}
-              onChange={(e) => set('blockers', e.target.value)}
-            />
-          </Field>
-        </div>
-
-        {msg?.error && <p className="text-sm text-red-600">{msg.error}</p>}
-        {msg?.ok && <p className="text-sm text-green-700">Saved.</p>}
-
-        <div className="flex justify-end">
-          <button onClick={save} disabled={busy} className="btn-primary">
-            {busy ? <Spinner /> : existing ? 'Update entry' : 'Save entry'}
-          </button>
-        </div>
-      </div>
-
-      {/* Recent entries */}
-      {dailyLogs.length > 0 && (
-        <div className="card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-espresso/50 text-xs uppercase tracking-widest border-b border-espresso/10">
-                <th className="px-5 py-3 font-medium">Day</th>
-                <th className="px-5 py-3 font-medium">Reels</th>
-                <th className="px-5 py-3 font-medium">Reposts</th>
-                <th className="px-5 py-3 font-medium">DMs sent</th>
-                <th className="px-5 py-3 font-medium">Unread</th>
-                <th className="px-5 py-3 font-medium">On track</th>
-                <th className="px-5 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {dailyLogs.map((d) => {
-                const dash = (v) => (v === null || v === undefined ? '—' : v)
-                return (
-                  <tr key={d.id} className="border-b border-espresso/5 last:border-0">
-                    <td className="px-5 py-3 font-medium text-espresso">{d.log_date}</td>
-                    <td className="px-5 py-3 text-espresso/60 tabular-nums">
-                      {dash(d.reels_posted)}
-                    </td>
-                    <td className="px-5 py-3 text-espresso/60 tabular-nums">
-                      {dash(d.reposts)}
-                    </td>
-                    <td className="px-5 py-3 text-espresso/60 tabular-nums">
-                      {dash(d.dms_sent)}
-                    </td>
-                    <td className="px-5 py-3 text-espresso/60 tabular-nums">
-                      {dash(d.dms_unread)}
-                    </td>
-                    <td className="px-5 py-3">
-                      {d.on_track === true ? (
-                        <span className="text-green-700">Yes</span>
-                      ) : d.on_track === false ? (
-                        <span className="text-red-600">No</span>
-                      ) : (
-                        <span className="text-espresso/30">—</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <button
-                        onClick={() => setDate(d.log_date)}
-                        className="btn-ghost text-xs"
-                      >
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* ────────────────────────────── EOD Draft ────────────────────────── */
-
-// Copy-paste end-of-day update: live Stats numbers + today's Daily Log entry,
-// formatted the way Darien wants (context on each bullet, quantified, blanks
-// marked). Generated fresh — no invented numbers.
-function EodTab({ dailyLogs }) {
-  const [copied, setCopied] = useState(false)
-  const today = todayStr()
-  const log = dailyLogs.find((d) => d.log_date === today) || null
-
-  const dateLabel = useMemo(
-    () =>
-      new Date().toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      }),
-    []
-  )
-
-  const draft = useMemo(
-    () => buildEodDraft({ log, dateLabel }),
-    [log, dateLabel]
-  )
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(draft)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      /* clipboard blocked — the textarea below is selectable to copy by hand */
-    }
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <h2 className="font-heading text-3xl text-espresso">EOD Draft</h2>
-          <p className="text-sm text-espresso/55 mt-1 max-w-xl">
-            End-of-day update built from the live Stats numbers and today’s Daily Log
-            entry. Any metric with no data is marked blank — nothing is invented.
-          </p>
-        </div>
-        <button onClick={copy} className="btn-gold shrink-0">
-          {copied ? '✓ Copied' : 'Copy update'}
-        </button>
-      </div>
-
-      {!log && (
-        <div className="rounded-lg px-4 py-3 text-sm bg-amber-50 text-amber-700 border border-amber-100">
-          No Daily Log entry for today yet — the content, DM, weekly-goal and on-track
-          lines will read as blank until you fill in the Daily Log tab.
-        </div>
-      )}
-
-      <div className="card p-6">
-        <textarea
-          readOnly
-          value={draft}
-          rows={draft.split('\n').length + 1}
-          className="w-full bg-cream rounded-xl border border-espresso/10 p-4 text-sm text-espresso font-mono leading-relaxed resize-none focus:outline-none"
-          onFocus={(e) => e.target.select()}
-        />
-      </div>
     </div>
   )
 }
