@@ -205,11 +205,18 @@ export default function PartnerHome() {
     <div className="min-h-screen pb-40">
       {/* Top bar */}
       <header className="border-b border-espresso/5 bg-cream/80 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="font-heading text-xl tracking-[0.2em]">
-            PLANET <span className="text-gold text-xs tracking-[0.3em]">by Lauren G</span>
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <img
+              src="/planet-wordmark.png"
+              alt="PLANET by Lauren G"
+              className="h-6 sm:h-7 w-auto"
+            />
+            <span className="text-gold text-[10px] uppercase tracking-[0.3em] hidden sm:inline">
+              by Lauren G
+            </span>
           </div>
-          <span className="text-xs text-espresso/40">{partner.name}</span>
+          <span className="text-xs text-espresso/40 truncate">{partner.name}</span>
         </div>
       </header>
 
