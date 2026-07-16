@@ -2232,6 +2232,7 @@ function PreviousKitPanel({ kit, onManage }) {
 
 function KitsTab({ partners, kits, pieces, onChange }) {
   const [editing, setEditing] = useState(null) // { partner, kit } — kit null = create new box
+  const [statusFilter, setStatusFilter] = useState('All') // All | <kit status> | No box out
 
   // Group ALL kits per partner (a partner can have several over time), newest
   // first. `kits` already arrives ordered by created_at desc.
@@ -2244,15 +2245,63 @@ function KitsTab({ partners, kits, pieces, onChange }) {
     return acc
   }, {})
 
+  // A partner matches a status filter if any of their boxes has that status.
+  // "No box out" = they have no active box (never sent, or all returned).
+  const matchesFilter = (p, filter) => {
+    if (filter === 'All') return true
+    const pk = kitsByPartner[p.id] || []
+    if (filter === 'No box out') return !pk.some(isActiveKit)
+    return pk.some((k) => k.status === filter)
+  }
+  const countFor = (filter) => partners.filter((p) => matchesFilter(p, filter)).length
+
+  // Filter chips: everyone, each kit status, then "no box out". Only show a
+  // status chip if at least one partner is in it, so the bar stays relevant.
+  const filterTabs = [
+    { id: 'All', label: `All (${partners.length})` },
+    ...KIT_STATUSES.map((s) => ({ id: s, label: `${s} (${countFor(s)})` })).filter(
+      (t) => t.id === statusFilter || countFor(t.id) > 0
+    ),
+    { id: 'No box out', label: `No box out (${countFor('No box out')})` },
+  ]
+
+  const filteredPartners = partners.filter((p) => matchesFilter(p, statusFilter))
+
   return (
     <div>
       <h2 className="font-heading text-3xl text-espresso mb-5">Kit Tracker</h2>
 
+      {partners.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-5">
+          <span className="text-[10px] uppercase tracking-widest text-espresso/40 mr-1">
+            Box status
+          </span>
+          {filterTabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setStatusFilter(t.id)}
+              className={`rounded-full px-4 py-1.5 text-xs font-medium tracking-wide border transition ${
+                statusFilter === t.id
+                  ? 'border-gold bg-gold/15 text-espresso'
+                  : 'border-espresso/15 text-espresso/55 hover:border-espresso/40'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {partners.length === 0 ? (
         <EmptyState title="No partners yet" hint="Add partners first, then build their kits." />
+      ) : filteredPartners.length === 0 ? (
+        <EmptyState
+          title="No partners match this filter"
+          hint="Try a different box-status filter."
+        />
       ) : (
         <div className="space-y-4">
-          {partners.map((p) => {
+          {filteredPartners.map((p) => {
             const partnerKits = kitsByPartner[p.id] || []
             const currentKits = partnerKits.filter(isActiveKit)
             const previousKits = partnerKits.filter((k) => !isActiveKit(k))
