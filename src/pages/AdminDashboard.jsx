@@ -91,10 +91,11 @@ export default function AdminDashboard() {
   const [pieces, setPieces] = useState([])
   const [content, setContent] = useState([])
   const [selections, setSelections] = useState([])
+  const [alerts, setAlerts] = useState([])
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [p, k, pc, c, sel] = await Promise.all([
+    const [p, k, pc, c, sel, al] = await Promise.all([
       supabase.from('partners').select('*').order('created_at', { ascending: false }),
       supabase.from('kits').select('*').order('created_at', { ascending: false }),
       supabase.from('kit_pieces').select('*').order('created_at', { ascending: true }),
@@ -103,6 +104,13 @@ export default function AdminDashboard() {
         .from('partner_selections')
         .select('*')
         .order('created_at', { ascending: false }),
+      // Ops-automation flags (kit-less partners + quiz-not-done). Tolerant of
+      // the table not existing yet — al.error is set before ops_automations.sql runs.
+      supabase
+        .from('ops_alerts')
+        .select('*')
+        .eq('status', 'open')
+        .order('updated_at', { ascending: false }),
     ])
     setPartners(p.data || [])
     setKits(k.data || [])
@@ -111,6 +119,7 @@ export default function AdminDashboard() {
     // Gracefully tolerate the table not existing yet (before Sofia runs the
     // migration) — sel.error is set and sel.data is null in that case.
     setSelections(sel.data || [])
+    setAlerts(al.data || [])
     setLoading(false)
   }, [])
 
@@ -175,6 +184,9 @@ export default function AdminDashboard() {
       </header>
 
       <main className="max-w-6xl mx-auto px-6 mt-8">
+        {/* Ops-automation alerts (kit-less partners, quiz-not-done nudges) */}
+        <OpsAlertsBanner alerts={alerts} onChange={load} />
+
         {/* Tabs */}
         <div className="flex gap-2 border-b border-espresso/10 mb-8">
           {tabs.map((t) => (
@@ -213,6 +225,89 @@ export default function AdminDashboard() {
           <ContentTab partners={partners} content={content} onChange={load} />
         )}
       </main>
+    </div>
+  )
+}
+
+/* ─────────────────────── Ops automation alerts ───────────────────── */
+
+// Banner for the two team-operable automations (api/cron/kitless-alert and
+// api/cron/quiz-nudge). They write open rows to public.ops_alerts; here we let
+// an admin see them and mark each resolved. Renders nothing until the
+// ops_automations.sql migration has run and an automation has flagged something.
+const OPS_ALERT_META = {
+  kitless_partner: { label: 'No box shipped', tone: 'bg-amber-100 text-amber-700' },
+  quiz_not_done: { label: 'Quiz not done', tone: 'bg-teal-100 text-teal-700' },
+}
+
+function OpsAlertsBanner({ alerts, onChange }) {
+  const [busyId, setBusyId] = useState(null)
+  if (!alerts || alerts.length === 0) return null
+
+  async function resolve(id) {
+    setBusyId(id)
+    await supabase
+      .from('ops_alerts')
+      .update({ status: 'resolved', updated_at: new Date().toISOString() })
+      .eq('id', id)
+    setBusyId(null)
+    onChange()
+  }
+
+  return (
+    <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50/70 p-5">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <h3 className="font-heading text-lg text-espresso">
+          Needs attention{' '}
+          <span className="text-espresso/40 text-sm">({alerts.length})</span>
+        </h3>
+        <span className="text-[10px] uppercase tracking-widest text-espresso/40">
+          Auto-flagged
+        </span>
+      </div>
+      <div className="divide-y divide-amber-200/60">
+        {alerts.map((a) => {
+          const meta = OPS_ALERT_META[a.type] || { label: a.type, tone: 'bg-espresso/10 text-espresso/70' }
+          const url = a.details?.portal_url
+          const outcome = a.details?.outcome
+          return (
+            <div key={a.id} className="flex items-start justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+              <div className="min-w-0">
+                <span className="inline-flex items-center gap-2">
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${meta.tone}`}>
+                    {meta.label}
+                  </span>
+                  {outcome === 'draft_queued' && (
+                    <span className="text-[10px] uppercase tracking-wide text-teal-700">Draft in Outlook</span>
+                  )}
+                  {outcome === 'needs_manual' && (
+                    <span className="text-[10px] uppercase tracking-wide text-amber-700">Send manually</span>
+                  )}
+                </span>
+                <p className="text-sm text-espresso mt-1">{a.message}</p>
+                {url && (
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-gold hover:underline break-all"
+                  >
+                    {url}
+                  </a>
+                )}
+              </div>
+              <button
+                onClick={() => resolve(a.id)}
+                disabled={busyId === a.id}
+                className="btn-ghost text-xs shrink-0 disabled:opacity-50"
+                title="Mark this alert resolved"
+              >
+                {busyId === a.id ? <Spinner /> : 'Resolve'}
+              </button>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -2961,7 +3056,7 @@ function SocialTab() {
           label="Total engagement"
           value={nfmt(social.totalEngagement)}
           accent="text-gold"
-          sub="likes + comments + shares + sends"
+          sub="likes + comments + shares + sends + saves"
         />
         <Metric
           label="Avg engagement / post"
@@ -2981,11 +3076,12 @@ function SocialTab() {
       </div>
 
       {/* Engagement breakdown */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <MiniStat label="Likes" value={nfmt(social.totalLikes)} />
         <MiniStat label="Comments" value={nfmt(social.totalComments)} />
         <MiniStat label="Shares" value={nfmt(social.totalShares)} />
         <MiniStat label="Sends" value={nfmt(social.totalSends)} />
+        <MiniStat label="Saves" value={nfmt(social.totalSaves)} />
       </div>
 
       {social.missingViews > 0 && (
@@ -3020,6 +3116,7 @@ function SocialTab() {
                   <th className="font-medium px-2 pb-2 text-right tabular-nums">Comments</th>
                   <th className="font-medium px-2 pb-2 text-right tabular-nums">Shares</th>
                   <th className="font-medium px-2 pb-2 text-right tabular-nums">Sends</th>
+                  <th className="font-medium px-2 pb-2 text-right tabular-nums">Saves</th>
                   <th className="font-medium px-2 pb-2 text-right tabular-nums">Views</th>
                 </tr>
               </thead>
@@ -3065,6 +3162,9 @@ function SocialTab() {
                     <td className="px-2 py-2.5 text-right tabular-nums text-espresso/70">
                       {nfmt(p.sends)}
                     </td>
+                    <td className="px-2 py-2.5 text-right tabular-nums text-espresso/70">
+                      {nfmt(p.saves)}
+                    </td>
                     <td className="px-2 py-2.5 text-right tabular-nums text-espresso/40">
                       {nfmt(p.views)}
                     </td>
@@ -3080,6 +3180,7 @@ function SocialTab() {
                   <td className="px-2 pt-2.5 text-right tabular-nums">{nfmt(g.comments)}</td>
                   <td className="px-2 pt-2.5 text-right tabular-nums">{nfmt(g.shares)}</td>
                   <td className="px-2 pt-2.5 text-right tabular-nums">{nfmt(g.sends)}</td>
+                  <td className="px-2 pt-2.5 text-right tabular-nums">{nfmt(g.saves)}</td>
                   <td className="px-2 pt-2.5 text-right tabular-nums text-espresso/55">
                     {g.viewsCount ? nfmt(g.views) : '—'}
                   </td>

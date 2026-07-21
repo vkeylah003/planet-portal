@@ -130,14 +130,16 @@ export function computeSocial() {
   const totalComments = sum('comments')
   const totalShares = sum('shares')
   const totalSends = sum('sends')
+  const totalSaves = sum('saves')
 
   // Views: only posts with a real number count toward the total.
   const withViews = posts.filter((p) => p.views !== null && p.views !== undefined)
   const totalViews = withViews.reduce((s, p) => s + p.views, 0)
 
-  // Engagement = the four interaction counts. Average is per post so it stays
+  // Engagement = the five interaction counts. Average is per post so it stays
   // comparable as the roster grows.
-  const totalEngagement = totalLikes + totalComments + totalShares + totalSends
+  const totalEngagement =
+    totalLikes + totalComments + totalShares + totalSends + totalSaves
   const avgEngagement = totalPosts ? Math.round(totalEngagement / totalPosts) : 0
 
   // Group by partner (keyed by handle, which is stable even when we can't match
@@ -154,6 +156,7 @@ export function computeSocial() {
         comments: 0,
         shares: 0,
         sends: 0,
+        saves: 0,
         views: 0,
         viewsCount: 0,
       }
@@ -164,13 +167,17 @@ export function computeSocial() {
     g.comments += p.comments || 0
     g.shares += p.shares || 0
     g.sends += p.sends || 0
+    g.saves += p.saves || 0
     if (p.views !== null && p.views !== undefined) {
       g.views += p.views
       g.viewsCount += 1
     }
   }
   const partners = Object.values(groupsByHandle)
-    .map((g) => ({ ...g, engagement: g.likes + g.comments + g.shares + g.sends }))
+    .map((g) => ({
+      ...g,
+      engagement: g.likes + g.comments + g.shares + g.sends + g.saves,
+    }))
     .sort((a, b) => b.engagement - a.engagement)
 
   return {
@@ -180,6 +187,7 @@ export function computeSocial() {
     totalComments,
     totalShares,
     totalSends,
+    totalSaves,
     totalEngagement,
     avgEngagement,
     totalViews,
