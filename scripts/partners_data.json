@@ -287,7 +287,7 @@
       "commission_basis_amount": 265.20,
       "commission_amount": 53.04,
       "attribution": "manual",
-      "note": "Manually attributed — order came in on WELCOME15 code, not Ginger's link; Ginger flagged via personal email. Attribution fix needed."
+      "note": "Manually attributed — order came in on WELCOME15 code, not Ginger's link; Ginger flagged via personal email. Attribution fix needed. 2026-07-21: Ginger drove this sale but it never attributed to her in Impact.com (Account ID 7429632). Order #OL65689 placed 2026-07-07 12:25pm from the Online Store, Paid + Fulfilled. Customer Helen M Harlow (first-time customer). Item: Cotton Metallic Crochet Boatneck Sweater – Mint/Silver, x1, $265.20 (order total $270.84). Expected commission ~$53 (20%), currently uncredited. Suspected cause: the click routed through Hue & Stripe, which likely interfered with Impact's attribution window. ACTION TAKEN: support ticket opened with Impact.com customer support today (2026-07-21) to investigate and request manual attribution/credit to Ginger's account — awaiting their response."
     }
   ]
 }
