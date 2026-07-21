@@ -13,7 +13,7 @@ const QUIZ_SECTIONS = [
     label: 'Your style vibe',
     hint: 'Pick the aesthetics that feel most you — choose as many as you like.',
     options: [
-      'Classic & Tailored',
+      'Classic & Polished',
       'Effortless & Relaxed',
       'Architectural & Edgy',
       'Soft & Romantic',
@@ -39,7 +39,7 @@ const QUIZ_SECTIONS = [
     label: 'Fabrics & textures',
     hint: 'What you love to wear.',
     options: [
-      'Structured & Tailored',
+      'Structured & Crisp',
       'Flowy & Drapey',
       'Cozy Knits',
       'Vegan Leather',
