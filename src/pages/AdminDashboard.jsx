@@ -15,6 +15,7 @@ import {
   statusLabel,
 } from '../lib/report'
 import { computeStats, computeSocial, computeManualSales } from '../lib/stats'
+import { translateQuiz } from '../lib/quizTranslation'
 
 function money(n) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
@@ -2000,6 +2001,70 @@ function QuizAnswers({ quiz }) {
           <p className="text-sm text-espresso/75">{quiz.avoid}</p>
         </div>
       )}
+
+      <QuizTranslation quiz={quiz} />
+    </div>
+  )
+}
+
+// The "Translation" — the partner's raw quiz answers condensed into PLANET's own
+// vocabulary (fabrics, signature pieces, palette) so the curation team can read
+// at a glance what to pull for their box. Computed LIVE from the map in
+// ../lib/quizTranslation, so refining the map instantly re-flows every quiz
+// (old rows included, even before the backfill stamps them).
+function QuizTranslation({ quiz }) {
+  const t = translateQuiz(quiz)
+  const cols = [
+    { label: 'Fabrics to pull', vals: t.fabrics },
+    { label: 'Signature pieces', vals: t.pieces },
+    { label: 'Palette', vals: t.palette },
+  ].filter((c) => c.vals.length > 0)
+
+  if (cols.length === 0) return null
+
+  return (
+    <div className="mt-1 rounded-xl border border-espresso/15 bg-espresso/[0.03] p-4 space-y-3">
+      <div className="flex items-center gap-2">
+        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-espresso text-cream">
+          Translation
+        </span>
+        <span className="text-xs text-espresso/45">In PLANET terms — what to put in their box</span>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        {cols.map((c) => (
+          <div key={c.label}>
+            <p className="text-[10px] uppercase tracking-widest text-espresso/50 font-medium mb-1.5">
+              {c.label}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {c.vals.map((v) => (
+                <span
+                  key={v}
+                  className="inline-flex items-center rounded-full bg-white border border-espresso/10 px-3 py-1 text-xs text-espresso"
+                >
+                  {v}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {t.summary && (
+        <p className="text-sm text-espresso/80 leading-relaxed border-t border-espresso/10 pt-3">
+          <span className="font-medium text-espresso">Read: </span>
+          {t.summary}
+        </p>
+      )}
+
+      {t.ambiguous.length > 0 &&
+        t.ambiguous.map((a) => (
+          <p key={a} className="text-xs text-amber-700/90 flex items-start gap-1.5">
+            <span aria-hidden="true">⚠</span>
+            <span>{a}</span>
+          </p>
+        ))}
     </div>
   )
 }
