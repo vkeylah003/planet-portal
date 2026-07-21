@@ -3209,6 +3209,348 @@
       "channel": "ShopMy",
       "email": "cortney@thegreyedit.com",
       "instagram": "@cortney.bigelow"
+    },
+    {
+      "name": "Stephy",
+      "business": "Style by Stephy",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "personalstylecoach@gmail.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Annette Bond",
+      "business": "Definitive Style by Annette Bond",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "annette@annettebond.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Barbara",
+      "business": "The Stylish Chick",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "thestylishchick@gmail.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Debra Cox",
+      "business": "Image Consulting (Debra Cox)",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "debcoxsf@gmail.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Kat Depner",
+      "business": "Seven Styling",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "katdepner@sevenstyling.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Danielle",
+      "business": "The Modified Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "themodifiedstyle@gmail.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Jess Sanderson",
+      "business": "Jess Sanderson – Personal Stylist",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "jess@jesssanderson.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Tara",
+      "business": "Style Elevation with Tara",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "tara@styleelevationwithtara.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Jaime Diehl",
+      "business": "Jaime Diehl Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "info@jaimediehlstyle.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Kate Goldsborough",
+      "business": "Kate Goldsborough Stylist",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "kate@kategoldsborough.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Michelle",
+      "business": "StyleUp with Michelle",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "styleup2016@gmail.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Paulette",
+      "business": "PE Image Consulting",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "info@pauletteaedwards.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Gilda",
+      "business": "Styled by Gilda",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "Contact@styledbygilda.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Lisa",
+      "business": "Privilege (Amid Privilege)",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "skyepeale@yahoo.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Judith",
+      "business": "Style Crone",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "judith@stylecrone.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Heather",
+      "business": "So Heather",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "heather@soheather.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Sabrina",
+      "business": "Croissants & Cafés",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "sabrina@croissantsandcafes.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Chanel",
+      "business": "Coco on Fifth",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "chanel@cocoonfifth.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Caroline",
+      "business": "Un-Fancy",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "unfancyblog@gmail.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Jessica",
+      "business": "Petite Style Script",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "Jessica@PetiteStyleScript.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Beth",
+      "business": "Serious About Styling (SAS for Short)",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "beth@sasforshort.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Leanne",
+      "business": "Classy Yet Trendy",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "classyyettrendy@gmail.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Crystalin",
+      "business": "Crystalin Marie",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "CrystalinMarieCollabs@gmail.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Noelani",
+      "business": "La Vie On Grand",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "lvogteam@lavieongrand.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Sue",
+      "business": "The Zhush",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "sue@thezhush.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Evonya",
+      "business": "Love E Fashion",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "Lovee@loveefashion.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Erica",
+      "business": "MONA — Atlanta Personal Stylist",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "mona@ericamona.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Afi",
+      "business": "Afi Like Taffy",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "afi@afiliketaffy.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Alma",
+      "business": "Alma Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "almaswanson5@gmail.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Stevie",
+      "business": "Stevie Bingham Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "stevie@steviebinghamstyle.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Hannah",
+      "business": "Style Haus",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "contact@styleehaus.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Shelley",
+      "business": "Shelley Golden Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "shelley@shelleygoldenstyle.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Colleen",
+      "business": "CP Image & Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "colleen@cpimageandstyle.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Conni",
+      "business": "Art In The Find",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "conni@artinthefind.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Abigail",
+      "business": "Joy & The Valentine",
+      "category": "blogger-influencer",
+      "status": "contacted",
+      "channel": "email",
+      "email": "abigail@joyandthevalentine.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Victoria",
+      "business": "Victoria Hitchcock Style",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "victoriahitchcockstyle@gmail.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Courtney",
+      "business": "Courtney Davila Styling",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "styling@courtneydavila.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
+    },
+    {
+      "name": "Lauren",
+      "business": "Edit by Lauren",
+      "category": "stylist",
+      "status": "contacted",
+      "channel": "email",
+      "email": "lauren@editbylauren.com",
+      "note": "Style Collective outreach — invite sent (2026-07-20)"
     }
   ]
 }
