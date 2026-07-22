@@ -139,6 +139,85 @@ function ranked(counts, limit) {
 // Dedupe an array preserving order.
 const uniq = (arr) => [...new Set(arr)]
 
+// ── Fabric keywords for matching against catalog product titles ──
+// FABRIC's values are the display strings shown to the curation team (e.g.
+// "Sculptural Nylon"), which won't literally substring-match a plain Shopify
+// title like "Nylon Big Pocket Pants". This is a parallel keyword list, keyed
+// the same as FABRIC, of the raw words/phrases to look for instead.
+const FABRIC_KEYWORDS = {
+  scuba: ['scuba'],
+  nylon: ['nylon'],
+  pima: ['pima'],
+  cotton: ['cotton'],
+  frenchTerry: ['french terry'],
+  matteJersey: ['matte jersey'],
+  lycra: ['cotton lycra'],
+  sateen: ['sateen'],
+  linen: ['linen'],
+  organza: ['organza'],
+  veganLeather: ['vegan leather'],
+  metallic: ['metallic'],
+  knit: ['cotton'],
+}
+
+// Map a FABRIC display string back to its keyword list.
+const FABRIC_DISPLAY_TO_KEYWORDS = Object.fromEntries(
+  Object.entries(FABRIC).map(([key, display]) => [display, FABRIC_KEYWORDS[key] || []])
+)
+
+/**
+ * Score and rank live catalog items against a partner's translated quiz
+ * preferences, for the curation team to pull from at a glance.
+ * @param {object} quiz - the stored style_quiz object.
+ * @param {Array} catalogItems - items from fetchCatalog() (../lib/catalog).
+ * @param {number} limit - max items to return (default 3).
+ * @returns {Array} up to `limit` catalog items, highest-scoring first.
+ */
+export function recommendProducts(quiz, catalogItems, limit = 3) {
+  const items = Array.isArray(catalogItems) ? catalogItems : []
+  if (items.length === 0) return []
+
+  const { fabrics, pieces, palette } = translateQuiz(quiz)
+  const fabricKeywords = uniq(fabrics.flatMap((f) => FABRIC_DISPLAY_TO_KEYWORDS[f] || []))
+  const paletteLower = palette.map((c) => c.toLowerCase())
+
+  const scored = items.map((item, index) => {
+    const title = String(item?.title || '').toLowerCase()
+    const color = String(item?.color || '').toLowerCase()
+    let score = 0
+
+    if (pieces.some((p) => title.includes(p.toLowerCase()))) score += 3
+    if (fabricKeywords.some((kw) => title.includes(kw))) score += 2
+    if (color && paletteLower.some((c) => color.includes(c))) score += 1
+
+    return { item, score, index }
+  })
+
+  const positive = scored
+    .filter((s) => s.score > 0)
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+
+  if (positive.length >= limit) {
+    return positive.slice(0, limit).map((s) => s.item)
+  }
+
+  // Backfill with next-highest-scoring in-stock items (score can be 0) so we
+  // still return up to `limit` when the catalog has enough products — but
+  // never introduce a zero-relevance item if positives already cover it.
+  const chosen = positive.map((s) => s.item)
+  const chosenSet = new Set(chosen)
+  const backfill = scored
+    .filter((s) => !chosenSet.has(s.item) && s.item?.available !== false)
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+
+  for (const s of backfill) {
+    if (chosen.length >= limit) break
+    chosen.push(s.item)
+  }
+
+  return chosen.slice(0, limit)
+}
+
 /**
  * Translate a style-quiz payload into PLANET terms.
  * @param {object} quiz - the stored style_quiz object (vibes/colors/fabrics/

@@ -15,7 +15,8 @@ import {
   statusLabel,
 } from '../lib/report'
 import { computeStats, computeSocial, computeManualSales } from '../lib/stats'
-import { translateQuiz } from '../lib/quizTranslation'
+import { translateQuiz, recommendProducts } from '../lib/quizTranslation'
+import { fetchCatalog } from '../lib/catalog'
 
 function money(n) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
@@ -1744,6 +1745,21 @@ function ReferralCreditRow({ credit, sale, referrerName, referredName, onChange 
 // admin's notification (count badge on the tab); Sofia marks each reviewed.
 function SelectionsTab({ selections, onChange }) {
   const [filter, setFilter] = useState('new') // new | reviewed | all
+  const [catalogItems, setCatalogItems] = useState(null) // null = not loaded yet
+
+  useEffect(() => {
+    let cancelled = false
+    fetchCatalog()
+      .then((data) => {
+        if (!cancelled) setCatalogItems(Array.isArray(data?.items) ? data.items : [])
+      })
+      .catch(() => {
+        if (!cancelled) setCatalogItems([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const counts = {
     new: selections.filter((s) => s.status === 'new').length,
@@ -1800,7 +1816,7 @@ function SelectionsTab({ selections, onChange }) {
       ) : (
         <div className="space-y-4">
           {rows.map((s) => (
-            <SelectionCard key={s.id} selection={s} onChange={onChange} />
+            <SelectionCard key={s.id} selection={s} onChange={onChange} catalogItems={catalogItems} />
           ))}
         </div>
       )}
@@ -1808,7 +1824,7 @@ function SelectionsTab({ selections, onChange }) {
   )
 }
 
-function SelectionCard({ selection, onChange }) {
+function SelectionCard({ selection, onChange, catalogItems }) {
   const [busy, setBusy] = useState(false)
   const items = Array.isArray(selection.items) ? selection.items : []
   // Style-quiz submissions carry a single tagged payload in `items`; older
@@ -1878,7 +1894,7 @@ function SelectionCard({ selection, onChange }) {
       </div>
 
       {quiz ? (
-        <QuizAnswers quiz={quiz} />
+        <QuizAnswers quiz={quiz} catalogItems={catalogItems} />
       ) : (
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {items.map((it, i) => (
@@ -1928,7 +1944,7 @@ function SelectionCard({ selection, onChange }) {
 // Renders a partner's style-quiz answers for the curation team: the multi-select
 // vibe/color/fabric/silhouette/occasion groups as pills, plus structured sizes
 // and anything-to-avoid. Tolerant of missing sections (partner may skip some).
-function QuizAnswers({ quiz }) {
+function QuizAnswers({ quiz, catalogItems }) {
   const groups = [
     { key: 'vibes', label: 'Style vibe' },
     { key: 'colors', label: 'Colors & palette' },
@@ -2002,7 +2018,7 @@ function QuizAnswers({ quiz }) {
         </div>
       )}
 
-      <QuizTranslation quiz={quiz} />
+      <QuizTranslation quiz={quiz} catalogItems={catalogItems} />
     </div>
   )
 }
@@ -2012,13 +2028,16 @@ function QuizAnswers({ quiz }) {
 // at a glance what to pull for their box. Computed LIVE from the map in
 // ../lib/quizTranslation, so refining the map instantly re-flows every quiz
 // (old rows included, even before the backfill stamps them).
-function QuizTranslation({ quiz }) {
+function QuizTranslation({ quiz, catalogItems }) {
   const t = translateQuiz(quiz)
   const cols = [
     { label: 'Fabrics to pull', vals: t.fabrics },
     { label: 'Signature pieces', vals: t.pieces },
     { label: 'Palette', vals: t.palette },
   ].filter((c) => c.vals.length > 0)
+
+  const catalogLoaded = Array.isArray(catalogItems)
+  const recommended = catalogLoaded ? recommendProducts(quiz, catalogItems, 3) : []
 
   if (cols.length === 0) return null
 
@@ -2065,6 +2084,50 @@ function QuizTranslation({ quiz }) {
             <span>{a}</span>
           </p>
         ))}
+
+      {catalogLoaded && recommended.length > 0 && (
+        <div className="border-t border-espresso/10 pt-3">
+          <p className="text-[10px] uppercase tracking-widest text-espresso/50 font-medium mb-1.5">
+            Recommended for their box
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {recommended.map((it) => (
+              <a
+                key={it.variant_id || it.product_id}
+                href={it.url}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-xl border border-espresso/5 bg-white overflow-hidden hover:border-gold/40 transition"
+              >
+                <div className="aspect-[4/5] bg-cream overflow-hidden">
+                  {it.image ? (
+                    <img
+                      src={it.image}
+                      alt={it.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : null}
+                </div>
+                <div className="p-2">
+                  <p className="text-xs font-medium text-espresso leading-tight line-clamp-2">
+                    {it.title}
+                  </p>
+                  {it.color && <p className="text-[11px] text-espresso/45">{it.color}</p>}
+                  {it.price != null && (
+                    <p className="text-[11px] text-espresso/60 mt-0.5">{money(it.price)}</p>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+      {catalogLoaded && recommended.length === 0 && cols.length > 0 && (
+        <p className="text-xs text-espresso/40 border-t border-espresso/10 pt-3">
+          Recommendations unavailable.
+        </p>
+      )}
     </div>
   )
 }
