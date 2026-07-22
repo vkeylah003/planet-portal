@@ -289,13 +289,103 @@ function inferSilhouetteCategory(item) {
   return `singleton:${item?.product_id ?? item?.variant_id ?? title}`
 }
 
+// ── Explicit-mention matching (quiz.avoid free text) ──
+// Despite the field's name, partners use quiz.avoid for both "avoid this"
+// and "I love this" (e.g. "Love the big pocket pants, the Lina shirt, the
+// easy top and linen crop pants!!"). A piece a partner names directly is a
+// stronger signal than any inferred fabric/silhouette/palette match, so it's
+// checked separately and given priority in recommendProducts below — but a
+// false positive here would confidently recommend the wrong thing, which is
+// worse than missing a real one, so matching stays deliberately narrow.
+
+// Lowercase, expand simple contractions ("don't" -> "do not"), strip
+// punctuation, collapse whitespace. Shared normalization for both the
+// partner's quiz.avoid text and catalog item titles, so phrase matching
+// between them is apples-to-apples.
+function normalizeText(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/n't\b/g, ' not')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// Connective/filler words too generic to count toward a "confident" phrase
+// on their own — a phrase needs at least 2 words that aren't in this list
+// (and aren't tiny), so a single common word like "top" or "pants" alone
+// never counts as a match. Not meant to be exhaustive.
+const MENTION_STOPWORDS = new Set([
+  'a', 'an', 'the', 'and', 'or', 'with', 'for', 'of', 'in', 'my', 'her', 'she',
+  'he', 'i', 'am', 'is', 'are', 'also', 'new', 'so', 'just', 'really', 'very',
+  'love', 'loved', 'loving', 'like', 'liked', 'likes', 'obsessed', 'fan',
+  'collection', 'too',
+])
+
+// Contiguous word-sequences from `words`, longest first, restricted to
+// phrases with at least 2 "meaningful" words (not a stopword, longer than 2
+// characters) — the conservative bar this whole feature leans on.
+function candidatePhrases(words) {
+  const phrases = []
+  for (const n of [4, 3, 2]) {
+    for (let i = 0; i + n <= words.length; i++) {
+      const slice = words.slice(i, i + n)
+      const meaningful = slice.filter((w) => !MENTION_STOPWORDS.has(w) && w.length > 2)
+      if (meaningful.length >= 2) phrases.push(slice.join(' '))
+    }
+  }
+  return phrases
+}
+
+// Simple negation check, not real NLP: does a negation cue (no/not/never/
+// avoid/dislike/hate/skip/without — "don't"/"doesn't" already became "do
+// not"/"does not" via normalizeText's contraction expansion) appear in the
+// few words right before a matched phrase? Catches "not a fan of vegan
+// leather"; anything subtler is out of scope on purpose.
+const NEGATION_WORDS = new Set(['no', 'not', 'never', 'avoid', 'dislike', 'hate', 'skip', 'without', 'anti'])
+const NEGATION_WINDOW = 4
+
+function isNegatedAt(normalizedText, phrase) {
+  const idx = normalizedText.indexOf(phrase)
+  if (idx < 0) return false
+  const before = normalizedText.slice(0, idx).trim().split(' ').filter(Boolean)
+  return before.slice(-NEGATION_WINDOW).some((w) => NEGATION_WORDS.has(w))
+}
+
+// Whether a catalog item is explicitly named in the partner's quiz.avoid
+// text. Matches bidirectionally and conservatively: either a specific
+// multi-word phrase from the item's (color-stripped) title appears in the
+// avoid text, or a specific multi-word phrase from the avoid text appears
+// in the title — never a single generic word alone. `negated` is true when
+// a negation cue sits just before the matched phrase, meaning the item
+// should be EXCLUDED rather than boosted.
+function getMentionStatus(item, avoidText, avoidPhrases) {
+  if (!avoidText) return { mentioned: false, negated: false }
+  const titleWords = normalizeText(baseName(item?.title)).split(' ').filter(Boolean)
+  const titleText = titleWords.join(' ')
+
+  for (const phrase of candidatePhrases(titleWords)) {
+    if (avoidText.includes(phrase)) {
+      return { mentioned: true, negated: isNegatedAt(avoidText, phrase) }
+    }
+  }
+  for (const phrase of avoidPhrases) {
+    if (titleText.includes(phrase)) {
+      return { mentioned: true, negated: isNegatedAt(avoidText, phrase) }
+    }
+  }
+  return { mentioned: false, negated: false }
+}
+
 /**
  * Score and rank live catalog items against a partner's translated quiz
- * preferences, for the curation team to pull from at a glance. Results aim
- * for a genuine outfit: one 'outerwear' + one 'tops' + one 'bottoms' item
- * when all three roles have an eligible candidate, or a 'dress' + 'outerwear'
- * pairing instead when the partner clearly leans toward dresses — never 3
- * items sharing an outfit role just because they scored well.
+ * preferences, for the curation team to pull from at a glance. A piece the
+ * partner explicitly names in quiz.avoid wins a slot first — direct intent
+ * outranks any inferred match — then remaining slots aim for a genuine
+ * outfit: one 'outerwear' + one 'tops' + one 'bottoms' item when all three
+ * roles have an eligible candidate, or a 'dress' + 'outerwear' pairing
+ * instead when the partner clearly leans toward dresses — never 3 items
+ * sharing an outfit role just because they scored well.
  * @param {object} quiz - the stored style_quiz object.
  * @param {Array} catalogItems - items from fetchCatalog() (../lib/catalog).
  *   Each item's `availableSizes` (if any) is checked against quiz.sizes.
@@ -306,8 +396,9 @@ function inferSilhouetteCategory(item) {
  *     excluded entirely, before scoring.
  * @returns {Array} up to `limit` catalog items, never two sharing a base name
  *   (garment) or an outfit role unless there weren't enough distinct roles
- *   left to fill `limit`, never an excluded piece, and never an item
- *   confidently known to be out of stock in the partner's size.
+ *   left to fill `limit`, never an excluded piece, never an item confidently
+ *   known to be out of stock in the partner's size, and never an item the
+ *   partner explicitly said she doesn't want.
  */
 export function recommendProducts(quiz, catalogItems, { limit = 3, excludePieceNames = [] } = {}) {
   const excluded = new Set(
@@ -318,9 +409,20 @@ export function recommendProducts(quiz, catalogItems, { limit = 3, excludePieceN
   const sizesAnswered =
     quiz && quiz.sizes && typeof quiz.sizes === 'object' ? quiz.sizes : {}
 
+  const avoidText = normalizeText(quiz?.avoid)
+  const avoidPhrases = avoidText ? candidatePhrases(avoidText.split(' ').filter(Boolean)) : []
+  const mentionByItem = new Map()
+  if (avoidText) {
+    for (const item of Array.isArray(catalogItems) ? catalogItems : []) {
+      mentionByItem.set(item, getMentionStatus(item, avoidText, avoidPhrases))
+    }
+  }
+  const mentionOf = (item) => mentionByItem.get(item) || { mentioned: false, negated: false }
+
   const items = (Array.isArray(catalogItems) ? catalogItems : [])
     .filter((item) => !excluded.has(baseName(item?.title)))
     .filter((item) => !failsSizeFilter(item, sizesAnswered))
+    .filter((item) => !mentionOf(item).negated)
   if (items.length === 0) return []
 
   const { fabrics, pieces, palette } = translateQuiz(quiz)
@@ -336,12 +438,40 @@ export function recommendProducts(quiz, catalogItems, { limit = 3, excludePieceN
     if (fabricKeywords.some((kw) => title.includes(kw))) score += 2
     if (color && paletteLower.some((c) => color.includes(c))) score += 1
 
-    return { item, score, index, base: baseName(item?.title), role: inferOutfitRole(item) }
+    return {
+      item,
+      score,
+      index,
+      base: baseName(item?.title),
+      role: inferOutfitRole(item),
+      mentioned: mentionOf(item).mentioned,
+    }
   })
 
   const pool = scored
     .filter((s) => s.item?.available !== false)
     .sort((a, b) => b.score - a.score || a.index - b.index)
+
+  const chosen = []
+  const chosenBases = new Set()
+  const usedRoles = new Set()
+
+  // Step 0: a piece the partner named explicitly wins a slot first — direct
+  // intent is a stronger signal than any inferred fabric/silhouette/palette
+  // match, and shouldn't lose out to the outfit-template diversity rule
+  // below (e.g. if she named 2 pants and a top, that IS the recommendation
+  // — not pants+top+a random dress forced in to "diversify"). Ranked by the
+  // same fabric/palette/piece score as a tiebreak among multiple mentions,
+  // but never gated by role.
+  for (const s of pool) {
+    if (chosen.length >= limit) break
+    if (!s.mentioned || chosenBases.has(s.base)) continue
+    chosen.push(s.item)
+    chosenBases.add(s.base)
+    usedRoles.add(s.role)
+  }
+
+  if (chosen.length >= limit) return chosen
 
   // Outfit template: outerwear + tops + bottoms (a real jacket/top/bottom
   // look) is the default. If the partner clearly leans toward dresses —
@@ -357,17 +487,18 @@ export function recommendProducts(quiz, catalogItems, { limit = 3, excludePieceN
     ? ['dress', 'outerwear', 'tops', 'bottoms']
     : ['outerwear', 'tops', 'bottoms', 'dress']
 
-  const chosen = []
-  const chosenBases = new Set()
-
   // Round 1: one best-scoring item per role, template order — a role with
-  // ANY eligible item gets its turn before any role repeats.
+  // ANY eligible item gets its turn before any role repeats. Skips a role
+  // an explicit mention (Step 0) already covered, to preserve outfit
+  // coherence around it rather than doubling up on the same role.
   for (const role of roleOrder) {
     if (chosen.length >= limit) break
+    if (usedRoles.has(role)) continue
     const best = pool.find((s) => s.role === role && !chosenBases.has(s.base))
     if (!best) continue
     chosen.push(best.item)
     chosenBases.add(best.base)
+    usedRoles.add(role)
   }
 
   if (chosen.length >= limit) return chosen
