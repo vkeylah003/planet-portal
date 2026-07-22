@@ -323,58 +323,40 @@ export function recommendProducts(quiz, catalogItems, { limit = 3, excludePieceN
     }
   }
 
+  // The full eligible pool (already passed excludePieceNames + size filters,
+  // score-sorted). Category diversity must be enforced across the ENTIRE
+  // selection — including what used to be a separate "backfill" step — or a
+  // strong-scoring already-used category (e.g. a partner's 2nd-favorite
+  // silhouette) keeps winning every remaining slot ahead of a genuinely
+  // unused category that just happens to score 0 on fabric/palette.
+  const pool = sorted.filter((s) => s.item?.available !== false)
+
   const chosen = []
   const chosenBases = new Set()
-  const usedCategories = new Set()
 
-  // Pass 1: best-scoring (score > 0) item from each not-yet-represented
-  // category, categories visited in priority order.
+  // Round 1: for each distinct category (priority order), take its single
+  // best-scoring eligible item — score can be 0. A category with ANY
+  // eligible item always gets its turn before any category repeats,
+  // regardless of how much lower its best item scores than an already-used
+  // category's next item.
   for (const cat of categoryOrder) {
     if (chosen.length >= limit) break
-    const best = sorted.find((s) => s.category === cat && s.score > 0 && !chosenBases.has(s.base))
+    const best = pool.find((s) => s.category === cat && !chosenBases.has(s.base))
     if (!best) continue
     chosen.push(best.item)
     chosenBases.add(best.base)
-    usedCategories.add(cat)
-  }
-
-  // Pass 2: still short? Only now allow a second (score > 0) item from a
-  // category already used — never before every distinct category had a turn.
-  if (chosen.length < limit) {
-    for (const s of sorted) {
-      if (chosen.length >= limit) break
-      if (s.score <= 0 || chosenBases.has(s.base)) continue
-      chosen.push(s.item)
-      chosenBases.add(s.base)
-      usedCategories.add(s.category)
-    }
   }
 
   if (chosen.length >= limit) return chosen
 
-  // Backfill with next-highest-scoring in-stock items (score can be 0) so we
-  // still return up to `limit` when the catalog has enough DISTINCT pieces —
-  // same category-diversity-first rule applies to the backfill pool.
-  const chosenSet = new Set(chosen)
-  const backfillPool = sorted.filter((s) => !chosenSet.has(s.item) && s.item?.available !== false)
-
-  for (const cat of categoryOrder) {
+  // Round 2: only reached once every distinct category has either
+  // contributed an item or been confirmed to have none left in the full
+  // pool — now it's fine to repeat a category, highest score first.
+  for (const s of pool) {
     if (chosen.length >= limit) break
-    if (usedCategories.has(cat)) continue
-    const best = backfillPool.find((s) => s.category === cat && !chosenBases.has(s.base))
-    if (!best) continue
-    chosen.push(best.item)
-    chosenBases.add(best.base)
-    usedCategories.add(cat)
-  }
-
-  if (chosen.length < limit) {
-    for (const s of backfillPool) {
-      if (chosen.length >= limit) break
-      if (chosenBases.has(s.base)) continue
-      chosen.push(s.item)
-      chosenBases.add(s.base)
-    }
+    if (chosenBases.has(s.base)) continue
+    chosen.push(s.item)
+    chosenBases.add(s.base)
   }
 
   return chosen.slice(0, limit)
