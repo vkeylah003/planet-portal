@@ -228,9 +228,30 @@ function failsSizeFilter(item, sizesAnswered) {
   return !sizes.some((s) => String(s).trim().toLowerCase() === wantedNorm)
 }
 
+// Which SILHOUETTE_MAP category (if any) a catalog item belongs to, by the
+// same title-match approach the piece-scoring below uses. Items that don't
+// match any category get their own singleton "category" — grouped by
+// product_type when there is one (so, say, multiple unmatched "Accessories"
+// still compete for one slot), or by product id when there isn't (fully
+// unique, so a totally uncategorizable item is always eligible and never
+// crowds out — or gets crowded out by — anything else).
+function inferSilhouetteCategory(item) {
+  const title = String(item?.title || '').toLowerCase()
+  for (const [silhouette, piecesForSilhouette] of Object.entries(SILHOUETTE_MAP)) {
+    if (piecesForSilhouette.some((p) => title.includes(p.toLowerCase()))) return silhouette
+  }
+  const productType = String(item?.product_type || '').trim().toLowerCase()
+  if (productType) return `product-type:${productType}`
+  return `singleton:${item?.product_id ?? item?.variant_id ?? title}`
+}
+
 /**
  * Score and rank live catalog items against a partner's translated quiz
- * preferences, for the curation team to pull from at a glance.
+ * preferences, for the curation team to pull from at a glance. Results are
+ * category-diverse: a curated box shouldn't repeat a garment type (e.g. 3
+ * jackets) just because those items scored well — one item per SILHOUETTE_MAP
+ * category is preferred, in the partner's own silhouette-pick order, before
+ * a second item from any category is allowed in.
  * @param {object} quiz - the stored style_quiz object.
  * @param {Array} catalogItems - items from fetchCatalog() (../lib/catalog).
  *   Each item's `availableSizes` (if any) is checked against quiz.sizes.
@@ -239,9 +260,10 @@ function failsSizeFilter(item, sizesAnswered) {
  *   - excludePieceNames: piece names (any case) the partner has already
  *     received in a prior kit — matched against each item's base name and
  *     excluded entirely, before scoring.
- * @returns {Array} up to `limit` catalog items, highest-scoring first, never
- *   two items sharing a base name (garment), never an excluded piece, and
- *   never an item confidently known to be out of stock in the partner's size.
+ * @returns {Array} up to `limit` catalog items, never two sharing a base name
+ *   (garment) or a SILHOUETTE_MAP category unless there weren't enough
+ *   distinct categories to fill `limit`, never an excluded piece, and never
+ *   an item confidently known to be out of stock in the partner's size.
  */
 export function recommendProducts(quiz, catalogItems, { limit = 3, excludePieceNames = [] } = {}) {
   const excluded = new Set(
@@ -270,37 +292,89 @@ export function recommendProducts(quiz, catalogItems, { limit = 3, excludePieceN
     if (fabricKeywords.some((kw) => title.includes(kw))) score += 2
     if (color && paletteLower.some((c) => color.includes(c))) score += 1
 
-    return { item, score, index, base: baseName(item?.title) }
+    return { item, score, index, base: baseName(item?.title), category: inferSilhouetteCategory(item) }
   })
 
-  const positive = scored
-    .filter((s) => s.score > 0)
-    .sort((a, b) => b.score - a.score || a.index - b.index)
+  const sorted = [...scored].sort((a, b) => b.score - a.score || a.index - b.index)
+
+  // Category priority order: the partner's own silhouette picks first. The
+  // `pieces` list (from translateQuiz) is already ordered by pick order —
+  // walk it and map each piece name back to its category to recover that
+  // order without re-reading the raw quiz.silhouettes array. Then append any
+  // other categories present among the candidates (best-score-first) so
+  // off-silhouette items can still contribute to diversity.
+  const pieceToCategory = new Map()
+  for (const [silhouette, piecesForSilhouette] of Object.entries(SILHOUETTE_MAP)) {
+    for (const p of piecesForSilhouette) pieceToCategory.set(p, silhouette)
+  }
+  const categoryOrder = []
+  const seenCategory = new Set()
+  for (const p of pieces) {
+    const cat = pieceToCategory.get(p)
+    if (cat && !seenCategory.has(cat)) {
+      seenCategory.add(cat)
+      categoryOrder.push(cat)
+    }
+  }
+  for (const s of sorted) {
+    if (!seenCategory.has(s.category)) {
+      seenCategory.add(s.category)
+      categoryOrder.push(s.category)
+    }
+  }
 
   const chosen = []
   const chosenBases = new Set()
-  for (const s of positive) {
+  const usedCategories = new Set()
+
+  // Pass 1: best-scoring (score > 0) item from each not-yet-represented
+  // category, categories visited in priority order.
+  for (const cat of categoryOrder) {
     if (chosen.length >= limit) break
-    if (chosenBases.has(s.base)) continue
-    chosen.push(s.item)
-    chosenBases.add(s.base)
+    const best = sorted.find((s) => s.category === cat && s.score > 0 && !chosenBases.has(s.base))
+    if (!best) continue
+    chosen.push(best.item)
+    chosenBases.add(best.base)
+    usedCategories.add(cat)
+  }
+
+  // Pass 2: still short? Only now allow a second (score > 0) item from a
+  // category already used — never before every distinct category had a turn.
+  if (chosen.length < limit) {
+    for (const s of sorted) {
+      if (chosen.length >= limit) break
+      if (s.score <= 0 || chosenBases.has(s.base)) continue
+      chosen.push(s.item)
+      chosenBases.add(s.base)
+      usedCategories.add(s.category)
+    }
   }
 
   if (chosen.length >= limit) return chosen
 
   // Backfill with next-highest-scoring in-stock items (score can be 0) so we
   // still return up to `limit` when the catalog has enough DISTINCT pieces —
-  // never a second color of a piece already chosen.
+  // same category-diversity-first rule applies to the backfill pool.
   const chosenSet = new Set(chosen)
-  const backfill = scored
-    .filter((s) => !chosenSet.has(s.item) && s.item?.available !== false)
-    .sort((a, b) => b.score - a.score || a.index - b.index)
+  const backfillPool = sorted.filter((s) => !chosenSet.has(s.item) && s.item?.available !== false)
 
-  for (const s of backfill) {
+  for (const cat of categoryOrder) {
     if (chosen.length >= limit) break
-    if (chosenBases.has(s.base)) continue
-    chosen.push(s.item)
-    chosenBases.add(s.base)
+    if (usedCategories.has(cat)) continue
+    const best = backfillPool.find((s) => s.category === cat && !chosenBases.has(s.base))
+    if (!best) continue
+    chosen.push(best.item)
+    chosenBases.add(best.base)
+    usedCategories.add(cat)
+  }
+
+  if (chosen.length < limit) {
+    for (const s of backfillPool) {
+      if (chosen.length >= limit) break
+      if (chosenBases.has(s.base)) continue
+      chosen.push(s.item)
+      chosenBases.add(s.base)
+    }
   }
 
   return chosen.slice(0, limit)
