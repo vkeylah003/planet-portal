@@ -176,18 +176,72 @@ function baseName(title) {
   return (dash > -1 ? t.slice(0, dash) : t).trim().toLowerCase()
 }
 
+// ── Category inference for size filtering ──
+// The style quiz stores sizes as quiz.sizes = { tops, bottoms, dress, shoe }
+// (see SIZE_LABELS in AdminDashboard.jsx's QuizAnswers). The catalog has no
+// direct field for this, so we infer which of those a catalog item belongs to.
+// Layering Pieces (jackets/vests/capes) and Jumpsuits have no corresponding
+// quiz.sizes field, so they're intentionally left out of this map — those
+// items (and anything else we can't confidently categorize) are never
+// size-filtered, rather than guessing wrong and zeroing out inventory.
+const SILHOUETTE_SIZE_CATEGORY = {
+  'Pants-forward': 'bottoms',
+  Skirts: 'bottoms',
+  Dresses: 'dress',
+  'Tops & Blouses': 'tops',
+}
+
+// Infer a catalog item's quiz.sizes category ('tops' | 'bottoms' | 'dress'),
+// trying Shopify's own product_type first, then falling back to matching the
+// item's title against the piece names grouped in SILHOUETTE_MAP. Returns
+// null when it can't confidently tell — callers must treat that as "don't
+// filter this item on size."
+function inferSizeCategory(item) {
+  const productType = String(item?.product_type || '').toLowerCase().trim()
+  if (productType) {
+    if (/dress/.test(productType)) return 'dress'
+    if (/pant|skirt|short|trouser|bottom|gaucho/.test(productType)) return 'bottoms'
+    if (/top|blouse|tee|shirt|tank/.test(productType)) return 'tops'
+  }
+
+  const title = String(item?.title || '').toLowerCase()
+  for (const [silhouette, category] of Object.entries(SILHOUETTE_SIZE_CATEGORY)) {
+    const piecesForSilhouette = SILHOUETTE_MAP[silhouette] || []
+    if (piecesForSilhouette.some((p) => title.includes(p.toLowerCase()))) return category
+  }
+  return null
+}
+
+// Whether a catalog item should be dropped because it's confidently NOT in
+// the partner's answered size. Only filters when we can confidently tell
+// BOTH the item's category AND that it has a size dimension at all (a
+// non-empty availableSizes) — an unknown category, a blank quiz answer for
+// that category, or no "Size" option on the product all mean "don't filter."
+function failsSizeFilter(item, sizesAnswered) {
+  const category = inferSizeCategory(item)
+  if (!category) return false
+  const wanted = sizesAnswered[category]
+  if (!wanted || !String(wanted).trim()) return false
+  const sizes = Array.isArray(item?.availableSizes) ? item.availableSizes : []
+  if (sizes.length === 0) return false
+  const wantedNorm = String(wanted).trim().toLowerCase()
+  return !sizes.some((s) => String(s).trim().toLowerCase() === wantedNorm)
+}
+
 /**
  * Score and rank live catalog items against a partner's translated quiz
  * preferences, for the curation team to pull from at a glance.
  * @param {object} quiz - the stored style_quiz object.
  * @param {Array} catalogItems - items from fetchCatalog() (../lib/catalog).
+ *   Each item's `availableSizes` (if any) is checked against quiz.sizes.
  * @param {{limit?: number, excludePieceNames?: string[]}} [opts]
  *   - limit: max items to return (default 3).
  *   - excludePieceNames: piece names (any case) the partner has already
  *     received in a prior kit — matched against each item's base name and
  *     excluded entirely, before scoring.
  * @returns {Array} up to `limit` catalog items, highest-scoring first, never
- *   two items sharing a base name (garment) and never an excluded piece.
+ *   two items sharing a base name (garment), never an excluded piece, and
+ *   never an item confidently known to be out of stock in the partner's size.
  */
 export function recommendProducts(quiz, catalogItems, { limit = 3, excludePieceNames = [] } = {}) {
   const excluded = new Set(
@@ -195,10 +249,12 @@ export function recommendProducts(quiz, catalogItems, { limit = 3, excludePieceN
       .map((n) => String(n || '').trim().toLowerCase())
       .filter(Boolean)
   )
+  const sizesAnswered =
+    quiz && quiz.sizes && typeof quiz.sizes === 'object' ? quiz.sizes : {}
 
-  const items = (Array.isArray(catalogItems) ? catalogItems : []).filter(
-    (item) => !excluded.has(baseName(item?.title))
-  )
+  const items = (Array.isArray(catalogItems) ? catalogItems : [])
+    .filter((item) => !excluded.has(baseName(item?.title)))
+    .filter((item) => !failsSizeFilter(item, sizesAnswered))
   if (items.length === 0) return []
 
   const { fabrics, pieces, palette } = translateQuiz(quiz)

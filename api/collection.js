@@ -24,8 +24,14 @@
 // Stylist Collective collection).
 //
 // Response: { items: [{ product_id, title, handle, url, variant_id,
-//                       color, price, image, available, variant_count }],
+//                       color, product_type, price, image, available,
+//                       variant_count, availableSizes }],
 //             count }
+// availableSizes is every in-stock size for the product (deduped, in Shopify's
+// order), derived from a "Size" variant option across ALL available variants
+// (not just the representative one). Empty array means the product has no
+// "Size" option at all (e.g. one-size accessories) — treat that as "no size
+// dimension to filter on", not "nothing in stock".
 // ════════════════════════════════════════════════════════════════════
 
 const DEFAULT_FEED =
@@ -47,6 +53,27 @@ function deriveColor(product, variant) {
   const dash = title.lastIndexOf(' - ')
   if (dash > -1) return title.slice(dash + 3).trim()
   return null
+}
+
+// Every in-stock size for a product, deduped, in Shopify's own order.
+// Same pattern as deriveColor(), but scans ALL available variants (not just
+// one representative) since size varies per-variant, not per-product.
+function deriveAvailableSizes(product, availableVariants) {
+  const sizeOptIndex = (product.options || []).findIndex(
+    (o) => String(o.name).toLowerCase() === 'size'
+  )
+  if (sizeOptIndex < 0) return []
+
+  const sizes = []
+  const seen = new Set()
+  for (const v of availableVariants) {
+    const val = v[`option${sizeOptIndex + 1}`]
+    if (val && val !== 'Default Title' && !seen.has(val)) {
+      seen.add(val)
+      sizes.push(val)
+    }
+  }
+  return sizes
 }
 
 export default async function handler(req, res) {
@@ -100,6 +127,7 @@ export default async function handler(req, res) {
           image,
           available: true,
           variant_count: available.length,
+          availableSizes: deriveAvailableSizes(p, available),
         })
       }
     }
