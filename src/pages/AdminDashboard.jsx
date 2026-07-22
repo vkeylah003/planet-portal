@@ -15,8 +15,7 @@ import {
   statusLabel,
 } from '../lib/report'
 import { computeStats, computeSocial, computeManualSales } from '../lib/stats'
-import { translateQuiz, recommendProducts } from '../lib/quizTranslation'
-import { fetchCatalog } from '../lib/catalog'
+import { translateQuiz } from '../lib/quizTranslation'
 
 function money(n) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
@@ -216,9 +215,7 @@ export default function AdminDashboard() {
         {tab === 'social' && <SocialTab />}
         {tab === 'partners' && <PartnersTab partners={partners} onChange={load} />}
         {tab === 'referrals' && <ReferralsTab partners={partners} />}
-        {tab === 'selections' && (
-          <SelectionsTab selections={selections} kits={kits} pieces={pieces} onChange={load} />
-        )}
+        {tab === 'selections' && <SelectionsTab selections={selections} onChange={load} />}
         {tab === 'outreach' && <OutreachTab />}
         {tab === 'kits' && (
           <KitsTab partners={partners} kits={kits} pieces={pieces} onChange={load} />
@@ -1745,23 +1742,8 @@ function ReferralCreditRow({ credit, sale, referrerName, referredName, onChange 
 
 // Partners' picks from the live catalog. New submissions land here as the
 // admin's notification (count badge on the tab); Sofia marks each reviewed.
-function SelectionsTab({ selections, kits, pieces, onChange }) {
+function SelectionsTab({ selections, onChange }) {
   const [filter, setFilter] = useState('new') // new | reviewed | all
-  const [catalogItems, setCatalogItems] = useState(null) // null = not loaded yet
-
-  useEffect(() => {
-    let cancelled = false
-    fetchCatalog()
-      .then((data) => {
-        if (!cancelled) setCatalogItems(Array.isArray(data?.items) ? data.items : [])
-      })
-      .catch(() => {
-        if (!cancelled) setCatalogItems([])
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   const counts = {
     new: selections.filter((s) => s.status === 'new').length,
@@ -1818,14 +1800,7 @@ function SelectionsTab({ selections, kits, pieces, onChange }) {
       ) : (
         <div className="space-y-4">
           {rows.map((s) => (
-            <SelectionCard
-              key={s.id}
-              selection={s}
-              onChange={onChange}
-              catalogItems={catalogItems}
-              kits={kits}
-              pieces={pieces}
-            />
+            <SelectionCard key={s.id} selection={s} onChange={onChange} />
           ))}
         </div>
       )}
@@ -1833,7 +1808,7 @@ function SelectionsTab({ selections, kits, pieces, onChange }) {
   )
 }
 
-function SelectionCard({ selection, onChange, catalogItems, kits, pieces }) {
+function SelectionCard({ selection, onChange }) {
   const [busy, setBusy] = useState(false)
   const items = Array.isArray(selection.items) ? selection.items : []
   // Style-quiz submissions carry a single tagged payload in `items`; older
@@ -1903,13 +1878,7 @@ function SelectionCard({ selection, onChange, catalogItems, kits, pieces }) {
       </div>
 
       {quiz ? (
-        <QuizAnswers
-          quiz={quiz}
-          catalogItems={catalogItems}
-          partnerId={selection.partner_id}
-          kits={kits}
-          pieces={pieces}
-        />
+        <QuizAnswers quiz={quiz} />
       ) : (
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {items.map((it, i) => (
@@ -1959,7 +1928,7 @@ function SelectionCard({ selection, onChange, catalogItems, kits, pieces }) {
 // Renders a partner's style-quiz answers for the curation team: the multi-select
 // vibe/color/fabric/silhouette/occasion groups as pills, plus structured sizes
 // and anything-to-avoid. Tolerant of missing sections (partner may skip some).
-function QuizAnswers({ quiz, catalogItems, partnerId, kits, pieces }) {
+function QuizAnswers({ quiz }) {
   const groups = [
     { key: 'vibes', label: 'Style vibe' },
     { key: 'colors', label: 'Colors & palette' },
@@ -2033,13 +2002,7 @@ function QuizAnswers({ quiz, catalogItems, partnerId, kits, pieces }) {
         </div>
       )}
 
-      <QuizTranslation
-        quiz={quiz}
-        catalogItems={catalogItems}
-        partnerId={partnerId}
-        kits={kits}
-        pieces={pieces}
-      />
+      <QuizTranslation quiz={quiz} />
     </div>
   )
 }
@@ -2049,37 +2012,13 @@ function QuizAnswers({ quiz, catalogItems, partnerId, kits, pieces }) {
 // at a glance what to pull for their box. Computed LIVE from the map in
 // ../lib/quizTranslation, so refining the map instantly re-flows every quiz
 // (old rows included, even before the backfill stamps them).
-function QuizTranslation({ quiz, catalogItems, partnerId, kits, pieces }) {
+function QuizTranslation({ quiz }) {
   const t = translateQuiz(quiz)
   const cols = [
     { label: 'Fabrics to pull', vals: t.fabrics },
     { label: 'Signature pieces', vals: t.pieces },
     { label: 'Palette', vals: t.palette },
   ].filter((c) => c.vals.length > 0)
-
-  // Pieces this partner has already received in ANY prior kit — excluded from
-  // recommendations entirely so we never re-suggest something already shipped.
-  const excludePieceNames = useMemo(() => {
-    if (!partnerId) return []
-    const partnerKitIds = new Set(
-      (Array.isArray(kits) ? kits : [])
-        .filter((k) => k.partner_id === partnerId)
-        .map((k) => k.id)
-    )
-    if (partnerKitIds.size === 0) return []
-    const names = new Set()
-    for (const p of Array.isArray(pieces) ? pieces : []) {
-      if (partnerKitIds.has(p.kit_id) && p.piece_name) {
-        names.add(String(p.piece_name).trim().toLowerCase())
-      }
-    }
-    return [...names]
-  }, [partnerId, kits, pieces])
-
-  const catalogLoaded = Array.isArray(catalogItems)
-  const recommended = catalogLoaded
-    ? recommendProducts(quiz, catalogItems, { limit: 3, excludePieceNames })
-    : []
 
   if (cols.length === 0) return null
 
@@ -2126,50 +2065,6 @@ function QuizTranslation({ quiz, catalogItems, partnerId, kits, pieces }) {
             <span>{a}</span>
           </p>
         ))}
-
-      {catalogLoaded && recommended.length > 0 && (
-        <div className="border-t border-espresso/10 pt-3">
-          <p className="text-[10px] uppercase tracking-widest text-espresso/50 font-medium mb-1.5">
-            Recommended for their box
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {recommended.map((it) => (
-              <a
-                key={it.variant_id || it.product_id}
-                href={it.url}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl border border-espresso/5 bg-white overflow-hidden hover:border-gold/40 transition"
-              >
-                <div className="aspect-[4/5] bg-cream overflow-hidden">
-                  {it.image ? (
-                    <img
-                      src={it.image}
-                      alt={it.title}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : null}
-                </div>
-                <div className="p-2">
-                  <p className="text-xs font-medium text-espresso leading-tight line-clamp-2">
-                    {it.title}
-                  </p>
-                  {it.color && <p className="text-[11px] text-espresso/45">{it.color}</p>}
-                  {it.price != null && (
-                    <p className="text-[11px] text-espresso/60 mt-0.5">{money(it.price)}</p>
-                  )}
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-      {catalogLoaded && recommended.length === 0 && cols.length > 0 && (
-        <p className="text-xs text-espresso/40 border-t border-espresso/10 pt-3">
-          Recommendations unavailable.
-        </p>
-      )}
     </div>
   )
 }
