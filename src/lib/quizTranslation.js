@@ -212,23 +212,62 @@ function inferOutfitRole(item) {
   return null
 }
 
+// ── Size filtering ──
+// PLANET's own numeric sizing only spans 0, 1, 2, 2-3, 3 (per their published
+// size chart — roughly 26"-32" waist / 37"-44.5" hip). The style quiz's size
+// fields (tops/bottoms/dress/shoe) just ask the partner to type a plain
+// number/size with no stated convention (a partner might answer "6"), which
+// has nothing to do with PLANET's numeric scale. This is NOT a
+// normalization problem (trim/case-fold can't fix it) — it's two different
+// sizing systems, and comparing them falsely excludes real inventory for
+// nearly every partner, not just an edge case.
+//
+// Confirmed against a real pull of
+// https://shopplanetbylaureng.com/collections/stylist-collective/products.json:
+// every non-empty availableSizes value in the live catalog is either
+// PLANET's numeric scale ("0"-"4") or a literal "One Size" — never an alpha
+// S/M/L size a partner's plain-language answer might plausibly match. That
+// numeric scale isn't unique to bottoms/dress either: the live Tank and
+// Shirt product types (both of which inferOutfitRole classifies as 'tops')
+// carry it too, so 'tops' has the exact same mismatch, not a safely
+// different alpha scale. So NO category is currently confidently
+// filterable against the quiz's size answer.
+//
+// A real fix needs the quiz's size question to either collect a waist/hip
+// measurement or explicitly state its convention, so it can be mapped to
+// PLANET's chart. Don't reintroduce filtering here with a guessed
+// conversion table — a wrong mapping would confidently recommend the WRONG
+// size, which is worse than not filtering at all.
+const FILTERABLE_SIZE_CATEGORIES = new Set() // none — see above; don't add tops/bottoms/dress back without fixing the underlying convention mismatch first
+
+// Whether an availableSizes value reads as a one-size garment — "One Size",
+// "OS", "O/S", "One Size Fits All/Most" (common for jackets/sweaters/capes,
+// and some tops). A single one-size variant can never meaningfully fail an
+// exact match against a specific quiz answer, so it's always treated as
+// "don't filter" — for whichever category might become filterable again in
+// the future (see FILTERABLE_SIZE_CATEGORIES above), not just today's set.
+function isOneSizeValue(value) {
+  const normalized = String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+  return ['onesize', 'onesizefitsall', 'onesizefitsmost', 'os'].includes(normalized)
+}
+
 // Whether a catalog item should be dropped because it's confidently NOT in
-// the partner's answered size. quiz.sizes only has tops/bottoms/dress/shoe
-// fields (see SIZE_LABELS in AdminDashboard.jsx's QuizAnswers) — 'outerwear'
-// (and anything inferOutfitRole can't classify) has no corresponding field,
-// so it's never size-filtered, rather than guessing wrong and zeroing out
-// inventory. Only filters when we can confidently tell BOTH the item's
-// category AND that it has a size dimension at all (a non-empty
-// availableSizes) — a blank quiz answer for that category, or no "Size"
-// option on the product, also both mean "don't filter."
+// the partner's answered size. FILTERABLE_SIZE_CATEGORIES is currently
+// empty (see above), so this always returns false today — kept as a real
+// function, rather than inlined, so the one-size exemption and the
+// reasoning stay attached to the actual filtering logic and not just a
+// comment. Only filters when we can confidently tell BOTH the item's
+// category AND that it has a real, sized (non-one-size) dimension — a blank
+// quiz answer for that category, no "Size" option on the product, or a
+// one-size variant all mean "don't filter."
 function failsSizeFilter(item, sizesAnswered) {
   const role = inferOutfitRole(item)
-  const category = role === 'tops' || role === 'bottoms' || role === 'dress' ? role : null
-  if (!category) return false
-  const wanted = sizesAnswered[category]
+  if (!FILTERABLE_SIZE_CATEGORIES.has(role)) return false
+  const wanted = sizesAnswered[role]
   if (!wanted || !String(wanted).trim()) return false
   const sizes = Array.isArray(item?.availableSizes) ? item.availableSizes : []
   if (sizes.length === 0) return false
+  if (sizes.some(isOneSizeValue)) return false
   const wantedNorm = String(wanted).trim().toLowerCase()
   return !sizes.some((s) => String(s).trim().toLowerCase() === wantedNorm)
 }
