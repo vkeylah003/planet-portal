@@ -992,6 +992,7 @@ function PartnersTab({ partners, selections, onChange }) {
         />
       ) : (
         <div className="card overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-espresso/50 text-xs uppercase tracking-widest border-b border-espresso/10">
@@ -1063,6 +1064,7 @@ function PartnersTab({ partners, selections, onChange }) {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
