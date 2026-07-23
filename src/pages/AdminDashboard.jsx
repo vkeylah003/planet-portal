@@ -154,9 +154,10 @@ export default function AdminDashboard() {
     { id: 'social', label: 'Social' },
     { id: 'partners', label: 'Partners' },
     { id: 'referrals', label: 'Referrals' },
-    { id: 'selections', label: 'Selections', badge: newSelections },
+    { id: 'selections', label: 'Submissions', badge: newSelections },
     { id: 'outreach', label: 'Everyone Contacted' },
-    { id: 'kits', label: 'Kit Tracker' },
+    { id: 'needsbox', label: 'Needs a Box' },
+    { id: 'kits', label: 'Order Tracker' },
     { id: 'cycle', label: 'Box Cycle' },
   ]
 
@@ -218,6 +219,9 @@ export default function AdminDashboard() {
         {tab === 'referrals' && <ReferralsTab partners={partners} />}
         {tab === 'selections' && <SelectionsTab selections={selections} onChange={load} />}
         {tab === 'outreach' && <OutreachTab />}
+        {tab === 'needsbox' && (
+          <NeedsBoxTab partners={partners} kits={kits} selections={selections} onChange={load} />
+        )}
         {tab === 'kits' && (
           <KitsTab partners={partners} kits={kits} pieces={pieces} onChange={load} />
         )}
@@ -2089,6 +2093,151 @@ function ShipTo({ address }) {
         {cityZip && <div>{cityZip}</div>}
       </address>
     </div>
+  )
+}
+
+/* ─────────────────────────── Needs a Box ─────────────────────────── */
+
+// Compact "N days ago" / "today" label for a submission's created_at.
+function daysAgoLabel(dateStr) {
+  const then = dateStr ? new Date(dateStr).getTime() : NaN
+  if (Number.isNaN(then)) return ''
+  const days = Math.floor((Date.now() - then) / 86400000)
+  if (days <= 0) return 'today'
+  if (days === 1) return '1 day ago'
+  return `${days} days ago`
+}
+
+// Partners who've completed the style quiz (a real, non-orphaned
+// partner_selections row) but don't currently have an active box — the
+// hand-off point between "quiz done" and "box built." A partner drops out of
+// this tab automatically the moment a kit exists for her, since membership
+// is computed live from `kits`/`selections` on every reload — no separate
+// resolve action needed here.
+function NeedsBoxTab({ partners, kits, selections }) {
+  const [openTile, setOpenTile] = useState(null) // { partner, selection }
+
+  const kitsByPartner = kits.reduce((acc, k) => {
+    ;(acc[k.partner_id] = acc[k.partner_id] || []).push(k)
+    return acc
+  }, {})
+
+  // Most recent real submission per partner. `selections` already arrives
+  // ordered by created_at desc, so the first match per partner_id wins.
+  const latestSelectionByPartner = {}
+  for (const s of selections) {
+    if (!s.partner_id) continue // orphaned row — not a real submission (CLAUDE.md §5c)
+    if (!(s.partner_id in latestSelectionByPartner)) {
+      latestSelectionByPartner[s.partner_id] = s
+    }
+  }
+
+  const candidates = partners
+    .filter((p) => latestSelectionByPartner[p.id])
+    .filter((p) => !(kitsByPartner[p.id] || []).some(isActiveKit))
+
+  return (
+    <div>
+      <h2 className="font-heading text-3xl text-espresso mb-1">Needs a Box</h2>
+      <p className="text-sm text-espresso/55 mb-5 max-w-xl">
+        Completed the quiz, no box out yet. Click a partner to see her full answers,
+        then build her box in Order Tracker.
+      </p>
+
+      {candidates.length === 0 ? (
+        <EmptyState
+          title="Nobody's waiting on a box"
+          hint="Everyone with a completed quiz already has a box out."
+        />
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {candidates.map((p) => {
+            const selection = latestSelectionByPartner[p.id]
+            return (
+              <button
+                key={p.id}
+                onClick={() => setOpenTile({ partner: p, selection })}
+                className="card p-4 text-left hover:border-gold/40 transition"
+              >
+                <p className="font-heading text-lg text-espresso truncate">{p.name}</p>
+                <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                  <PlatformBadge platform={p.platform} />
+                  <span className="text-[11px] text-espresso/45">
+                    {daysAgoLabel(selection.created_at)}
+                  </span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {openTile && (
+        <NeedsBoxDetailModal
+          partner={openTile.partner}
+          selection={openTile.selection}
+          onClose={() => setOpenTile(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+// Read-only detail view for a "Needs a Box" tile — same interaction pattern
+// as KitModal (open on click, ✕/backdrop to close, no navigation). Reuses
+// QuizAnswers/QuizTranslation and the exact shipping/note/product-grid
+// markup SelectionCard already renders, rather than rebuilding any of it.
+function NeedsBoxDetailModal({ partner, selection, onClose }) {
+  const items = Array.isArray(selection.items) ? selection.items : []
+  const quiz = items[0]?.kind === 'style_quiz' ? items[0] : null
+
+  return (
+    <Modal title={`${partner.name}'s submission`} onClose={onClose}>
+      <div className="space-y-4">
+        {quiz ? (
+          <QuizAnswers quiz={quiz} />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {items.map((it, i) => (
+              <div
+                key={`${it.variant_id || it.product_id}-${i}`}
+                className="rounded-xl border border-espresso/5 bg-white overflow-hidden"
+              >
+                <div className="aspect-[4/5] bg-cream overflow-hidden">
+                  {it.image ? (
+                    <img
+                      src={it.image}
+                      alt={it.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : null}
+                </div>
+                <div className="p-2">
+                  <p className="text-xs font-medium text-espresso leading-tight line-clamp-2">
+                    {it.title}
+                  </p>
+                  {it.color && <p className="text-[11px] text-espresso/45">{it.color}</p>}
+                  {it.price != null && (
+                    <p className="text-[11px] text-espresso/60 mt-0.5">{money(it.price)}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {selection.shipping_address && <ShipTo address={selection.shipping_address} />}
+          {selection.note && (
+            <div className="bg-cream rounded-xl px-4 py-3 border border-espresso/5">
+              <p className="label">Note from partner</p>
+              <p className="text-sm text-espresso/75 italic">“{selection.note}”</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </Modal>
   )
 }
 
