@@ -197,6 +197,9 @@ export default function AdminDashboard() {
         {/* Ops-automation alerts (kit-less partners, quiz-not-done nudges) */}
         <OpsAlertsBanner alerts={alerts} onChange={load} />
 
+        {/* Client-computed CTA: quiz done, no box out yet */}
+        <NeedsBoxBanner partners={partners} kits={kits} selections={selections} onChange={load} />
+
         {/* Tabs */}
         <div className="flex gap-2 border-b border-espresso/10 mb-8">
           {tabs.map((t) => (
@@ -325,6 +328,64 @@ function OpsAlertsBanner({ alerts, onChange }) {
           )
         })}
       </div>
+    </div>
+  )
+}
+
+// Client-side CTA banner — NOT the ops_alerts table. Same "needs a box"
+// membership KitsTab's "No box out" section already computes: a real
+// submission (latestSelectionsByPartner) and no kit with isActiveKit true.
+// Same rounded-card/header/list family as OpsAlertsBanner above, but a
+// gold/espresso tone so the two are easy to tell apart at a glance. Renders
+// nothing when nobody qualifies, same "return null when empty" pattern.
+function NeedsBoxBanner({ partners, kits, selections, onChange }) {
+  const [viewing, setViewing] = useState(null) // { partner, selection }
+
+  const kitsByPartner = kits.reduce((acc, k) => {
+    ;(acc[k.partner_id] = acc[k.partner_id] || []).push(k)
+    return acc
+  }, {})
+  const selectionByPartner = latestSelectionsByPartner(selections)
+
+  const candidates = partners.filter(
+    (p) => selectionByPartner[p.id] && !(kitsByPartner[p.id] || []).some(isActiveKit)
+  )
+
+  if (candidates.length === 0) return null
+
+  return (
+    <div className="mb-8 rounded-2xl border border-gold/30 bg-gold/10 p-5">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <h3 className="font-heading text-lg text-espresso">
+          Needs a box{' '}
+          <span className="text-espresso/40 text-sm">({candidates.length})</span>
+        </h3>
+        <span className="text-[10px] uppercase tracking-widest text-espresso/40">
+          Quiz done, no box out
+        </span>
+      </div>
+      <div className="divide-y divide-gold/20">
+        {candidates.map((p) => (
+          <div key={p.id} className="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+            <p className="text-sm text-espresso font-medium min-w-0 truncate">{p.name}</p>
+            <button
+              onClick={() => setViewing({ partner: p, selection: selectionByPartner[p.id] })}
+              className="btn-outline text-xs shrink-0"
+            >
+              View
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {viewing && (
+        <PartnerDetailModal
+          partner={viewing.partner}
+          selection={viewing.selection}
+          onClose={() => setViewing(null)}
+          onChange={onChange}
+        />
+      )}
     </div>
   )
 }
@@ -997,6 +1058,7 @@ function PartnersTab({ partners, selections, onChange }) {
             <thead>
               <tr className="text-left text-espresso/50 text-xs uppercase tracking-widest border-b border-espresso/10">
                 <th className="px-5 py-3 font-medium">Name</th>
+                <th className="px-5 py-3 font-medium">Quiz</th>
                 <th className="px-5 py-3 font-medium">Email</th>
                 <th className="px-5 py-3 font-medium">Platform</th>
                 <th className="px-5 py-3 font-medium">Instagram</th>
@@ -1018,6 +1080,18 @@ function PartnersTab({ partners, selections, onChange }) {
                         </span>
                       )}
                     </span>
+                  </td>
+                  <td className="px-5 py-3">
+                    {selectionByPartner[p.id] ? (
+                      <button
+                        onClick={() => setViewing(p)}
+                        className="btn-outline text-xs whitespace-nowrap"
+                      >
+                        View quiz
+                      </button>
+                    ) : (
+                      <span className="text-espresso/25">—</span>
+                    )}
                   </td>
                   <td className="px-5 py-3 text-espresso/60">{p.email}</td>
                   <td className="px-5 py-3">
