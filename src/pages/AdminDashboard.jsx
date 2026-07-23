@@ -157,6 +157,7 @@ export default function AdminDashboard() {
     { id: 'selections', label: 'Selections', badge: newSelections },
     { id: 'outreach', label: 'Everyone Contacted' },
     { id: 'kits', label: 'Kit Tracker' },
+    { id: 'cycle', label: 'Box Cycle' },
   ]
 
   return (
@@ -219,6 +220,9 @@ export default function AdminDashboard() {
         {tab === 'outreach' && <OutreachTab />}
         {tab === 'kits' && (
           <KitsTab partners={partners} kits={kits} pieces={pieces} onChange={load} />
+        )}
+        {tab === 'cycle' && (
+          <BoxCycleTab partners={partners} kits={kits} selections={selections} />
         )}
       </main>
     </div>
@@ -2539,6 +2543,148 @@ function KitsTab({ partners, kits, pieces, onChange }) {
           onClose={() => setEditing(null)}
           onChange={onChange}
         />
+      )}
+    </div>
+  )
+}
+
+/* ─────────────────────────── Box Cycle ───────────────────────────── */
+
+// Where each Active Partner sits in the monthly box cycle: has a box out
+// right now, has done the quiz and is waiting on curation, or hasn't even
+// done the quiz yet. Priority order matters — an active box is the
+// actionable state regardless of quiz status, so it's checked first.
+const BOX_CYCLE_BUCKETS = [
+  { id: 'has_box', label: 'Has a box' },
+  { id: 'waiting_box', label: 'Waiting on a box' },
+  { id: 'waiting_quiz', label: 'Waiting on the quiz' },
+]
+
+function boxCycleBucket(partner, kitsByPartner, selectedPartnerIds) {
+  const partnerKits = kitsByPartner[partner.id] || []
+  if (partnerKits.some(isActiveKit)) return 'has_box'
+  if (selectedPartnerIds.has(partner.id)) return 'waiting_box'
+  return 'waiting_quiz'
+}
+
+function BoxCycleTab({ partners, kits, selections }) {
+  const [filter, setFilter] = useState('All')
+
+  // The monthly-box cohort. Intentionally excludes Contacted/Interested/
+  // Passed — this tab is about cadence for partners already in rotation.
+  // Easy to widen later (e.g. include 'Interested') if that turns out wrong.
+  const pool = partners.filter((p) => p.status === 'Active Partner')
+
+  // Same grouping approach as KitsTab: all kits per partner, newest first
+  // (`kits` already arrives ordered by created_at desc).
+  const kitsByPartner = kits.reduce((acc, k) => {
+    ;(acc[k.partner_id] = acc[k.partner_id] || []).push(k)
+    return acc
+  }, {})
+
+  // A partner has "done the quiz" if a partner_selections row is actually
+  // linked to them — orphaned rows (partner_id null, see CLAUDE.md §5c)
+  // don't count as a real answer for this feature.
+  const selectedPartnerIds = new Set(
+    selections.filter((s) => s.partner_id).map((s) => s.partner_id)
+  )
+
+  const bucketOf = (p) => boxCycleBucket(p, kitsByPartner, selectedPartnerIds)
+
+  const countFor = (bucketId) => pool.filter((p) => bucketOf(p) === bucketId).length
+
+  const filterTabs = [
+    { id: 'All', label: `All (${pool.length})` },
+    ...BOX_CYCLE_BUCKETS.map((b) => ({ id: b.id, label: `${b.label} (${countFor(b.id)})` })),
+  ]
+
+  const filteredPartners = pool.filter((p) => filter === 'All' || bucketOf(p) === filter)
+
+  return (
+    <div>
+      <h2 className="font-heading text-3xl text-espresso mb-1">Box Cycle</h2>
+      <p className="text-sm text-espresso/55 mb-5 max-w-xl">
+        Active Partners grouped by where they are in the monthly box cycle, with each
+        partner's full box history so it's easy to judge who's due for the next one.
+      </p>
+
+      {pool.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-5">
+          {filterTabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setFilter(t.id)}
+              className={`rounded-full px-4 py-1.5 text-xs font-medium tracking-wide border transition ${
+                filter === t.id
+                  ? 'border-gold bg-gold/15 text-espresso'
+                  : 'border-espresso/15 text-espresso/55 hover:border-espresso/40'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {pool.length === 0 ? (
+        <EmptyState
+          title="No Active Partners yet"
+          hint="Partners show up here once their status is Active Partner."
+        />
+      ) : filteredPartners.length === 0 ? (
+        <EmptyState title="No partners match this filter" hint="Try a different bucket." />
+      ) : (
+        <div className="space-y-4">
+          {filteredPartners.map((p) => {
+            const partnerKits = kitsByPartner[p.id] || []
+            const bucket = bucketOf(p)
+            const bucketMeta = BOX_CYCLE_BUCKETS.find((b) => b.id === bucket)
+            // Oldest-first kit's created_at is the "since" anchor for the
+            // total-boxes line — always present, unlike ship_date which can
+            // be null for a box still in Preparing.
+            const sinceDate = partnerKits[partnerKits.length - 1]?.created_at?.slice(0, 10)
+
+            return (
+              <div key={p.id} className="card p-5">
+                <div className="flex items-start justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h3 className="font-heading text-xl text-espresso">{p.name}</h3>
+                    <PlatformBadge platform={p.platform} />
+                    <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium tracking-wide bg-gold/15 text-espresso">
+                      {bucketMeta?.label}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <p className="text-[11px] uppercase tracking-widest text-espresso/40 mb-2">
+                    Box history
+                  </p>
+                  {partnerKits.length === 0 ? (
+                    <p className="text-sm text-espresso/45">No boxes yet.</p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-espresso/55 mb-2">
+                        {partnerKits.length} box{partnerKits.length === 1 ? '' : 'es'}
+                        {sinceDate ? ` since ${sinceDate}` : ''}
+                      </p>
+                      <div className="space-y-1.5">
+                        {partnerKits.map((k) => (
+                          <div key={k.id} className="flex items-center gap-2 text-xs">
+                            <span className="text-espresso/55 tabular-nums w-24 shrink-0">
+                              {k.ship_date || 'not yet shipped'}
+                            </span>
+                            <Badge status={k.status} />
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
       )}
     </div>
   )
