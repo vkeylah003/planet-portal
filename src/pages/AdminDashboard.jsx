@@ -33,6 +33,19 @@ const ACTIVE_KIT_STATUSES = ['Preparing', 'Shipped', 'Delivered', 'Return Pendin
 const isActiveKit = (k) => ACTIVE_KIT_STATUSES.includes(k?.status)
 const PLATFORMS = ['GoAffPro', 'Impact']
 
+// Most recent REAL partner_selections row per partner_id — orphaned rows
+// (partner_id null, see CLAUDE.md §5c) don't count as a real submission.
+// `selections` must already be ordered by created_at desc (as loaded at the
+// Dashboard root) so the first match per partner wins.
+function latestSelectionsByPartner(selections) {
+  const map = {}
+  for (const s of selections) {
+    if (!s.partner_id) continue
+    if (!(s.partner_id in map)) map[s.partner_id] = s
+  }
+  return map
+}
+
 // Partners we explicitly GIFTED product to (no return expected) — distinct
 // from the normal sample-kit partners who send the kit back. The `gifted`
 // boolean on the partners table is the source of truth; this email set is a
@@ -146,17 +159,13 @@ export default function AdminDashboard() {
 
   if (loading) return <FullPageLoader label="Loading dashboard…" />
 
-  const newSelections = selections.filter((s) => s.status === 'new').length
-
   const tabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'stats', label: 'Stats' },
     { id: 'social', label: 'Social' },
     { id: 'partners', label: 'Partners' },
     { id: 'referrals', label: 'Referrals' },
-    { id: 'selections', label: 'Submissions', badge: newSelections },
     { id: 'outreach', label: 'Everyone Contacted' },
-    { id: 'needsbox', label: 'Needs a Box' },
     { id: 'kits', label: 'Order Tracker' },
     { id: 'cycle', label: 'Box Cycle' },
   ]
@@ -215,15 +224,19 @@ export default function AdminDashboard() {
         )}
         {tab === 'stats' && <StatsTab />}
         {tab === 'social' && <SocialTab />}
-        {tab === 'partners' && <PartnersTab partners={partners} onChange={load} />}
-        {tab === 'referrals' && <ReferralsTab partners={partners} />}
-        {tab === 'selections' && <SelectionsTab selections={selections} onChange={load} />}
-        {tab === 'outreach' && <OutreachTab />}
-        {tab === 'needsbox' && (
-          <NeedsBoxTab partners={partners} kits={kits} selections={selections} onChange={load} />
+        {tab === 'partners' && (
+          <PartnersTab partners={partners} selections={selections} onChange={load} />
         )}
+        {tab === 'referrals' && <ReferralsTab partners={partners} />}
+        {tab === 'outreach' && <OutreachTab />}
         {tab === 'kits' && (
-          <KitsTab partners={partners} kits={kits} pieces={pieces} onChange={load} />
+          <KitsTab
+            partners={partners}
+            kits={kits}
+            pieces={pieces}
+            selections={selections}
+            onChange={load}
+          />
         )}
         {tab === 'cycle' && (
           <BoxCycleTab partners={partners} kits={kits} selections={selections} />
@@ -833,12 +846,15 @@ function CopyLinkButton({ partner, className = '' }) {
   )
 }
 
-function PartnersTab({ partners, onChange }) {
+function PartnersTab({ partners, selections, onChange }) {
   const [editing, setEditing] = useState(null) // partner object or {} for new
+  const [viewing, setViewing] = useState(null) // partner object — read-only detail view
   const [platformFilter, setPlatformFilter] = useState('All') // All | GoAffPro | Impact
   const [giftedFilter, setGiftedFilter] = useState('All') // All | Gifted | Standard
   const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState(null) // { ok, message } | { error }
+
+  const selectionByPartner = latestSelectionsByPartner(selections)
 
   async function runSync() {
     setSyncing(true)
@@ -1029,7 +1045,13 @@ function PartnersTab({ partners, onChange }) {
                   <td className="px-5 py-3">
                     <CopyLinkButton partner={p} />
                   </td>
-                  <td className="px-5 py-3 text-right">
+                  <td className="px-5 py-3 text-right space-x-2">
+                    <button
+                      onClick={() => setViewing(p)}
+                      className="btn-ghost text-xs"
+                    >
+                      View
+                    </button>
                     <button
                       onClick={() => setEditing(p)}
                       className="btn-ghost text-xs"
@@ -1042,6 +1064,15 @@ function PartnersTab({ partners, onChange }) {
             </tbody>
           </table>
         </div>
+      )}
+
+      {viewing && (
+        <PartnerDetailModal
+          partner={viewing}
+          selection={selectionByPartner[viewing.id]}
+          onClose={() => setViewing(null)}
+          onChange={onChange}
+        />
       )}
 
       {editing && (
@@ -1746,193 +1777,6 @@ function ReferralCreditRow({ credit, sale, referrerName, referredName, onChange 
   )
 }
 
-/* ─────────────────────────── Selections ──────────────────────────── */
-
-// Partners' picks from the live catalog. New submissions land here as the
-// admin's notification (count badge on the tab); Sofia marks each reviewed.
-function SelectionsTab({ selections, onChange }) {
-  const [filter, setFilter] = useState('new') // new | reviewed | all
-
-  const counts = {
-    new: selections.filter((s) => s.status === 'new').length,
-    reviewed: selections.filter((s) => s.status === 'reviewed').length,
-    all: selections.length,
-  }
-
-  const rows =
-    filter === 'all' ? selections : selections.filter((s) => s.status === filter)
-
-  const filterTabs = [
-    { id: 'new', label: `Pending (${counts.new})` },
-    { id: 'reviewed', label: `Reviewed (${counts.reviewed})` },
-    { id: 'all', label: `All (${counts.all})` },
-  ]
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="font-heading text-3xl text-espresso">Style Preferences</h2>
-        <p className="text-sm text-espresso/55 mt-1 max-w-xl">
-          Partners' style-quiz answers — the vibes, colors, fabrics, silhouettes, sizes and
-          occasions to curate their box from. New submissions appear here (and flag the tab)
-          so you see them at a glance. Older rows may show pieces picked under the previous
-          catalog flow.
-        </p>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        {filterTabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setFilter(t.id)}
-            className={`rounded-full px-4 py-1.5 text-xs font-medium tracking-wide border transition ${
-              filter === t.id
-                ? 'border-gold bg-gold/15 text-espresso'
-                : 'border-espresso/15 text-espresso/55 hover:border-espresso/40'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {rows.length === 0 ? (
-        <EmptyState
-          title={filter === 'new' ? 'No pending selections' : 'Nothing here'}
-          hint={
-            filter === 'new'
-              ? "When a partner submits their picks, they'll show up here."
-              : 'Try a different filter.'
-          }
-        />
-      ) : (
-        <div className="space-y-4">
-          {rows.map((s) => (
-            <SelectionCard key={s.id} selection={s} onChange={onChange} />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function SelectionCard({ selection, onChange }) {
-  const [busy, setBusy] = useState(false)
-  const items = Array.isArray(selection.items) ? selection.items : []
-  // Style-quiz submissions carry a single tagged payload in `items`; older
-  // rows carry an array of picked products. Detect which so each renders right.
-  const quiz = items[0]?.kind === 'style_quiz' ? items[0] : null
-
-  const when = selection.created_at
-    ? new Date(selection.created_at).toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-      })
-    : '—'
-
-  async function setStatus(status) {
-    setBusy(true)
-    await supabase.from('partner_selections').update({ status }).eq('id', selection.id)
-    setBusy(false)
-    onChange()
-  }
-
-  const isNew = selection.status === 'new'
-
-  return (
-    <div
-      className={`card p-5 ${isNew ? 'border-l-4 border-l-gold' : ''}`}
-    >
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h3 className="font-heading text-xl text-espresso">
-              {selection.partner_name || selection.partner_email}
-            </h3>
-            {isNew ? (
-              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-gold/20 text-gold">
-                New
-              </span>
-            ) : (
-              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-green-100 text-green-700">
-                Reviewed
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-espresso/45 mt-0.5">
-            {selection.partner_email} · {when}
-          </p>
-        </div>
-        {isNew ? (
-          <button
-            onClick={() => setStatus('reviewed')}
-            disabled={busy}
-            className="btn-outline text-xs shrink-0"
-          >
-            {busy ? <Spinner /> : 'Mark reviewed'}
-          </button>
-        ) : (
-          <button
-            onClick={() => setStatus('new')}
-            disabled={busy}
-            className="btn-ghost text-xs shrink-0"
-          >
-            {busy ? <Spinner /> : 'Reopen'}
-          </button>
-        )}
-      </div>
-
-      {quiz ? (
-        <QuizAnswers quiz={quiz} />
-      ) : (
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {items.map((it, i) => (
-            <div
-              key={`${it.variant_id || it.product_id}-${i}`}
-              className="rounded-xl border border-espresso/5 bg-white overflow-hidden"
-            >
-              <div className="aspect-[4/5] bg-cream overflow-hidden">
-                {it.image ? (
-                  <img
-                    src={it.image}
-                    alt={it.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                ) : null}
-              </div>
-              <div className="p-2">
-                <p className="text-xs font-medium text-espresso leading-tight line-clamp-2">
-                  {it.title}
-                </p>
-                {it.color && <p className="text-[11px] text-espresso/45">{it.color}</p>}
-                {it.price != null && (
-                  <p className="text-[11px] text-espresso/60 mt-0.5">{money(it.price)}</p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        {selection.shipping_address && (
-          <ShipTo address={selection.shipping_address} />
-        )}
-        {selection.note && (
-          <div className="bg-cream rounded-xl px-4 py-3 border border-espresso/5">
-            <p className="label">Note from partner</p>
-            <p className="text-sm text-espresso/75 italic">“{selection.note}”</p>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 // Renders a partner's style-quiz answers for the curation team: the multi-select
 // vibe/color/fabric/silhouette/occasion groups as pills, plus structured sizes
 // and anything-to-avoid. Tolerant of missing sections (partner may skip some).
@@ -2096,146 +1940,132 @@ function ShipTo({ address }) {
   )
 }
 
-/* ─────────────────────────── Needs a Box ─────────────────────────── */
+/* ────────────────────────── Partner detail ───────────────────────── */
 
-// Compact "N days ago" / "today" label for a submission's created_at.
-function daysAgoLabel(dateStr) {
-  const then = dateStr ? new Date(dateStr).getTime() : NaN
-  if (Number.isNaN(then)) return ''
-  const days = Math.floor((Date.now() - then) / 86400000)
-  if (days <= 0) return 'today'
-  if (days === 1) return '1 day ago'
-  return `${days} days ago`
-}
-
-// Partners who've completed the style quiz (a real, non-orphaned
-// partner_selections row) but don't currently have an active box — the
-// hand-off point between "quiz done" and "box built." A partner drops out of
-// this tab automatically the moment a kit exists for her, since membership
-// is computed live from `kits`/`selections` on every reload — no separate
-// resolve action needed here.
-function NeedsBoxTab({ partners, kits, selections }) {
-  const [openTile, setOpenTile] = useState(null) // { partner, selection }
-
-  const kitsByPartner = kits.reduce((acc, k) => {
-    ;(acc[k.partner_id] = acc[k.partner_id] || []).push(k)
-    return acc
-  }, {})
-
-  // Most recent real submission per partner. `selections` already arrives
-  // ordered by created_at desc, so the first match per partner_id wins.
-  const latestSelectionByPartner = {}
-  for (const s of selections) {
-    if (!s.partner_id) continue // orphaned row — not a real submission (CLAUDE.md §5c)
-    if (!(s.partner_id in latestSelectionByPartner)) {
-      latestSelectionByPartner[s.partner_id] = s
-    }
-  }
-
-  const candidates = partners
-    .filter((p) => latestSelectionByPartner[p.id])
-    .filter((p) => !(kitsByPartner[p.id] || []).some(isActiveKit))
-
-  return (
-    <div>
-      <h2 className="font-heading text-3xl text-espresso mb-1">Needs a Box</h2>
-      <p className="text-sm text-espresso/55 mb-5 max-w-xl">
-        Completed the quiz, no box out yet. Click a partner to see her full answers,
-        then build her box in Order Tracker.
-      </p>
-
-      {candidates.length === 0 ? (
-        <EmptyState
-          title="Nobody's waiting on a box"
-          hint="Everyone with a completed quiz already has a box out."
-        />
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {candidates.map((p) => {
-            const selection = latestSelectionByPartner[p.id]
-            return (
-              <button
-                key={p.id}
-                onClick={() => setOpenTile({ partner: p, selection })}
-                className="card p-4 text-left hover:border-gold/40 transition"
-              >
-                <p className="font-heading text-lg text-espresso truncate">{p.name}</p>
-                <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-                  <PlatformBadge platform={p.platform} />
-                  <span className="text-[11px] text-espresso/45">
-                    {daysAgoLabel(selection.created_at)}
-                  </span>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {openTile && (
-        <NeedsBoxDetailModal
-          partner={openTile.partner}
-          selection={openTile.selection}
-          onClose={() => setOpenTile(null)}
-        />
-      )}
-    </div>
-  )
-}
-
-// Read-only detail view for a "Needs a Box" tile — same interaction pattern
+// Read-only partner profile, plus (when she has one) her latest style-quiz
+// submission — the shared detail view opened from the Partners tab's "View"
+// button and Order Tracker's "No box out" section. Same interaction pattern
 // as KitModal (open on click, ✕/backdrop to close, no navigation). Reuses
 // QuizAnswers/QuizTranslation and the exact shipping/note/product-grid
-// markup SelectionCard already renders, rather than rebuilding any of it.
-function NeedsBoxDetailModal({ partner, selection, onClose }) {
-  const items = Array.isArray(selection.items) ? selection.items : []
+// markup SelectionCard used to render, rather than rebuilding any of it.
+// `selection` is optional — pass null/undefined for a partner with no
+// submission and only the profile section renders.
+function PartnerDetailModal({ partner, selection, onClose, onChange }) {
+  const [busy, setBusy] = useState(false)
+
+  const items = selection && Array.isArray(selection.items) ? selection.items : []
   const quiz = items[0]?.kind === 'style_quiz' ? items[0] : null
+  const isNew = selection?.status === 'new'
+
+  // Same status-toggle behavior the old Submissions tab's SelectionCard had —
+  // the one piece of that tab's functionality that had to survive its removal.
+  async function setStatus(status) {
+    setBusy(true)
+    await supabase.from('partner_selections').update({ status }).eq('id', selection.id)
+    setBusy(false)
+    onChange()
+  }
 
   return (
-    <Modal title={`${partner.name}'s submission`} onClose={onClose}>
+    <Modal title={partner.name} onClose={onClose}>
       <div className="space-y-4">
-        {quiz ? (
-          <QuizAnswers quiz={quiz} />
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {items.map((it, i) => (
-              <div
-                key={`${it.variant_id || it.product_id}-${i}`}
-                className="rounded-xl border border-espresso/5 bg-white overflow-hidden"
-              >
-                <div className="aspect-[4/5] bg-cream overflow-hidden">
-                  {it.image ? (
-                    <img
-                      src={it.image}
-                      alt={it.title}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : null}
-                </div>
-                <div className="p-2">
-                  <p className="text-xs font-medium text-espresso leading-tight line-clamp-2">
-                    {it.title}
-                  </p>
-                  {it.color && <p className="text-[11px] text-espresso/45">{it.color}</p>}
-                  {it.price != null && (
-                    <p className="text-[11px] text-espresso/60 mt-0.5">{money(it.price)}</p>
-                  )}
-                </div>
-              </div>
-            ))}
+        {/* Partner info — same fields/labels PartnerModal already shows */}
+        <div className="rounded-xl border border-espresso/10 bg-white p-4 space-y-2.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            {partner.platform ? (
+              <PlatformBadge platform={partner.platform} />
+            ) : (
+              <span className="text-espresso/25 text-xs">—</span>
+            )}
+            <Badge status={partner.status} />
           </div>
-        )}
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          {selection.shipping_address && <ShipTo address={selection.shipping_address} />}
-          {selection.note && (
-            <div className="bg-cream rounded-xl px-4 py-3 border border-espresso/5">
+          <p className="text-sm text-espresso/75">
+            <span className="text-espresso/45">Email: </span>
+            {partner.email}
+          </p>
+          {partner.instagram && (
+            <p className="text-sm text-espresso/75">
+              <span className="text-espresso/45">Instagram: </span>
+              {partner.instagram}
+            </p>
+          )}
+          {partner.partner_message && (
+            <div>
               <p className="label">Note from partner</p>
-              <p className="text-sm text-espresso/75 italic">“{selection.note}”</p>
+              <p className="text-sm text-espresso/70 italic">“{partner.partner_message}”</p>
             </div>
           )}
         </div>
+
+        {selection && (
+          <div className="border-t border-espresso/10 pt-4 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[11px] uppercase tracking-widest text-espresso/40">
+                Style quiz submission
+              </span>
+              {isNew ? (
+                <button
+                  onClick={() => setStatus('reviewed')}
+                  disabled={busy}
+                  className="btn-outline text-xs shrink-0"
+                >
+                  {busy ? <Spinner /> : 'Mark reviewed'}
+                </button>
+              ) : (
+                <button
+                  onClick={() => setStatus('new')}
+                  disabled={busy}
+                  className="btn-ghost text-xs shrink-0"
+                >
+                  {busy ? <Spinner /> : 'Reopen'}
+                </button>
+              )}
+            </div>
+
+            {quiz ? (
+              <QuizAnswers quiz={quiz} />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {items.map((it, i) => (
+                  <div
+                    key={`${it.variant_id || it.product_id}-${i}`}
+                    className="rounded-xl border border-espresso/5 bg-white overflow-hidden"
+                  >
+                    <div className="aspect-[4/5] bg-cream overflow-hidden">
+                      {it.image ? (
+                        <img
+                          src={it.image}
+                          alt={it.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : null}
+                    </div>
+                    <div className="p-2">
+                      <p className="text-xs font-medium text-espresso leading-tight line-clamp-2">
+                        {it.title}
+                      </p>
+                      {it.color && <p className="text-[11px] text-espresso/45">{it.color}</p>}
+                      {it.price != null && (
+                        <p className="text-[11px] text-espresso/60 mt-0.5">{money(it.price)}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {selection.shipping_address && <ShipTo address={selection.shipping_address} />}
+              {selection.note && (
+                <div className="bg-cream rounded-xl px-4 py-3 border border-espresso/5">
+                  <p className="label">Note from partner</p>
+                  <p className="text-sm text-espresso/75 italic">“{selection.note}”</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </Modal>
   )
@@ -2519,28 +2349,34 @@ function CurrentKitPanel({ kit, pieces }) {
 
 // A PREVIOUS box: a returned kit. A clean one-line history entry — no pieces,
 // no countdown. Pieces belong only to the current box.
-function PreviousKitPanel({ kit, onManage }) {
+function PreviousKitPanel({ kit, pieces, onManage, onViewProducts }) {
   return (
     <div className="rounded-xl bg-espresso/[0.03] border border-espresso/5 px-4 py-3">
       <div className="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-espresso/55">
         <Badge status={kit.status} />
         {kit.ship_date && <span>Shipped {kit.ship_date}</span>}
         {kit.tracking_number && <span className="text-espresso/40">{kit.tracking_number}</span>}
-        <button
-          onClick={onManage}
-          className="ml-auto text-espresso/40 hover:text-gold"
-        >
-          Manage
-        </button>
+        <div className="ml-auto flex items-center gap-3">
+          {pieces && pieces.length > 0 && (
+            <button onClick={onViewProducts} className="text-espresso/40 hover:text-gold">
+              View products
+            </button>
+          )}
+          <button onClick={onManage} className="text-espresso/40 hover:text-gold">
+            Manage
+          </button>
+        </div>
       </div>
       {kit.notes && <p className="mt-2 text-[11px] text-espresso/45 italic">{kit.notes}</p>}
     </div>
   )
 }
 
-function KitsTab({ partners, kits, pieces, onChange }) {
+function KitsTab({ partners, kits, pieces, selections, onChange }) {
   const [editing, setEditing] = useState(null) // { partner, kit } — kit null = create new box
   const [statusFilter, setStatusFilter] = useState('All') // All | <kit status> | No box out
+  const [viewingSelection, setViewingSelection] = useState(null) // { partner, selection }
+  const [viewingPieces, setViewingPieces] = useState(null) // a previous kit, to show its pieces
 
   // Group ALL kits per partner (a partner can have several over time), newest
   // first. `kits` already arrives ordered by created_at desc.
@@ -2552,6 +2388,7 @@ function KitsTab({ partners, kits, pieces, onChange }) {
     ;(acc[pc.kit_id] = acc[pc.kit_id] || []).push(pc)
     return acc
   }, {})
+  const selectionByPartner = latestSelectionsByPartner(selections)
 
   // A partner matches a status filter if any of their boxes has that status.
   // "No box out" = they have no active box (never sent, or all returned).
@@ -2655,9 +2492,21 @@ function KitsTab({ partners, kits, pieces, onChange }) {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-espresso/45">
-                      No box currently out — nothing with {firstName} right now.
-                    </p>
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <p className="text-sm text-espresso/45">
+                        No box currently out — nothing with {firstName} right now.
+                      </p>
+                      {selectionByPartner[p.id] && (
+                        <button
+                          onClick={() =>
+                            setViewingSelection({ partner: p, selection: selectionByPartner[p.id] })
+                          }
+                          className="btn-outline text-xs shrink-0"
+                        >
+                          View quiz info
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -2672,7 +2521,9 @@ function KitsTab({ partners, kits, pieces, onChange }) {
                         <PreviousKitPanel
                           key={k.id}
                           kit={k}
+                          pieces={piecesByKit[k.id] || []}
                           onManage={() => setEditing({ partner: p, kit: k })}
+                          onViewProducts={() => setViewingPieces(k)}
                         />
                       ))}
                     </div>
@@ -2692,6 +2543,24 @@ function KitsTab({ partners, kits, pieces, onChange }) {
           onClose={() => setEditing(null)}
           onChange={onChange}
         />
+      )}
+
+      {viewingSelection && (
+        <PartnerDetailModal
+          partner={viewingSelection.partner}
+          selection={viewingSelection.selection}
+          onClose={() => setViewingSelection(null)}
+          onChange={onChange}
+        />
+      )}
+
+      {viewingPieces && (
+        <Modal
+          title={`Box contents · ${viewingPieces.ship_date || 'no ship date'}`}
+          onClose={() => setViewingPieces(null)}
+        >
+          <PieceChips pieces={piecesByKit[viewingPieces.id] || []} />
+        </Modal>
       )}
     </div>
   )
