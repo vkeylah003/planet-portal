@@ -225,7 +225,7 @@ export default function AdminDashboard() {
         {tab === 'overview' && (
           <OverviewTab partners={partners} kits={kits} pieces={pieces} content={content} />
         )}
-        {tab === 'stats' && <StatsTab />}
+        {tab === 'stats' && <StatsTab kits={kits} partners={partners} />}
         {tab === 'social' && <SocialTab />}
         {tab === 'partners' && (
           <PartnersTab partners={partners} selections={selections} onChange={load} />
@@ -447,6 +447,8 @@ function OverviewTab({ partners, kits, pieces, content }) {
   for (const k of kits) if (k.status in kitByStatus) kitByStatus[k.status] += 1
   const totalKits = kits.length
   const delivered = kitByStatus.Delivered
+  const returned = kitByStatus.Returned
+  const inProgress = kitByStatus.Preparing + kitByStatus.Shipped + kitByStatus['Return Pending']
 
   // Outstanding deliverables ≈ partners with a delivered kit but no logged content.
   const loggedPartnerIds = new Set(content.map((c) => c.partner_id))
@@ -535,7 +537,7 @@ function OverviewTab({ partners, kits, pieces, content }) {
           label="Kits delivered"
           value={delivered}
           accent="text-green-700"
-          sub={`${totalKits - delivered} in progress`}
+          sub={`${inProgress} in progress · ${returned} returned`}
         />
         <Metric
           label="Impact sales · 30d"
@@ -3062,8 +3064,11 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
 
 // Live internal metrics, recomputed from the bundled data snapshots on every
 // mount (see src/lib/stats.js). No backend — pure functions of the shipped JSON.
-function StatsTab() {
-  const { outreach, boxes, partners, social } = useMemo(() => computeStats(), [])
+function StatsTab({ kits, partners: livePartners }) {
+  const { outreach, boxes, partners, social } = useMemo(
+    () => computeStats({ kits, partners: livePartners }),
+    []
+  )
 
   const pct = (n) => `${(n * 100).toFixed(1)}%`
   const nfmt = (n) => n.toLocaleString('en-US')

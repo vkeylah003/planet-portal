@@ -52,8 +52,7 @@ export function computeOutreach() {
   }
 }
 
-export function computeBoxes() {
-  const kits = partnersData.kits || []
+export function computeBoxes(kits = partnersData.kits || []) {
   const byStatus = {}
   for (const k of kits) byStatus[k.status] = (byStatus[k.status] || 0) + 1
   const g = (s) => byStatus[s] || 0
@@ -94,8 +93,7 @@ export function computeBoxes() {
   }
 }
 
-export function computePartners() {
-  const partners = partnersData.partners || []
+export function computePartners(partners = partnersData.partners || []) {
   const byStatus = {}
   for (const p of partners) byStatus[p.status] = (byStatus[p.status] || 0) + 1
   const total = partners.length
@@ -211,11 +209,11 @@ export function computeManualSales() {
   return { sales, count: sales.length, totalSales, totalCommission }
 }
 
-export function computeStats() {
+export function computeStats({ kits, partners } = {}) {
   return {
     outreach: computeOutreach(),
-    boxes: computeBoxes(),
-    partners: computePartners(),
+    boxes: computeBoxes(kits),
+    partners: computePartners(partners),
     social: computeSocial(),
     manualSales: computeManualSales(),
   }
