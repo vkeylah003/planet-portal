@@ -2044,10 +2044,13 @@ function PartnerDetailModal({ partner, selection, onClose, onChange }) {
     onChange()
   }
 
-  // Warehouse-friendly picking sheet: the PLANET translation (what to pull)
-  // as the primary, largest section, plus the raw quiz answers underneath
-  // for reference. Plain inline styles, no app CSS — this prints on paper,
-  // not in the browser.
+  // Complete, unabridged picking sheet: every raw quiz answer in full (no
+  // slicing/limiting — quiz.vibes/colors/etc. are printed directly, not the
+  // capped arrays translateQuiz() derives from them), plus the partner's
+  // separate note, shipping address, and submission date, all on one sheet.
+  // The PLANET translation is a secondary, clearly-labeled reference section
+  // below the raw answers, not a replacement for them. Plain inline styles,
+  // no app CSS — this prints on paper, not in the browser.
   function printQuiz() {
     const t = translateQuiz(quiz)
 
@@ -2066,6 +2069,26 @@ function PartnerDetailModal({ partner, selection, onClose, onChange }) {
       ? sizeEntries.map(([k, v]) => `${SIZE_LABELS[k] || k}: ${esc(v)}`).join(' · ')
       : '—'
 
+    const submittedAt = selection?.created_at
+      ? new Date(selection.created_at).toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+        })
+      : '—'
+
+    const addr = selection?.shipping_address || {}
+    const addrCityLine = [addr.city, addr.state].filter(Boolean).join(', ')
+    const addrCityZip = [addrCityLine, addr.zip].filter(Boolean).join(' ')
+    const addressHtml = selection?.shipping_address
+      ? [addr.name, addr.line1, addr.line2, addrCityZip]
+          .filter(Boolean)
+          .map((line) => esc(line))
+          .join('<br>')
+      : '—'
+
     const html = `<!doctype html>
 <html>
 <head>
@@ -2081,30 +2104,43 @@ function PartnerDetailModal({ partner, selection, onClose, onChange }) {
   .summary { font-size: 15pt; margin: 10px 0 0; padding: 12px; border: 2px solid #000; }
   .secondary { font-size: 13pt; color: #111; margin-top: 28px; }
   .secondary h2 { font-size: 16pt; }
-  .avoid-text { white-space: pre-wrap; }
+  .pre-text { white-space: pre-wrap; }
 </style>
 </head>
 <body>
   <h1>${esc(partner.name)}</h1>
-  <p class="meta">Style quiz picking sheet — printed ${esc(new Date().toLocaleDateString('en-US'))}</p>
+  <p class="meta">
+    ${esc(partner.email)}<br>
+    Submitted: ${esc(submittedAt)}
+  </p>
 
-  <h2>PLANET translation — what to pull</h2>
-  <div class="field"><span class="label">Fabrics:</span> ${list(t.fabrics)}</div>
-  <div class="field"><span class="label">Signature pieces:</span> ${list(t.pieces)}</div>
-  <div class="field"><span class="label">Palette:</span> ${list(t.palette)}</div>
-  ${t.summary ? `<div class="summary">${esc(t.summary)}</div>` : ''}
+  <h2>Style quiz — full submission</h2>
+  <div class="field"><span class="label">Style vibe:</span> ${list(quiz.vibes)}</div>
+  <div class="field"><span class="label">Colors &amp; palette:</span> ${list(quiz.colors)}</div>
+  <div class="field"><span class="label">Fabrics &amp; textures:</span> ${list(quiz.fabrics)}</div>
+  <div class="field"><span class="label">Silhouettes:</span> ${list(quiz.silhouettes)}</div>
+  <div class="field"><span class="label">Occasions:</span> ${list(quiz.occasions)}</div>
+  <div class="field"><span class="label">Sizes:</span> ${sizesText}</div>
+  <div class="field"><span class="label">Avoid:</span> <span class="pre-text">${
+    quiz.avoid ? esc(quiz.avoid) : '—'
+  }</span></div>
+
+  ${
+    selection?.note
+      ? `<h2>Additional notes from partner</h2>
+  <p class="pre-text">${esc(selection.note)}</p>`
+      : ''
+  }
+
+  <h2>Shipping address</h2>
+  <p>${addressHtml}</p>
 
   <div class="secondary">
-    <h2>Raw quiz answers (reference)</h2>
-    <div class="field"><span class="label">Style vibe:</span> ${list(quiz.vibes)}</div>
-    <div class="field"><span class="label">Colors &amp; palette:</span> ${list(quiz.colors)}</div>
-    <div class="field"><span class="label">Fabrics &amp; textures:</span> ${list(quiz.fabrics)}</div>
-    <div class="field"><span class="label">Silhouettes:</span> ${list(quiz.silhouettes)}</div>
-    <div class="field"><span class="label">Occasions:</span> ${list(quiz.occasions)}</div>
-    <div class="field"><span class="label">Sizes:</span> ${sizesText}</div>
-    <div class="field"><span class="label">Avoid:</span> <span class="avoid-text">${
-      quiz.avoid ? esc(quiz.avoid) : '—'
-    }</span></div>
+    <h2>Curation team's translation (for reference)</h2>
+    <div class="field"><span class="label">Fabrics to pull:</span> ${list(t.fabrics)}</div>
+    <div class="field"><span class="label">Signature pieces:</span> ${list(t.pieces)}</div>
+    <div class="field"><span class="label">Palette:</span> ${list(t.palette)}</div>
+    ${t.summary ? `<div class="summary">${esc(t.summary)}</div>` : ''}
   </div>
 </body>
 </html>`
