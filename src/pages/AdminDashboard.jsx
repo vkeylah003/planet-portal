@@ -2044,6 +2044,79 @@ function PartnerDetailModal({ partner, selection, onClose, onChange }) {
     onChange()
   }
 
+  // Warehouse-friendly picking sheet: the PLANET translation (what to pull)
+  // as the primary, largest section, plus the raw quiz answers underneath
+  // for reference. Plain inline styles, no app CSS — this prints on paper,
+  // not in the browser.
+  function printQuiz() {
+    const t = translateQuiz(quiz)
+
+    const esc = (s) =>
+      String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+    const list = (arr) => (Array.isArray(arr) && arr.length ? arr.map(esc).join(', ') : '—')
+
+    const sizes = quiz.sizes && typeof quiz.sizes === 'object' ? quiz.sizes : {}
+    const SIZE_LABELS = { tops: 'Tops', bottoms: 'Bottoms', dress: 'Dress', shoe: 'Shoe' }
+    const sizeEntries = Object.entries(sizes).filter(([, v]) => v)
+    const sizesText = sizeEntries.length
+      ? sizeEntries.map(([k, v]) => `${SIZE_LABELS[k] || k}: ${esc(v)}`).join(' · ')
+      : '—'
+
+    const html = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${esc(partner.name)} — Quiz picking sheet</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; color: #000; background: #fff; margin: 0.5in; font-size: 14pt; line-height: 1.5; }
+  h1 { font-size: 26pt; margin: 0 0 4px; }
+  h2 { font-size: 20pt; margin: 24px 0 10px; border-bottom: 2px solid #000; padding-bottom: 4px; }
+  .meta { font-size: 12pt; color: #333; margin-bottom: 20px; }
+  .field { margin: 0 0 12px; }
+  .label { font-weight: bold; }
+  .summary { font-size: 15pt; margin: 10px 0 0; padding: 12px; border: 2px solid #000; }
+  .secondary { font-size: 13pt; color: #111; margin-top: 28px; }
+  .secondary h2 { font-size: 16pt; }
+  .avoid-text { white-space: pre-wrap; }
+</style>
+</head>
+<body>
+  <h1>${esc(partner.name)}</h1>
+  <p class="meta">Style quiz picking sheet — printed ${esc(new Date().toLocaleDateString('en-US'))}</p>
+
+  <h2>PLANET translation — what to pull</h2>
+  <div class="field"><span class="label">Fabrics:</span> ${list(t.fabrics)}</div>
+  <div class="field"><span class="label">Signature pieces:</span> ${list(t.pieces)}</div>
+  <div class="field"><span class="label">Palette:</span> ${list(t.palette)}</div>
+  ${t.summary ? `<div class="summary">${esc(t.summary)}</div>` : ''}
+
+  <div class="secondary">
+    <h2>Raw quiz answers (reference)</h2>
+    <div class="field"><span class="label">Style vibe:</span> ${list(quiz.vibes)}</div>
+    <div class="field"><span class="label">Colors &amp; palette:</span> ${list(quiz.colors)}</div>
+    <div class="field"><span class="label">Fabrics &amp; textures:</span> ${list(quiz.fabrics)}</div>
+    <div class="field"><span class="label">Silhouettes:</span> ${list(quiz.silhouettes)}</div>
+    <div class="field"><span class="label">Occasions:</span> ${list(quiz.occasions)}</div>
+    <div class="field"><span class="label">Sizes:</span> ${sizesText}</div>
+    <div class="field"><span class="label">Avoid:</span> <span class="avoid-text">${
+      quiz.avoid ? esc(quiz.avoid) : '—'
+    }</span></div>
+  </div>
+</body>
+</html>`
+
+    const w = window.open('', '_blank')
+    if (!w) return
+    w.document.open()
+    w.document.write(html)
+    w.document.close()
+    setTimeout(() => w.print(), 250)
+  }
+
   return (
     <Modal title={partner.name} onClose={onClose}>
       <div className="space-y-4">
@@ -2081,23 +2154,30 @@ function PartnerDetailModal({ partner, selection, onClose, onChange }) {
               <span className="text-[11px] uppercase tracking-widest text-espresso/40">
                 Style quiz submission
               </span>
-              {isNew ? (
-                <button
-                  onClick={() => setStatus('reviewed')}
-                  disabled={busy}
-                  className="btn-outline text-xs shrink-0"
-                >
-                  {busy ? <Spinner /> : 'Mark reviewed'}
-                </button>
-              ) : (
-                <button
-                  onClick={() => setStatus('new')}
-                  disabled={busy}
-                  className="btn-ghost text-xs shrink-0"
-                >
-                  {busy ? <Spinner /> : 'Reopen'}
-                </button>
-              )}
+              <div className="flex items-center gap-2 shrink-0">
+                {quiz && (
+                  <button onClick={printQuiz} className="btn-ghost text-xs shrink-0">
+                    Print quiz
+                  </button>
+                )}
+                {isNew ? (
+                  <button
+                    onClick={() => setStatus('reviewed')}
+                    disabled={busy}
+                    className="btn-outline text-xs shrink-0"
+                  >
+                    {busy ? <Spinner /> : 'Mark reviewed'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setStatus('new')}
+                    disabled={busy}
+                    className="btn-ghost text-xs shrink-0"
+                  >
+                    {busy ? <Spinner /> : 'Reopen'}
+                  </button>
+                )}
+              </div>
             </div>
 
             {quiz ? (
