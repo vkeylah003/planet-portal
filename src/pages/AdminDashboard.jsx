@@ -3383,16 +3383,19 @@ function SocialTab() {
         </p>
       )}
 
-      {/* Posts grouped by partner */}
+      {/* Posts grouped by partner — a partner posting under multiple handles/
+          channels (e.g. an Instagram handle + an email-newsletter handle) is
+          combined into one group, so `handles` may list more than one. */}
       {social.partners.map((g) => (
-        <div key={g.handle} className="card p-6">
+        <div key={g.name || g.handle} className="card p-6">
           <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
             <div>
               <h3 className="font-heading text-xl text-espresso mb-0.5">
                 {g.name || g.handle}
               </h3>
               <p className="text-xs text-espresso/45">
-                {g.handle} · {g.posts.length} post{g.posts.length === 1 ? '' : 's'} ·{' '}
+                {(g.handles && g.handles.length > 0 ? g.handles.join(' · ') : g.handle)} ·{' '}
+                {g.posts.length} post{g.posts.length === 1 ? '' : 's'} ·{' '}
                 {nfmt(g.engagement)} total engagement
               </p>
             </div>

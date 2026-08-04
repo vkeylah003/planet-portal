@@ -141,13 +141,20 @@ export function computeSocial() {
   const avgEngagement = totalPosts ? Math.round(totalEngagement / totalPosts) : 0
 
   // Group by partner (keyed by handle, which is stable even when we can't match
-  // a partner name). Each group carries its own roll-ups plus the raw posts.
+  // a partner name). Grouped by partner_name (falling back to the handle when
+  // no name is known) so the SAME PERSON posting under multiple handles/channels
+  // — e.g. Jan Correll's Instagram (@silver_isthenewblonde) and email newsletter
+  // (silveristhenewblonde.com) — rolls up into one combined entry instead of
+  // splitting into separate rows per handle. `handles` tracks every distinct
+  // handle seen in the group (order of first appearance) since a combined group
+  // can span more than one.
   const groupsByHandle = {}
   for (const p of posts) {
-    const key = p.partner_handle
+    const key = p.partner_name || p.partner_handle
     if (!groupsByHandle[key]) {
       groupsByHandle[key] = {
-        handle: key,
+        handle: p.partner_handle,
+        handles: [],
         name: p.partner_name || null,
         posts: [],
         likes: 0,
@@ -160,6 +167,9 @@ export function computeSocial() {
       }
     }
     const g = groupsByHandle[key]
+    if (p.partner_handle && !g.handles.includes(p.partner_handle)) {
+      g.handles.push(p.partner_handle)
+    }
     g.posts.push(p)
     g.likes += p.likes || 0
     g.comments += p.comments || 0
