@@ -2423,6 +2423,21 @@ function daysUntil(dateStr) {
   return Math.round((target - today) / 86400000)
 }
 
+// Human relative-time label for a YYYY-MM-DD date — "Today", "Yesterday",
+// "3 days ago", "2 weeks ago" for the past; "Tomorrow", "in 3 days",
+// "in 2 weeks" for the future. Null/empty date → null (nothing to show).
+function relativeLabel(dateStr) {
+  if (!dateStr) return null
+  const diff = daysUntil(dateStr)
+  const abs = Math.abs(diff)
+  if (diff === 0) return 'Today'
+  if (diff === -1) return 'Yesterday'
+  if (diff === 1) return 'Tomorrow'
+  if (abs < 7) return diff < 0 ? `${abs} days ago` : `in ${abs} days`
+  const weeks = Math.round(abs / 7)
+  return diff < 0 ? `${weeks} week${weeks === 1 ? '' : 's'} ago` : `in ${weeks} week${weeks === 1 ? '' : 's'}`
+}
+
 // 30-day return-window countdown pill. Milestones are days REMAINING:
 // >15 normal · ≤15 follow-up due (amber) · ≤5 final follow-up (red) · past = overdue.
 function ReturnCountdown({ date }) {
@@ -2525,10 +2540,30 @@ function CurrentKitPanel({ kit, pieces }) {
         )}
       </div>
       <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2 text-xs text-espresso/55">
-        <span>Ship: {kit.ship_date || '—'}</span>
+        <span>
+          Ship:{' '}
+          {kit.ship_date ? (
+            <>
+              <span className="font-semibold text-espresso">{kit.ship_date}</span>
+              {relativeLabel(kit.ship_date) && ` (${relativeLabel(kit.ship_date)})`}
+            </>
+          ) : (
+            '—'
+          )}
+        </span>
         <span>Tracking: {kit.tracking_number || 'pending'}</span>
         <span>Carrier: {kit.carrier || '—'}</span>
-        <span>Return by: {kit.return_by_date || '—'}</span>
+        <span>
+          Return by:{' '}
+          {kit.return_by_date ? (
+            <>
+              <span className="font-semibold text-espresso">{kit.return_by_date}</span>
+              {relativeLabel(kit.return_by_date) && ` (${relativeLabel(kit.return_by_date)})`}
+            </>
+          ) : (
+            '—'
+          )}
+        </span>
       </div>
       {kit.followup_note && (
         <p className="mt-2 inline-flex items-center rounded-lg bg-amber-50 px-3 py-1.5 text-xs text-amber-700">
@@ -2548,7 +2583,12 @@ function PreviousKitPanel({ kit, pieces, onManage, onViewProducts }) {
     <div className="rounded-xl bg-espresso/[0.03] border border-espresso/5 px-4 py-3">
       <div className="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-espresso/55">
         <Badge status={kit.status} />
-        {kit.ship_date && <span>Shipped {kit.ship_date}</span>}
+        {kit.ship_date && (
+          <span>
+            Shipped <span className="font-semibold text-espresso">{kit.ship_date}</span>
+            {relativeLabel(kit.ship_date) && ` (${relativeLabel(kit.ship_date)})`}
+          </span>
+        )}
         {kit.tracking_number && <span className="text-espresso/40">{kit.tracking_number}</span>}
         <div className="ml-auto flex items-center gap-3">
           {pieces && pieces.length > 0 && (
@@ -2566,9 +2606,28 @@ function PreviousKitPanel({ kit, pieces, onManage, onViewProducts }) {
   )
 }
 
+// A partner's most recent order date, for sorting the tracker newest-first.
+// Takes the latest of their most recent kit's ship_date, delivered_at, and
+// created_at — so a kit that was shipped a while ago but just got marked
+// Delivered (delivered_at is newer than ship_date) still bumps that partner
+// up, rather than staying pinned to its original ship date. created_at is the
+// fallback when neither ship_date nor delivered_at is set yet (still
+// Preparing). `partnerKits` is already newest-first, so this only looks at
+// the first entry. Note: a pure status flip to Returned with no accompanying
+// date field (there's no returned_at column) won't move a partner — only
+// ship_date/delivered_at changes affect ordering.
+function mostRecentOrderDate(partnerKits) {
+  const latest = partnerKits?.[0]
+  if (!latest) return null
+  const dates = [latest.ship_date, latest.delivered_at, latest.created_at].filter(Boolean)
+  if (dates.length === 0) return null
+  return dates.reduce((max, d) => (new Date(d) > new Date(max) ? d : max))
+}
+
 function KitsTab({ partners, kits, pieces, selections, onChange }) {
   const [editing, setEditing] = useState(null) // { partner, kit } — kit null = create new box
   const [statusFilter, setStatusFilter] = useState('All') // All | <kit status> | No box out
+  const [sortDir, setSortDir] = useState('desc') // desc = newest order first (default)
   const [viewingSelection, setViewingSelection] = useState(null) // { partner, selection }
   const [viewingPieces, setViewingPieces] = useState(null) // a previous kit, to show its pieces
 
@@ -2604,7 +2663,21 @@ function KitsTab({ partners, kits, pieces, selections, onChange }) {
     { id: 'No box out', label: `No box out (${countFor('No box out')})` },
   ]
 
-  const filteredPartners = partners.filter((p) => matchesFilter(p, statusFilter))
+  // Newest-first by default (toggle flips to oldest-first). Partners with no
+  // kits at all have no order date, so they always sort to the end regardless
+  // of direction rather than interleaving with dated partners.
+  const filteredPartners = partners
+    .filter((p) => matchesFilter(p, statusFilter))
+    .sort((a, b) => {
+      const aDate = mostRecentOrderDate(kitsByPartner[a.id] || [])
+      const bDate = mostRecentOrderDate(kitsByPartner[b.id] || [])
+      if (!aDate || !bDate) {
+        if (aDate === bDate) return 0
+        return aDate ? -1 : 1
+      }
+      const diff = new Date(aDate) - new Date(bDate)
+      return sortDir === 'desc' ? -diff : diff
+    })
 
   return (
     <div>
@@ -2628,6 +2701,12 @@ function KitsTab({ partners, kits, pieces, selections, onChange }) {
               {t.label}
             </button>
           ))}
+          <button
+            onClick={() => setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))}
+            className="ml-auto rounded-full px-4 py-1.5 text-xs font-medium tracking-wide border border-espresso/15 text-espresso/55 hover:border-espresso/40 transition"
+          >
+            {sortDir === 'desc' ? 'Newest first' : 'Oldest first'}
+          </button>
         </div>
       )}
 
