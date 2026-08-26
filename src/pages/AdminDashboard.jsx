@@ -2988,12 +2988,14 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
     tracking_number: kit?.tracking_number || '',
     return_by_date: kit?.return_by_date || '',
     notes: kit?.notes || '',
+    invoice_url: kit?.invoice_url || '',
   })
   const [busy, setBusy] = useState(false)
   const [localPieces, setLocalPieces] = useState(pieces)
   const [newPiece, setNewPiece] = useState({ piece_name: '', color: '', photo_url: '' })
   const [trackMsg, setTrackMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
+  const [uploadingInvoice, setUploadingInvoice] = useState(false)
 
   function set(k, v) {
     setForm((f) => ({ ...f, [k]: v }))
@@ -3006,7 +3008,30 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
       ...form,
       ship_date: form.ship_date || null,
       return_by_date: form.return_by_date || null,
+      invoice_url: form.invoice_url || null,
     }
+  }
+
+  // Upload a purchase invoice (PDF/image) to the 'kit-invoices' bucket and
+  // store its public URL on the form — saved along with the rest of the kit
+  // on "Save kit" (kitPayload). Never leaves the form looking "attached" on a
+  // failed upload — form.invoice_url is only set once the upload succeeds.
+  async function uploadInvoice(file) {
+    if (!file) return
+    setUploadingInvoice(true)
+    setErrorMsg('')
+    const path = `${partner.id}-${kit?.id || 'new'}-${Date.now()}-${file.name}`
+    const { error: upErr } = await supabase.storage.from('kit-invoices').upload(path, file)
+    if (upErr) {
+      setUploadingInvoice(false)
+      setErrorMsg(`Couldn't upload invoice: ${upErr.message}`)
+      return
+    }
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('kit-invoices').getPublicUrl(path)
+    set('invoice_url', publicUrl)
+    setUploadingInvoice(false)
   }
 
   // Ensures a kit exists, returns { id, error }. Never throws — callers must
@@ -3176,6 +3201,40 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
             value={form.notes || ''}
             onChange={(e) => set('notes', e.target.value)}
           />
+        </Field>
+
+        <Field label="Attach invoice">
+          <input
+            type="file"
+            accept="application/pdf,image/*"
+            disabled={uploadingInvoice}
+            onChange={(e) => uploadInvoice(e.target.files?.[0])}
+            className="text-xs text-espresso/60"
+          />
+          {uploadingInvoice && (
+            <p className="mt-1 flex items-center gap-2 text-xs text-espresso/45">
+              <Spinner className="h-3 w-3" /> Uploading…
+            </p>
+          )}
+          {form.invoice_url && !uploadingInvoice && (
+            <p className="mt-1 flex items-center gap-3 text-xs">
+              <a
+                href={form.invoice_url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-gold hover:underline"
+              >
+                View invoice ↗
+              </a>
+              <button
+                type="button"
+                onClick={() => set('invoice_url', '')}
+                className="text-espresso/40 hover:text-red-600"
+              >
+                Remove
+              </button>
+            </p>
+          )}
         </Field>
 
         {/* Pieces */}
