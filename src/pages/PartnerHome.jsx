@@ -390,12 +390,15 @@ function KitSection({ kit, pieces, collapsedTitle = false }) {
           </a>
         </p>
       )}
-      {returnBy && (
+      {/* Return deadline + countdown only make sense while a box is still
+          out — once it's back (status Returned), showing "please return by"
+          and an "overdue" pill on an already-completed box is misleading. */}
+      {returnBy && kit.status !== 'Returned' && (
         <p className="text-sm text-espresso/60 mt-1">
           Please return by: <span className="text-espresso font-medium">{returnBy}</span>
         </p>
       )}
-      {kit.return_by_date && (
+      {kit.return_by_date && kit.status !== 'Returned' && (
         <div className="mt-3">
           <ReturnCountdown date={kit.return_by_date} />
         </div>
