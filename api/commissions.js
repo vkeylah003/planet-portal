@@ -168,16 +168,35 @@ export default async function handler(req, res) {
     // surface as both the headline "balance" and "unpaid" — there are two UI
     // labels for the same real number. `total` sums every earnings bucket
     // GoAffPro tracks (referral + MLM/network + other one-off rewards).
-    // There is no direct "total sales $" field in GoAffPro's affiliate
-    // schema — that would need a separate call to /admin/orders or
-    // /admin/affiliates/{id}/commissions summed manually, so it's left at 0
-    // for now rather than guessing at a field that doesn't exist.
     const pending = Number(me.total_amount_pending || 0)
     const paid = Number(me.total_amount_paid || 0)
     const total =
       Number(me.total_referral_earnings || 0) +
       Number(me.total_network_earnings || 0) +
       Number(me.total_other_earnings || 0)
+
+    // There's no "total sales $" field on the affiliate record itself —
+    // GoAffPro only tracks earnings there, not the underlying order amounts.
+    // Real sales $ lives on the order records, so sum `total` across this
+    // affiliate's orders (verified against GoAffPro's /admin/orders schema).
+    // Best-effort: if this call fails for any reason, fall back to 0 rather
+    // than failing the whole earnings response.
+    let sales = 0
+    try {
+      const ordersResp = await fetch(
+        `${GOAFFPRO_BASE}/admin/orders?affiliate_id=${encodeURIComponent(me.id)}&fields=total,status`,
+        { headers: affHeaders }
+      )
+      if (ordersResp.ok) {
+        const ordersData = await ordersResp.json()
+        const orders = Array.isArray(ordersData) ? ordersData : ordersData.orders || []
+        sales = orders
+          .filter((o) => o.status !== 'rejected')
+          .reduce((sum, o) => sum + Number(o.total || 0), 0)
+      }
+    } catch {
+      // sales stays 0 — earnings response still returns successfully below.
+    }
     return res.status(200).json({
       configured: true,
       found: true,
@@ -187,7 +206,7 @@ export default async function handler(req, res) {
         unpaid: pending,
         paid,
         total,
-        sales: 0,
+        sales,
         orders: Number(me.number_of_orders || 0),
       },
     })
