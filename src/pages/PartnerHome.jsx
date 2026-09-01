@@ -344,7 +344,7 @@ function Earnings({ commissions }) {
           <div className="grid grid-cols-2 gap-3 mt-5 text-sm">
             <Stat label="Unpaid" value={money(state.data.earnings.unpaid)} />
             <Stat label="Paid out" value={money(state.data.earnings.paid)} />
-            <Stat label="Total sales" value={money(state.data.earnings.sales)} />
+            <Stat label="Total sales" value={state.data.earnings.sales} />
             <Stat label="Orders" value={state.data.earnings.orders} />
           </div>
         </div>

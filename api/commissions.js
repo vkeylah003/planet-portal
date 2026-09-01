@@ -175,28 +175,13 @@ export default async function handler(req, res) {
       Number(me.total_network_earnings || 0) +
       Number(me.total_other_earnings || 0)
 
-    // There's no "total sales $" field on the affiliate record itself —
-    // GoAffPro only tracks earnings there, not the underlying order amounts.
-    // Real sales $ lives on the order records, so sum `total` across this
-    // affiliate's orders (verified against GoAffPro's /admin/orders schema).
-    // Best-effort: if this call fails for any reason, fall back to 0 rather
-    // than failing the whole earnings response.
-    let sales = 0
-    try {
-      const ordersResp = await fetch(
-        `${GOAFFPRO_BASE}/admin/orders?affiliate_id=${encodeURIComponent(me.id)}&fields=total,status`,
-        { headers: affHeaders }
-      )
-      if (ordersResp.ok) {
-        const ordersData = await ordersResp.json()
-        const orders = Array.isArray(ordersData) ? ordersData : ordersData.orders || []
-        sales = orders
-          .filter((o) => o.status !== 'rejected')
-          .reduce((sum, o) => sum + Number(o.total || 0), 0)
-      }
-    } catch {
-      // sales stays 0 — earnings response still returns successfully below.
-    }
+    // "sales" is deliberately a COUNT, not a dollar figure — showing the raw
+    // order revenue (e.g. $1,003.49) right next to her much smaller actual
+    // commission ($185.40) reads as misleading, as if that bigger number were
+    // what she's owed. `number_of_orders` is GoAffPro's own count of referral
+    // orders, so sales and orders are intentionally the same count here.
+    const orderCount = Number(me.number_of_orders || 0)
+
     return res.status(200).json({
       configured: true,
       found: true,
@@ -206,8 +191,8 @@ export default async function handler(req, res) {
         unpaid: pending,
         paid,
         total,
-        sales,
-        orders: Number(me.number_of_orders || 0),
+        sales: orderCount,
+        orders: orderCount,
       },
     })
   } catch (err) {
