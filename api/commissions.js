@@ -30,10 +30,14 @@ const STORE_URL = (process.env.AFFILIATE_STORE_URL || 'https://shopplanetbylaure
 // still prefer a ref_id link if one ever exists. Returns { link, coupon } or
 // null when the affiliate has neither.
 function buildAffiliate(me) {
-  const refId = (me?.ref_id || '').toString().trim()
+  // GoAffPro's real field is `ref_code`, not `ref_id` (there is no `ref_id`
+  // field in their API — this was a bug: a field that never existed always
+  // read as undefined, so this branch never fired even for affiliates that
+  // do have a referral code).
+  const refCode = (me?.ref_code || '').toString().trim()
   const coupon = (me?.coupon?.code || '').toString().trim()
-  if (refId) {
-    return { link: `${STORE_URL}/?ref=${encodeURIComponent(refId)}`, coupon: coupon || null }
+  if (refCode) {
+    return { link: `${STORE_URL}/?ref=${encodeURIComponent(refCode)}`, coupon: coupon || null }
   }
   if (coupon) {
     return { link: `${STORE_URL}/discount/${encodeURIComponent(coupon)}`, coupon }
@@ -129,8 +133,13 @@ export default async function handler(req, res) {
     // The public token is optional — only send it when configured.
     if (publicToken) affHeaders['x-goaffpro-public-token'] = publicToken
 
+    // Field names must match GoAffPro's actual Affiliate schema (verified
+    // against their live API docs at https://api.goaffpro.com/docs/admin/ —
+    // fields like `balance`/`unpaid_commissions`/`paid_commissions`/
+    // `total_commissions`/`total_sales`/`orders_count`/`ref_id` DO NOT EXIST
+    // and previously silently returned undefined for every affiliate).
     const affResp = await fetch(
-      `${GOAFFPRO_BASE}/admin/affiliates?fields=id,email,ref_id,coupon,balance,unpaid_commissions,paid_commissions,total_commissions,total_sales,orders_count`,
+      `${GOAFFPRO_BASE}/admin/affiliates?fields=id,email,ref_code,coupon,total_referral_earnings,total_network_earnings,total_amount_paid,total_amount_pending,total_other_earnings,number_of_orders`,
       { headers: affHeaders }
     )
 
@@ -154,17 +163,32 @@ export default async function handler(req, res) {
     }
 
     // 4: return this partner's earnings + their shareable affiliate link.
+    // `total_amount_pending` is GoAffPro's own "amount due" figure (matches
+    // what the admin sees on the affiliate's Payments tab), so that's what we
+    // surface as both the headline "balance" and "unpaid" — there are two UI
+    // labels for the same real number. `total` sums every earnings bucket
+    // GoAffPro tracks (referral + MLM/network + other one-off rewards).
+    // There is no direct "total sales $" field in GoAffPro's affiliate
+    // schema — that would need a separate call to /admin/orders or
+    // /admin/affiliates/{id}/commissions summed manually, so it's left at 0
+    // for now rather than guessing at a field that doesn't exist.
+    const pending = Number(me.total_amount_pending || 0)
+    const paid = Number(me.total_amount_paid || 0)
+    const total =
+      Number(me.total_referral_earnings || 0) +
+      Number(me.total_network_earnings || 0) +
+      Number(me.total_other_earnings || 0)
     return res.status(200).json({
       configured: true,
       found: true,
       affiliate: buildAffiliate(me),
       earnings: {
-        balance: Number(me.balance || 0),
-        unpaid: Number(me.unpaid_commissions || 0),
-        paid: Number(me.paid_commissions || 0),
-        total: Number(me.total_commissions || me.balance || 0),
-        sales: Number(me.total_sales || 0),
-        orders: Number(me.orders_count || 0),
+        balance: pending,
+        unpaid: pending,
+        paid,
+        total,
+        sales: 0,
+        orders: Number(me.number_of_orders || 0),
       },
     })
   } catch (err) {
