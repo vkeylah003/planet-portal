@@ -132,3 +132,80 @@ export async function patchPartner(id, fields) {
     body: JSON.stringify(fields),
   })
 }
+
+// ── Ops automations (kit-less alert + quiz-not-done nudge) ───────────
+// These read partners with their kits / selections embedded (one round-trip
+// each via PostgREST FK embedding) so the cron can compute "has no shipped
+// box" / "never did the quiz" in JS, and write flags to public.ops_alerts.
+
+const enc = encodeURIComponent
+
+// Active Partners with every kit embedded (status only) so the cron can tell
+// who has never had a box SHIPPED (Preparing doesn't count — the box hasn't
+// left yet). Includes the onboarding clock (link_sent_at, created_at).
+export async function getActivePartnersWithKits() {
+  const rows = await rest(
+    `partners?select=id,name,email,status,created_at,link_sent_at,kits(status)` +
+      `&status=eq.${enc('Active Partner')}`
+  )
+  return Array.isArray(rows) ? rows : []
+}
+
+// Partners in the given statuses with their selections embedded (id only) so
+// the cron can tell who has never submitted the style quiz. Includes the
+// select_token (to build the portal link) and the drafted-stamp (idempotency).
+export async function getPartnersWithSelections(statuses) {
+  const list = (statuses || []).map((s) => `"${s}"`).join(',')
+  const rows = await rest(
+    `partners?select=id,name,email,status,created_at,link_sent_at,select_token,` +
+      `quiz_reminder_drafted_at,partner_selections(id)` +
+      `&status=in.(${enc(list)})`
+  )
+  return Array.isArray(rows) ? rows : []
+}
+
+// Upsert one alert keyed on (type, partner_id) — idempotent re-flagging. Sets
+// updated_at; created_at is left to the row default on first insert.
+export async function upsertOpsAlert(alert) {
+  const row = { ...alert, updated_at: new Date().toISOString() }
+  const rows = await rest(`ops_alerts?on_conflict=type,partner_id`, {
+    method: 'POST',
+    headers: { Prefer: 'return=representation,resolution=merge-duplicates' },
+    body: JSON.stringify(row),
+  })
+  return Array.isArray(rows) && rows.length ? rows[0] : null
+}
+
+// All currently-open alerts of a type (used to auto-resolve stale ones).
+export async function listOpenOpsAlerts(type) {
+  const rows = await rest(
+    `ops_alerts?select=id,partner_id&type=eq.${enc(type)}&status=eq.open`
+  )
+  return Array.isArray(rows) ? rows : []
+}
+
+// Mark a set of alert ids resolved (the problem cleared — box shipped / quiz done).
+export async function resolveOpsAlerts(ids) {
+  if (!Array.isArray(ids) || ids.length === 0) return 0
+  await rest(`ops_alerts?id=in.(${ids.map(enc).join(',')})`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'resolved', updated_at: new Date().toISOString() }),
+  })
+  return ids.length
+}
+
+// ── Automation 3: purchase-pending flag ───────────────────────────────
+// Kit pieces the partner decided to KEEP on a kit that's already been
+// Returned, but that have no purchase_amount yet — i.e. someone still needs
+// to call the partner, collect payment, and log what she paid. Embeds the
+// owning kit (must be Returned) and partner so the cron can build a message
+// and flag the right person.
+export async function getKeptUnpaidPieces() {
+  const rows = await rest(
+    `kit_pieces?select=id,piece_name,color,purchase_amount,partner_decision,` +
+      `kit:kits(id,status,partner:partners(id,name,email))` +
+      `&partner_decision=eq.Keep&purchase_amount=is.null`
+  )
+  const list = Array.isArray(rows) ? rows : []
+  return list.filter((r) => r.kit?.status === 'Returned' && r.kit?.partner)
+}

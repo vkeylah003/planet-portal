@@ -258,6 +258,9 @@ export default function AdminDashboard() {
 const OPS_ALERT_META = {
   kitless_partner: { label: 'No box shipped', tone: 'bg-amber-100 text-amber-700' },
   quiz_not_done: { label: 'Quiz not done', tone: 'bg-teal-100 text-teal-700' },
+  // Red on purpose — a kept-and-unpaid piece needs a purchase call, and it
+  // shouldn't blend in with the amber/teal "just FYI" alert types above.
+  purchase_pending: { label: 'Purchase needed', tone: 'bg-red-100 text-red-700', rowAccent: true },
 }
 
 function OpsAlertsBanner({ alerts, onChange }) {
@@ -291,7 +294,12 @@ function OpsAlertsBanner({ alerts, onChange }) {
           const url = a.details?.portal_url
           const outcome = a.details?.outcome
           return (
-            <div key={a.id} className="flex items-start justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+            <div
+              key={a.id}
+              className={`flex items-start justify-between gap-4 py-2.5 first:pt-0 last:pb-0 ${
+                meta.rowAccent ? 'bg-red-50/70 border-l-4 border-red-400 pl-3 -ml-1 rounded-r-lg' : ''
+              }`}
+            >
               <div className="min-w-0">
                 <span className="inline-flex items-center gap-2">
                   <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${meta.tone}`}>
