@@ -2591,6 +2591,11 @@ function PreviousKitPanel({ kit, pieces, onManage, onViewProducts }) {
     <div className="rounded-xl bg-espresso/[0.03] border border-espresso/5 px-4 py-3">
       <div className="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-espresso/55">
         <Badge status={kit.status} />
+        {kit.status === 'Returned' && kit.returned_at && (
+          <span>
+            returned <span className="font-semibold text-espresso">{kit.returned_at.slice(0, 10)}</span>
+          </span>
+        )}
         {kit.ship_date && (
           <span>
             Shipped <span className="font-semibold text-espresso">{kit.ship_date}</span>
@@ -2974,6 +2979,11 @@ function BoxCycleTab({ partners, kits, selections }) {
                               {k.ship_date || 'not yet shipped'}
                             </span>
                             <Badge status={k.status} />
+                            {k.status === 'Returned' && k.returned_at && (
+                              <span className="text-espresso/55">
+                                · returned {k.returned_at.slice(0, 10)}
+                              </span>
+                            )}
                           </div>
                         ))}
                       </div>

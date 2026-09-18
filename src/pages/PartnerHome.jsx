@@ -374,7 +374,14 @@ function KitSection({ kit, pieces, collapsedTitle = false }) {
     <Card>
       <div className="flex items-center justify-between flex-wrap gap-3">
         <p className="eyebrow">{collapsedTitle ? 'Your last box' : 'Your box'}</p>
-        {kit.status && <Badge status={kit.status} />}
+        <div className="flex items-center gap-2 flex-wrap">
+          {kit.status && <Badge status={kit.status} />}
+          {kit.status === 'Returned' && kit.returned_at && (
+            <span className="text-xs text-espresso/50">
+              returned {formatLongDate(kit.returned_at)}
+            </span>
+          )}
+        </div>
       </div>
 
       {tracking && (
