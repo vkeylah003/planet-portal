@@ -33,6 +33,26 @@ const ACTIVE_KIT_STATUSES = ['Preparing', 'Shipped', 'Delivered', 'Return Pendin
 const isActiveKit = (k) => ACTIVE_KIT_STATUSES.includes(k?.status)
 const PLATFORMS = ['GoAffPro', 'Impact']
 
+// Payment status for a kept piece. No DB check constraint on kit_pieces.
+// purchase_status (it's a free-text column, see
+// scripts/add_purchase_amount_column.sql) — these two exact lowercase
+// strings are what the Stats tab's money-made total, and every paid/pending
+// badge in this file, recognize. Anything else (including the old 'unpaid')
+// just reads as unset.
+const PURCHASE_STATUSES = ['pending', 'paid']
+function PurchaseStatusBadge({ status }) {
+  const s = (status || '').toLowerCase()
+  if (s !== 'paid' && s !== 'pending') return null
+  const tone = s === 'paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+  return (
+    <span
+      className={`text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded ${tone}`}
+    >
+      {s === 'paid' ? 'Paid' : 'Pending'}
+    </span>
+  )
+}
+
 // Most recent REAL partner_selections row per partner_id — orphaned rows
 // (partner_id null, see CLAUDE.md §5c) don't count as a real submission.
 // `selections` must already be ordered by created_at desc (as loaded at the
@@ -228,7 +248,13 @@ export default function AdminDashboard() {
         {tab === 'stats' && <StatsTab kits={kits} partners={partners} />}
         {tab === 'social' && <SocialTab />}
         {tab === 'partners' && (
-          <PartnersTab partners={partners} selections={selections} onChange={load} />
+          <PartnersTab
+            partners={partners}
+            kits={kits}
+            pieces={pieces}
+            selections={selections}
+            onChange={load}
+          />
         )}
         {tab === 'referrals' && <ReferralsTab partners={partners} />}
         {tab === 'outreach' && <OutreachTab />}
@@ -242,7 +268,7 @@ export default function AdminDashboard() {
           />
         )}
         {tab === 'cycle' && (
-          <BoxCycleTab partners={partners} kits={kits} selections={selections} />
+          <BoxCycleTab partners={partners} kits={kits} pieces={pieces} selections={selections} />
         )}
       </main>
     </div>
@@ -917,9 +943,10 @@ function CopyLinkButton({ partner, className = '' }) {
   )
 }
 
-function PartnersTab({ partners, selections, onChange }) {
+function PartnersTab({ partners, kits, pieces, selections, onChange }) {
   const [editing, setEditing] = useState(null) // partner object or {} for new
   const [viewing, setViewing] = useState(null) // partner object — read-only detail view
+  const [viewingAccount, setViewingAccount] = useState(null) // partner object — editable account view
   const [platformFilter, setPlatformFilter] = useState('All') // All | GoAffPro | Impact
   const [giftedFilter, setGiftedFilter] = useState('All') // All | Gifted | Standard
   const [syncing, setSyncing] = useState(false)
@@ -1132,6 +1159,13 @@ function PartnersTab({ partners, selections, onChange }) {
                   </td>
                   <td className="px-5 py-3 text-right space-x-2">
                     <button
+                      onClick={() => setViewingAccount(p)}
+                      className="btn-outline text-xs"
+                      title="Quiz, notes, kept pieces, invoices — everything about this partner, editable"
+                    >
+                      Account
+                    </button>
+                    <button
                       onClick={() => setViewing(p)}
                       className="btn-ghost text-xs"
                     >
@@ -1157,6 +1191,18 @@ function PartnersTab({ partners, selections, onChange }) {
           partner={viewing}
           selection={selectionByPartner[viewing.id]}
           onClose={() => setViewing(null)}
+          onChange={onChange}
+        />
+      )}
+
+      {viewingAccount && (
+        <PartnerAccountModal
+          partner={viewingAccount}
+          kits={kits}
+          pieces={pieces}
+          selection={selectionByPartner[viewingAccount.id]}
+          editable
+          onClose={() => setViewingAccount(null)}
           onChange={onChange}
         />
       )}
@@ -2028,76 +2074,57 @@ function ShipTo({ address }) {
 
 /* ────────────────────────── Partner detail ───────────────────────── */
 
-// Read-only partner profile, plus (when she has one) her latest style-quiz
-// submission — the shared detail view opened from the Partners tab's "View"
-// button and Order Tracker's "No box out" section. Same interaction pattern
-// as KitModal (open on click, ✕/backdrop to close, no navigation). Reuses
-// QuizAnswers/QuizTranslation and the exact shipping/note/product-grid
-// markup SelectionCard used to render, rather than rebuilding any of it.
-// `selection` is optional — pass null/undefined for a partner with no
-// submission and only the profile section renders.
-function PartnerDetailModal({ partner, selection, onClose, onChange }) {
-  const [busy, setBusy] = useState(false)
-
+// Complete, unabridged picking sheet: every raw quiz answer in full (no
+// slicing/limiting — quiz.vibes/colors/etc. are printed directly, not the
+// capped arrays translateQuiz() derives from them), plus the partner's
+// separate note, shipping address, and submission date, all on one sheet.
+// The PLANET translation is a secondary, clearly-labeled reference section
+// below the raw answers, not a replacement for them. Plain inline styles, no
+// app CSS — this prints on paper, not in the browser. Standalone (not a
+// closure inside one modal) so both PartnerDetailModal and PartnerAccountModal
+// can trigger the same sheet.
+function printQuizSheet(partner, selection) {
   const items = selection && Array.isArray(selection.items) ? selection.items : []
   const quiz = items[0]?.kind === 'style_quiz' ? items[0] : null
-  const isNew = selection?.status === 'new'
+  if (!quiz) return
+  const t = translateQuiz(quiz)
 
-  // Same status-toggle behavior the old Submissions tab's SelectionCard had —
-  // the one piece of that tab's functionality that had to survive its removal.
-  async function setStatus(status) {
-    setBusy(true)
-    await supabase.from('partner_selections').update({ status }).eq('id', selection.id)
-    setBusy(false)
-    onChange()
-  }
+  const esc = (s) =>
+    String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+  const list = (arr) => (Array.isArray(arr) && arr.length ? arr.map(esc).join(', ') : '—')
 
-  // Complete, unabridged picking sheet: every raw quiz answer in full (no
-  // slicing/limiting — quiz.vibes/colors/etc. are printed directly, not the
-  // capped arrays translateQuiz() derives from them), plus the partner's
-  // separate note, shipping address, and submission date, all on one sheet.
-  // The PLANET translation is a secondary, clearly-labeled reference section
-  // below the raw answers, not a replacement for them. Plain inline styles,
-  // no app CSS — this prints on paper, not in the browser.
-  function printQuiz() {
-    const t = translateQuiz(quiz)
+  const sizes = quiz.sizes && typeof quiz.sizes === 'object' ? quiz.sizes : {}
+  const SIZE_LABELS = { tops: 'Tops', bottoms: 'Bottoms', dress: 'Dress', shoe: 'Shoe' }
+  const sizeEntries = Object.entries(sizes).filter(([, v]) => v)
+  const sizesText = sizeEntries.length
+    ? sizeEntries.map(([k, v]) => `${SIZE_LABELS[k] || k}: ${esc(v)}`).join(' · ')
+    : '—'
 
-    const esc = (s) =>
-      String(s ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-    const list = (arr) => (Array.isArray(arr) && arr.length ? arr.map(esc).join(', ') : '—')
+  const submittedAt = selection?.created_at
+    ? new Date(selection.created_at).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      })
+    : '—'
 
-    const sizes = quiz.sizes && typeof quiz.sizes === 'object' ? quiz.sizes : {}
-    const SIZE_LABELS = { tops: 'Tops', bottoms: 'Bottoms', dress: 'Dress', shoe: 'Shoe' }
-    const sizeEntries = Object.entries(sizes).filter(([, v]) => v)
-    const sizesText = sizeEntries.length
-      ? sizeEntries.map(([k, v]) => `${SIZE_LABELS[k] || k}: ${esc(v)}`).join(' · ')
-      : '—'
+  const addr = selection?.shipping_address || {}
+  const addrCityLine = [addr.city, addr.state].filter(Boolean).join(', ')
+  const addrCityZip = [addrCityLine, addr.zip].filter(Boolean).join(' ')
+  const addressHtml = selection?.shipping_address
+    ? [addr.name, addr.line1, addr.line2, addrCityZip]
+        .filter(Boolean)
+        .map((line) => esc(line))
+        .join('<br>')
+    : '—'
 
-    const submittedAt = selection?.created_at
-      ? new Date(selection.created_at).toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-        })
-      : '—'
-
-    const addr = selection?.shipping_address || {}
-    const addrCityLine = [addr.city, addr.state].filter(Boolean).join(', ')
-    const addrCityZip = [addrCityLine, addr.zip].filter(Boolean).join(' ')
-    const addressHtml = selection?.shipping_address
-      ? [addr.name, addr.line1, addr.line2, addrCityZip]
-          .filter(Boolean)
-          .map((line) => esc(line))
-          .join('<br>')
-      : '—'
-
-    const html = `<!doctype html>
+  const html = `<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -2153,12 +2180,36 @@ function PartnerDetailModal({ partner, selection, onClose, onChange }) {
 </body>
 </html>`
 
-    const w = window.open('', '_blank')
-    if (!w) return
-    w.document.open()
-    w.document.write(html)
-    w.document.close()
-    setTimeout(() => w.print(), 250)
+  const w = window.open('', '_blank')
+  if (!w) return
+  w.document.open()
+  w.document.write(html)
+  w.document.close()
+  setTimeout(() => w.print(), 250)
+}
+
+// Read-only partner profile, plus (when she has one) her latest style-quiz
+// submission — the shared detail view opened from the Partners tab's "View"
+// button and Order Tracker's "No box out" section. Same interaction pattern
+// as KitModal (open on click, ✕/backdrop to close, no navigation). Reuses
+// QuizAnswers/QuizTranslation and the exact shipping/note/product-grid
+// markup SelectionCard used to render, rather than rebuilding any of it.
+// `selection` is optional — pass null/undefined for a partner with no
+// submission and only the profile section renders.
+function PartnerDetailModal({ partner, selection, onClose, onChange }) {
+  const [busy, setBusy] = useState(false)
+
+  const items = selection && Array.isArray(selection.items) ? selection.items : []
+  const quiz = items[0]?.kind === 'style_quiz' ? items[0] : null
+  const isNew = selection?.status === 'new'
+
+  // Same status-toggle behavior the old Submissions tab's SelectionCard had —
+  // the one piece of that tab's functionality that had to survive its removal.
+  async function setStatus(status) {
+    setBusy(true)
+    await supabase.from('partner_selections').update({ status }).eq('id', selection.id)
+    setBusy(false)
+    onChange()
   }
 
   return (
@@ -2200,7 +2251,10 @@ function PartnerDetailModal({ partner, selection, onClose, onChange }) {
               </span>
               <div className="flex items-center gap-2 shrink-0">
                 {quiz && (
-                  <button onClick={printQuiz} className="btn-ghost text-xs shrink-0">
+                  <button
+                    onClick={() => printQuizSheet(partner, selection)}
+                    className="btn-ghost text-xs shrink-0"
+                  >
                     Print quiz
                   </button>
                 )}
@@ -2643,6 +2697,7 @@ function KitsTab({ partners, kits, pieces, selections, onChange }) {
   const [sortDir, setSortDir] = useState('desc') // desc = newest order first (default)
   const [viewingSelection, setViewingSelection] = useState(null) // { partner, selection }
   const [viewingPieces, setViewingPieces] = useState(null) // a previous kit, to show its pieces
+  const [viewingAccount, setViewingAccount] = useState(null) // partner object — view-only account
 
   // Group ALL kits per partner (a partner can have several over time), newest
   // first. `kits` already arrives ordered by created_at desc.
@@ -2754,16 +2809,21 @@ function KitsTab({ partners, kits, pieces, selections, onChange }) {
                       </span>
                     )}
                   </div>
-                  <button
-                    onClick={() => setEditing({ partner: p, kit: currentKit })}
-                    className="btn-outline text-xs"
-                  >
-                    {currentKit
-                      ? 'Manage current box'
-                      : partnerKits.length
-                      ? 'Send new box'
-                      : 'Create kit'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setViewingAccount(p)} className="btn-ghost text-xs">
+                      View account
+                    </button>
+                    <button
+                      onClick={() => setEditing({ partner: p, kit: currentKit })}
+                      className="btn-outline text-xs"
+                    >
+                      {currentKit
+                        ? 'Manage current box'
+                        : partnerKits.length
+                        ? 'Send new box'
+                        : 'Create kit'}
+                    </button>
+                  </div>
                 </div>
 
                 {/* CURRENT box */}
@@ -2848,6 +2908,17 @@ function KitsTab({ partners, kits, pieces, selections, onChange }) {
           <PieceChips pieces={piecesByKit[viewingPieces.id] || []} />
         </Modal>
       )}
+
+      {viewingAccount && (
+        <PartnerAccountModal
+          partner={viewingAccount}
+          kits={kits}
+          pieces={pieces}
+          selection={selectionByPartner[viewingAccount.id]}
+          editable={false}
+          onClose={() => setViewingAccount(null)}
+        />
+      )}
     </div>
   )
 }
@@ -2871,8 +2942,9 @@ function boxCycleBucket(partner, kitsByPartner, selectedPartnerIds) {
   return 'waiting_quiz'
 }
 
-function BoxCycleTab({ partners, kits, selections }) {
+function BoxCycleTab({ partners, kits, pieces, selections }) {
   const [filter, setFilter] = useState('All')
+  const [viewingAccount, setViewingAccount] = useState(null) // partner object — view-only account
 
   // The monthly-box cohort. Intentionally excludes Contacted/Interested/
   // Passed — this tab is about cadence for partners already in rotation.
@@ -2892,6 +2964,7 @@ function BoxCycleTab({ partners, kits, selections }) {
   const selectedPartnerIds = new Set(
     selections.filter((s) => s.partner_id).map((s) => s.partner_id)
   )
+  const selectionByPartner = latestSelectionsByPartner(selections)
 
   const bucketOf = (p) => boxCycleBucket(p, kitsByPartner, selectedPartnerIds)
 
@@ -2958,6 +3031,9 @@ function BoxCycleTab({ partners, kits, selections }) {
                       {bucketMeta?.label}
                     </span>
                   </div>
+                  <button onClick={() => setViewingAccount(p)} className="btn-ghost text-xs">
+                    View account
+                  </button>
                 </div>
 
                 <div className="mt-4">
@@ -2995,16 +3071,43 @@ function BoxCycleTab({ partners, kits, selections }) {
           })}
         </div>
       )}
+
+      {viewingAccount && (
+        <PartnerAccountModal
+          partner={viewingAccount}
+          kits={kits}
+          pieces={pieces}
+          selection={selectionByPartner[viewingAccount.id]}
+          editable={false}
+          onClose={() => setViewingAccount(null)}
+        />
+      )}
     </div>
   )
 }
 
-function KitModal({ partner, kit, pieces, onClose, onChange }) {
+// One kit, fully editable OR read-only depending on `editable` — shared by
+// the single-kit "Manage" modal (KitModal, below) and the all-kits Partner
+// Account view (PartnerAccountModal). Editable mode exposes everything:
+// status/dates/tracking/notes/invoice, plus per-piece Keep/Return decision,
+// purchase amount, and paid/pending status — the three piece fields that
+// otherwise have NO admin UI anywhere (they've only ever been set by one-off
+// scripts; see the purchase-pending ops alert and the Stats tab's "Stylist
+// purchases" section, both of which read purchase_status/purchase_amount but
+// never wrote them). View mode is a clean read-only summary — no inputs.
+//
+// `onSaved(attempted)` — if provided, called instead of showing an inline
+// "Saved ✓" message, so a caller that wants to close/navigate on save (like
+// KitModal) can do so; `attempted` is whether a live-tracking registration
+// was kicked off, so the caller can give the admin a beat to read that
+// message before closing.
+function KitEditorCard({ partner, kit, pieces, editable = true, onChange, onSaved }) {
   const [form, setForm] = useState({
     status: kit?.status || 'Preparing',
     ship_date: kit?.ship_date || '',
     tracking_number: kit?.tracking_number || '',
     return_by_date: kit?.return_by_date || '',
+    returned_at: kit?.returned_at ? kit.returned_at.slice(0, 10) : '',
     notes: kit?.notes || '',
     invoice_url: kit?.invoice_url || '',
   })
@@ -3013,10 +3116,26 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
   const [newPiece, setNewPiece] = useState({ piece_name: '', color: '', photo_url: '' })
   const [trackMsg, setTrackMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
+  const [savedMsg, setSavedMsg] = useState('')
   const [uploadingInvoice, setUploadingInvoice] = useState(false)
 
   function set(k, v) {
     setForm((f) => ({ ...f, [k]: v }))
+  }
+
+  // Flipping to Returned auto-fills today as the return date if one isn't
+  // set yet — still freely editable/clearable right after, just a default
+  // so "mark it Returned" doesn't silently leave returned_at empty (the gap
+  // that used to require a one-off script every time).
+  function setStatus(status) {
+    setForm((f) => ({
+      ...f,
+      status,
+      returned_at:
+        status === 'Returned' && !f.returned_at
+          ? new Date().toISOString().slice(0, 10)
+          : f.returned_at,
+    }))
   }
 
   // Postgres rejects '' for a `date` column — the date inputs default to ''
@@ -3026,6 +3145,7 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
       ...form,
       ship_date: form.ship_date || null,
       return_by_date: form.return_by_date || null,
+      returned_at: form.returned_at || null,
       invoice_url: form.invoice_url || null,
     }
   }
@@ -3112,6 +3232,7 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
   async function saveKit() {
     setBusy(true)
     setErrorMsg('')
+    setSavedMsg('')
     const { id: kitId, error } = await ensureKit()
     if (error) {
       setBusy(false)
@@ -3121,9 +3242,8 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
     const attempted = await startTracking(kitId)
     setBusy(false)
     onChange()
-    // If we kicked off tracking, give the admin a beat to read the result.
-    if (attempted) setTimeout(onClose, 1400)
-    else onClose()
+    if (onSaved) onSaved(attempted)
+    else setSavedMsg('Saved ✓')
   }
 
   async function addPiece() {
@@ -3166,107 +3286,180 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
     onChange()
   }
 
-  return (
-    <Modal title={`${partner.name}'s kit`} onClose={onClose}>
-      <div className="space-y-4">
-        <Field label="Kit status">
-          <select
-            className="input"
-            value={form.status}
-            onChange={(e) => set('status', e.target.value)}
-          >
-            {KIT_STATUSES.map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-        </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Ship date">
-            <input
-              type="date"
-              className="input"
-              value={form.ship_date || ''}
-              onChange={(e) => set('ship_date', e.target.value)}
-            />
-          </Field>
-          <Field label="Return by">
-            <input
-              type="date"
-              className="input"
-              value={form.return_by_date || ''}
-              onChange={(e) => set('return_by_date', e.target.value)}
-            />
-          </Field>
+  // Piece-level decision/amount/paid-status save immediately (optimistic
+  // local update + a direct PATCH), same immediacy as delete — no separate
+  // per-piece "save" step to forget, and nothing's lost switching partners
+  // mid-edit in the all-kits account view.
+  async function updatePiece(id, fields) {
+    setLocalPieces((prev) => prev.map((p) => (p.id === id ? { ...p, ...fields } : p)))
+    const { error } = await supabase.from('kit_pieces').update(fields).eq('id', id)
+    if (error) setErrorMsg(`Couldn't update piece: ${error.message}`)
+    onChange()
+  }
+
+  if (!editable) {
+    return (
+      <div className="rounded-xl bg-espresso/[0.03] border border-espresso/5 p-4">
+        <div className="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-espresso/55 mb-2">
+          <Badge status={kit.status} />
+          {kit.status === 'Returned' && kit.returned_at && (
+            <span>
+              returned{' '}
+              <span className="font-semibold text-espresso">{kit.returned_at.slice(0, 10)}</span>
+            </span>
+          )}
+          {kit.ship_date && (
+            <span>
+              shipped <span className="font-semibold text-espresso">{kit.ship_date}</span>
+            </span>
+          )}
+          {kit.return_by_date && kit.status !== 'Returned' && (
+            <span>
+              return by{' '}
+              <span className="font-semibold text-espresso">{kit.return_by_date}</span>
+            </span>
+          )}
+          {kit.tracking_number && <span className="text-espresso/40">{kit.tracking_number}</span>}
+          {kit.invoice_url && (
+            <a
+              href={kit.invoice_url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-gold hover:underline"
+            >
+              Invoice ↗
+            </a>
+          )}
         </div>
-        <Field label="Tracking number">
-          <input
-            className="input"
-            placeholder="Any carrier — auto-detected"
-            value={form.tracking_number || ''}
-            onChange={(e) => set('tracking_number', e.target.value)}
-          />
-          <p className="mt-1 text-[11px] text-espresso/45">
-            Saving a tracking number starts live tracking. When it’s delivered, a
-            draft follow-up email is created in Outlook for you to review — never sent
-            automatically.
-          </p>
-          {trackMsg && <p className="mt-1 text-xs text-gold">{trackMsg}</p>}
-        </Field>
-        <Field label="Internal notes">
-          <textarea
-            rows={2}
-            className="input resize-none"
-            value={form.notes || ''}
-            onChange={(e) => set('notes', e.target.value)}
-          />
-        </Field>
-
-        <Field label="Attach invoice">
-          <input
-            type="file"
-            accept="application/pdf,image/*"
-            disabled={uploadingInvoice}
-            onChange={(e) => uploadInvoice(e.target.files?.[0])}
-            className="text-xs text-espresso/60"
-          />
-          {uploadingInvoice && (
-            <p className="mt-1 flex items-center gap-2 text-xs text-espresso/45">
-              <Spinner className="h-3 w-3" /> Uploading…
-            </p>
-          )}
-          {form.invoice_url && !uploadingInvoice && (
-            <p className="mt-1 flex items-center gap-3 text-xs">
-              <a
-                href={form.invoice_url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-gold hover:underline"
-              >
-                View invoice ↗
-              </a>
-              <button
-                type="button"
-                onClick={() => set('invoice_url', '')}
-                className="text-espresso/40 hover:text-red-600"
-              >
-                Remove
-              </button>
-            </p>
-          )}
-        </Field>
-
-        {/* Pieces */}
-        <div className="border-t border-espresso/10 pt-4">
-          <p className="label">Kit pieces</p>
-          <div className="space-y-2">
-            {localPieces.length === 0 && (
-              <p className="text-xs text-espresso/40">No pieces yet.</p>
-            )}
+        {kit.notes && <p className="text-xs text-espresso/50 italic mb-2">{kit.notes}</p>}
+        {localPieces.length > 0 && (
+          <div className="space-y-1.5">
             {localPieces.map((pc) => (
-              <div
-                key={pc.id}
-                className="flex items-center gap-3 bg-white rounded-xl px-3 py-2 border border-espresso/5"
-              >
+              <div key={pc.id} className="flex items-center justify-between gap-3 text-xs">
+                <span className="text-espresso/70 truncate">
+                  {pc.piece_name}
+                  {pc.color && <span className="text-espresso/40"> · {pc.color}</span>}
+                </span>
+                <span className="flex items-center gap-2 shrink-0">
+                  {pc.partner_decision && <Badge status={pc.partner_decision} />}
+                  <PurchaseStatusBadge status={pc.purchase_status} />
+                  <span className="text-espresso font-medium tabular-nums">
+                    {pc.purchase_amount == null ? '—' : money(pc.purchase_amount)}
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-xl border border-espresso/10 bg-white p-4 space-y-4">
+      <Field label="Kit status">
+        <select className="input" value={form.status} onChange={(e) => setStatus(e.target.value)}>
+          {KIT_STATUSES.map((s) => (
+            <option key={s}>{s}</option>
+          ))}
+        </select>
+      </Field>
+      <div className="grid grid-cols-3 gap-3">
+        <Field label="Ship date">
+          <input
+            type="date"
+            className="input"
+            value={form.ship_date || ''}
+            onChange={(e) => set('ship_date', e.target.value)}
+          />
+        </Field>
+        <Field label="Return by">
+          <input
+            type="date"
+            className="input"
+            value={form.return_by_date || ''}
+            onChange={(e) => set('return_by_date', e.target.value)}
+          />
+        </Field>
+        <Field label="Returned on">
+          <input
+            type="date"
+            className="input"
+            value={form.returned_at || ''}
+            onChange={(e) => set('returned_at', e.target.value)}
+          />
+        </Field>
+      </div>
+      <Field label="Tracking number">
+        <input
+          className="input"
+          placeholder="Any carrier — auto-detected"
+          value={form.tracking_number || ''}
+          onChange={(e) => set('tracking_number', e.target.value)}
+        />
+        <p className="mt-1 text-[11px] text-espresso/45">
+          Saving a tracking number starts live tracking. When it’s delivered, a
+          draft follow-up email is created in Outlook for you to review — never sent
+          automatically.
+        </p>
+        {trackMsg && <p className="mt-1 text-xs text-gold">{trackMsg}</p>}
+      </Field>
+      <Field label="Internal notes">
+        <textarea
+          rows={2}
+          className="input resize-none"
+          value={form.notes || ''}
+          onChange={(e) => set('notes', e.target.value)}
+        />
+      </Field>
+
+      <Field label="Attach invoice">
+        <input
+          type="file"
+          accept="application/pdf,image/*"
+          disabled={uploadingInvoice}
+          onChange={(e) => uploadInvoice(e.target.files?.[0])}
+          className="text-xs text-espresso/60"
+        />
+        {uploadingInvoice && (
+          <p className="mt-1 flex items-center gap-2 text-xs text-espresso/45">
+            <Spinner className="h-3 w-3" /> Uploading…
+          </p>
+        )}
+        {form.invoice_url && !uploadingInvoice && (
+          <p className="mt-1 flex items-center gap-3 text-xs">
+            <a
+              href={form.invoice_url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-gold hover:underline"
+            >
+              View invoice ↗
+            </a>
+            <button
+              type="button"
+              onClick={() => set('invoice_url', '')}
+              className="text-espresso/40 hover:text-red-600"
+            >
+              Remove
+            </button>
+          </p>
+        )}
+      </Field>
+
+      {/* Pieces */}
+      <div className="border-t border-espresso/10 pt-4">
+        <p className="label">Kit pieces</p>
+        <div className="space-y-2">
+          {localPieces.length === 0 && (
+            <p className="text-xs text-espresso/40">No pieces yet.</p>
+          )}
+          {localPieces.map((pc) => (
+            <div
+              key={pc.id}
+              className="bg-cream/50 rounded-xl px-3 py-2 border border-espresso/5 space-y-2"
+            >
+              <div className="flex items-center gap-3">
                 {pc.photo_url ? (
                   <img
                     src={pc.photo_url}
@@ -3280,7 +3473,6 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
                   <p className="text-sm text-espresso truncate">{pc.piece_name}</p>
                   <p className="text-xs text-espresso/40">{pc.color || '—'}</p>
                 </div>
-                {pc.partner_decision && <Badge status={pc.partner_decision} />}
                 <button
                   onClick={() => deletePiece(pc.id)}
                   className="text-espresso/30 hover:text-red-600 text-sm px-1"
@@ -3288,44 +3480,224 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
                   ✕
                 </button>
               </div>
-            ))}
-          </div>
-
-          {/* Add piece */}
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            <input
-              className="input"
-              placeholder="Piece name"
-              value={newPiece.piece_name}
-              onChange={(e) => setNewPiece((n) => ({ ...n, piece_name: e.target.value }))}
-            />
-            <input
-              className="input"
-              placeholder="Color"
-              value={newPiece.color}
-              onChange={(e) => setNewPiece((n) => ({ ...n, color: e.target.value }))}
-            />
-            <input
-              className="input"
-              placeholder="Photo URL"
-              value={newPiece.photo_url}
-              onChange={(e) => setNewPiece((n) => ({ ...n, photo_url: e.target.value }))}
-            />
-          </div>
-          <button
-            onClick={addPiece}
-            disabled={busy || !newPiece.piece_name.trim()}
-            className="btn-outline text-xs mt-2"
-          >
-            + Add piece
-          </button>
+              <div className="flex items-center gap-2 flex-wrap pl-12">
+                <select
+                  className="input !w-auto text-xs py-1"
+                  value={pc.partner_decision || ''}
+                  onChange={(e) =>
+                    updatePiece(pc.id, { partner_decision: e.target.value || null })
+                  }
+                >
+                  <option value="">Decision —</option>
+                  <option value="Keep">Keep</option>
+                  <option value="Return">Return</option>
+                </select>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="input !w-24 text-xs py-1"
+                  placeholder="Amount"
+                  value={pc.purchase_amount ?? ''}
+                  onChange={(e) =>
+                    setLocalPieces((prev) =>
+                      prev.map((p) =>
+                        p.id === pc.id ? { ...p, purchase_amount: e.target.value } : p
+                      )
+                    )
+                  }
+                  onBlur={(e) =>
+                    updatePiece(pc.id, {
+                      purchase_amount: e.target.value === '' ? null : Number(e.target.value),
+                    })
+                  }
+                />
+                <select
+                  className="input !w-auto text-xs py-1"
+                  value={pc.purchase_status || ''}
+                  onChange={(e) =>
+                    updatePiece(pc.id, { purchase_status: e.target.value || null })
+                  }
+                >
+                  <option value="">Payment —</option>
+                  {PURCHASE_STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {s === 'paid' ? 'Paid' : 'Pending'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-2">
-          {errorMsg && <p className="text-xs text-red-600 flex-1">{errorMsg}</p>}
-          <button onClick={saveKit} disabled={busy} className="btn-primary">
-            {busy ? <Spinner /> : 'Save kit'}
-          </button>
+        {/* Add piece */}
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <input
+            className="input"
+            placeholder="Piece name"
+            value={newPiece.piece_name}
+            onChange={(e) => setNewPiece((n) => ({ ...n, piece_name: e.target.value }))}
+          />
+          <input
+            className="input"
+            placeholder="Color"
+            value={newPiece.color}
+            onChange={(e) => setNewPiece((n) => ({ ...n, color: e.target.value }))}
+          />
+          <input
+            className="input"
+            placeholder="Photo URL"
+            value={newPiece.photo_url}
+            onChange={(e) => setNewPiece((n) => ({ ...n, photo_url: e.target.value }))}
+          />
+        </div>
+        <button
+          onClick={addPiece}
+          disabled={busy || !newPiece.piece_name.trim()}
+          className="btn-outline text-xs mt-2"
+        >
+          + Add piece
+        </button>
+      </div>
+
+      <div className="flex items-center justify-end gap-3 pt-2">
+        {errorMsg && <p className="text-xs text-red-600 flex-1">{errorMsg}</p>}
+        {savedMsg && !errorMsg && <p className="text-xs text-green-700 flex-1">{savedMsg}</p>}
+        <button onClick={saveKit} disabled={busy} className="btn-primary">
+          {busy ? <Spinner /> : 'Save kit'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// Thin modal wrapper around KitEditorCard for the single-kit "Manage"
+// flow (Order Tracker's "Manage current box" / "Send new box" / "Create
+// kit" buttons). Preserves the original close-with-a-beat-to-read-it
+// behavior when a tracking registration was kicked off on save.
+function KitModal({ partner, kit, pieces, onClose, onChange }) {
+  function handleSaved(attempted) {
+    if (attempted) setTimeout(onClose, 1400)
+    else onClose()
+  }
+  return (
+    <Modal title={`${partner.name}'s kit`} onClose={onClose}>
+      <KitEditorCard
+        partner={partner}
+        kit={kit}
+        pieces={pieces}
+        editable
+        onChange={onChange}
+        onSaved={handleSaved}
+      />
+    </Modal>
+  )
+}
+
+// Everything about one partner in a single scroll: contact info, their style
+// quiz, and their FULL kit history (every box, not just the current one) —
+// each kit's status/dates/notes/invoice and every piece's Keep/Return +
+// paid/pending status. `editable` controls whether the kit section is the
+// full KitEditorCard form or a read-only summary; the profile/quiz section
+// is always read-only here (editing those stays in PartnerModal/the quiz
+// itself — this view is about kits/pieces/invoices, per Keylah's brainstorm:
+// "quiz and notes and pieces they've paid and invoices attached and their
+// contact info... all in one spot", editable only from the Partners tab).
+function PartnerAccountModal({ partner, kits, pieces, selection, editable = false, onClose, onChange }) {
+  const partnerKits = (kits || [])
+    .filter((k) => k.partner_id === partner.id)
+    .slice()
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  const piecesByKit = (pieces || []).reduce((acc, pc) => {
+    ;(acc[pc.kit_id] = acc[pc.kit_id] || []).push(pc)
+    return acc
+  }, {})
+
+  const items = selection && Array.isArray(selection.items) ? selection.items : []
+  const quiz = items[0]?.kind === 'style_quiz' ? items[0] : null
+
+  return (
+    <Modal title={`${partner.name}'s account`} onClose={onClose}>
+      <div className="space-y-5">
+        {/* Contact info */}
+        <div className="rounded-xl border border-espresso/10 bg-white p-4 space-y-2.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            {partner.platform ? (
+              <PlatformBadge platform={partner.platform} />
+            ) : (
+              <span className="text-espresso/25 text-xs">—</span>
+            )}
+            <Badge status={partner.status} />
+          </div>
+          <p className="text-sm text-espresso/75">
+            <span className="text-espresso/45">Email: </span>
+            {partner.email}
+          </p>
+          {partner.instagram && (
+            <p className="text-sm text-espresso/75">
+              <span className="text-espresso/45">Instagram: </span>
+              {partner.instagram}
+            </p>
+          )}
+          {partner.partner_message && (
+            <div>
+              <p className="label">Note from partner</p>
+              <p className="text-sm text-espresso/70 italic">“{partner.partner_message}”</p>
+            </div>
+          )}
+        </div>
+
+        {/* Quiz */}
+        {selection && (
+          <div className="border-t border-espresso/10 pt-4 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[11px] uppercase tracking-widest text-espresso/40">
+                Style quiz submission
+              </span>
+              {quiz && (
+                <button
+                  onClick={() => printQuizSheet(partner, selection)}
+                  className="btn-ghost text-xs shrink-0"
+                >
+                  Print quiz
+                </button>
+              )}
+            </div>
+            {quiz && <QuizAnswers quiz={quiz} />}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {selection.shipping_address && <ShipTo address={selection.shipping_address} />}
+              {selection.note && (
+                <div className="bg-cream rounded-xl px-4 py-3 border border-espresso/5">
+                  <p className="label">Note from partner</p>
+                  <p className="text-sm text-espresso/75 italic">“{selection.note}”</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Kit history — every box, newest first */}
+        <div className="border-t border-espresso/10 pt-4 space-y-3">
+          <span className="text-[11px] uppercase tracking-widest text-espresso/40">
+            Box history ({partnerKits.length})
+            {!editable && <span className="normal-case tracking-normal"> · view only</span>}
+          </span>
+          {partnerKits.length === 0 ? (
+            <p className="text-sm text-espresso/45">No boxes yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {partnerKits.map((k) => (
+                <KitEditorCard
+                  key={k.id}
+                  partner={partner}
+                  kit={k}
+                  pieces={piecesByKit[k.id] || []}
+                  editable={editable}
+                  onChange={onChange}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </Modal>
