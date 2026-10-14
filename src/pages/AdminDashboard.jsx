@@ -1095,7 +1095,7 @@ function PartnersTab({ partners, kits, pieces, selections, onChange }) {
             <thead>
               <tr className="text-left text-espresso/50 text-xs uppercase tracking-widest border-b border-espresso/10">
                 <th className="px-5 py-3 font-medium">Name</th>
-                <th className="px-5 py-3 font-medium">Quiz</th>
+                <th className="px-5 py-3 font-medium">Account / Quiz</th>
                 <th className="px-5 py-3 font-medium">Email</th>
                 <th className="px-5 py-3 font-medium">Platform</th>
                 <th className="px-5 py-3 font-medium">Instagram</th>
@@ -1119,16 +1119,25 @@ function PartnersTab({ partners, kits, pieces, selections, onChange }) {
                     </span>
                   </td>
                   <td className="px-5 py-3">
-                    {selectionByPartner[p.id] ? (
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setViewing(p)}
+                        onClick={() => setViewingAccount(p)}
                         className="btn-outline text-xs whitespace-nowrap"
+                        title="Quiz, notes, kept pieces, invoices — everything about this partner, editable"
                       >
-                        View quiz
+                        Account
                       </button>
-                    ) : (
-                      <span className="text-espresso/25">—</span>
-                    )}
+                      {selectionByPartner[p.id] ? (
+                        <button
+                          onClick={() => setViewing(p)}
+                          className="btn-outline text-xs whitespace-nowrap"
+                        >
+                          View quiz
+                        </button>
+                      ) : (
+                        <span className="text-espresso/25">—</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-5 py-3 text-espresso/60">{p.email}</td>
                   <td className="px-5 py-3">
@@ -1158,13 +1167,6 @@ function PartnersTab({ partners, kits, pieces, selections, onChange }) {
                     <CopyLinkButton partner={p} />
                   </td>
                   <td className="px-5 py-3 text-right space-x-2">
-                    <button
-                      onClick={() => setViewingAccount(p)}
-                      className="btn-outline text-xs"
-                      title="Quiz, notes, kept pieces, invoices — everything about this partner, editable"
-                    >
-                      Account
-                    </button>
                     <button
                       onClick={() => setViewing(p)}
                       className="btn-outline text-xs"
