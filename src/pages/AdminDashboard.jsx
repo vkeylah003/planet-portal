@@ -3603,6 +3603,88 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
 // itself — this view is about kits/pieces/invoices, per Keylah's brainstorm:
 // "quiz and notes and pieces they've paid and invoices attached and their
 // contact info... all in one spot", editable only from the Partners tab).
+// Collapsible, color-coded section for the account view. Closed by default so
+// opening an account shows a tidy list of one-line summaries instead of every
+// field at once; click a header to open just that category.
+const ACCOUNT_TONES = {
+  blue: { wrap: 'border-blue-200 bg-blue-50/60', head: 'text-blue-800', pill: 'bg-blue-100 text-blue-800' },
+  violet: { wrap: 'border-violet-200 bg-violet-50/60', head: 'text-violet-800', pill: 'bg-violet-100 text-violet-800' },
+  green: { wrap: 'border-green-300 bg-green-50', head: 'text-green-800', pill: 'bg-green-100 text-green-800' },
+  amber: { wrap: 'border-amber-200 bg-amber-50/60', head: 'text-amber-800', pill: 'bg-amber-100 text-amber-800' },
+}
+function AccountSection({ title, tone = 'blue', summary, children, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen)
+  const t = ACCOUNT_TONES[tone]
+  return (
+    <div className={`rounded-2xl border ${t.wrap}`}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left"
+      >
+        <span className="flex items-center gap-2 flex-wrap min-w-0">
+          <span className={`font-heading text-lg ${t.head}`}>{title}</span>
+          {summary && (
+            <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${t.pill}`}>
+              {summary}
+            </span>
+          )}
+        </span>
+        <span className={`text-sm shrink-0 ${t.head}`}>{open ? '▲ Hide' : '▼ Show'}</span>
+      </button>
+      {open && <div className="px-4 pb-4 pt-1 space-y-3">{children}</div>}
+    </div>
+  )
+}
+
+// One kit as an accordion row: a one-line header (status, dates, and a
+// highlighted green invoice chip) that opens the full KitEditorCard. The card
+// stays mounted while closed so unsaved edits aren't lost by collapsing.
+function KitAccordion({ partner, kit, pieces, editable, onChange }) {
+  const [open, setOpen] = useState(false)
+  const kept = pieces.filter((p) => p.partner_decision === 'Keep').length
+  return (
+    <div className="rounded-xl border border-amber-200 bg-white">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left"
+      >
+        <span className="flex items-center gap-2 flex-wrap text-xs text-espresso/60">
+          <Badge status={kit.status} />
+          <span>{kit.ship_date ? `shipped ${kit.ship_date}` : 'not shipped'}</span>
+          {kit.status === 'Returned' && kit.returned_at && (
+            <span>· returned {kit.returned_at.slice(0, 10)}</span>
+          )}
+          <span>· {pieces.length} piece{pieces.length === 1 ? '' : 's'}</span>
+          {kept > 0 && <span>· {kept} kept</span>}
+          {kit.invoice_url && (
+            <a
+              href={kit.invoice_url}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="px-2 py-0.5 rounded-full bg-green-600 text-white font-semibold hover:bg-green-700"
+            >
+              Invoice ↗
+            </a>
+          )}
+        </span>
+        <span className="text-xs text-amber-800 shrink-0">{open ? '▲' : '▼'}</span>
+      </button>
+      <div className={open ? 'px-3 pb-3' : 'hidden'}>
+        <KitEditorCard
+          partner={partner}
+          kit={kit}
+          pieces={pieces}
+          editable={editable}
+          onChange={onChange}
+        />
+      </div>
+    </div>
+  )
+}
+
 function PartnerAccountModal({ partner, kits, pieces, selection, editable = false, onClose, onChange }) {
   const partnerKits = (kits || [])
     .filter((k) => k.partner_id === partner.id)
@@ -3616,19 +3698,42 @@ function PartnerAccountModal({ partner, kits, pieces, selection, editable = fals
   const items = selection && Array.isArray(selection.items) ? selection.items : []
   const quiz = items[0]?.kind === 'style_quiz' ? items[0] : null
 
+  // Purchases: every kept piece across all of this partner's boxes.
+  const kept = []
+  for (const k of partnerKits) {
+    for (const pc of piecesByKit[k.id] || []) {
+      if (pc.partner_decision === 'Keep') kept.push({ ...pc, kit: k })
+    }
+  }
+  const sum = (status) =>
+    kept
+      .filter((pc) => (pc.purchase_status || '').toLowerCase() === status)
+      .reduce((s, pc) => s + Number(pc.purchase_amount || 0), 0)
+  const paidTotal = sum('paid')
+  const pendingTotal = sum('pending')
+  const invoiceKits = partnerKits.filter((k) => k.invoice_url)
+
+  const purchasesSummary =
+    kept.length === 0
+      ? 'none yet'
+      : `${kept.length} kept${paidTotal ? ` · ${money(paidTotal)} paid` : ''}${
+          pendingTotal ? ` · ${money(pendingTotal)} due` : ''
+        }`
+
   return (
     <Modal title={`${partner.name}'s account`} onClose={onClose}>
-      <div className="space-y-5">
-        {/* Contact info */}
-        <div className="rounded-xl border border-espresso/10 bg-white p-4 space-y-2.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            {partner.platform ? (
-              <PlatformBadge platform={partner.platform} />
-            ) : (
-              <span className="text-espresso/25 text-xs">—</span>
-            )}
-            <Badge status={partner.status} />
-          </div>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          {partner.platform && <PlatformBadge platform={partner.platform} />}
+          <Badge status={partner.status} />
+          {!editable && <span className="text-[11px] text-espresso/40">view only</span>}
+        </div>
+
+        <AccountSection
+          title="Contact"
+          tone="blue"
+          summary={partner.email}
+        >
           <p className="text-sm text-espresso/75">
             <span className="text-espresso/45">Email: </span>
             {partner.email}
@@ -3645,60 +3750,119 @@ function PartnerAccountModal({ partner, kits, pieces, selection, editable = fals
               <p className="text-sm text-espresso/70 italic">“{partner.partner_message}”</p>
             </div>
           )}
-        </div>
+        </AccountSection>
 
-        {/* Quiz */}
-        {selection && (
-          <div className="border-t border-espresso/10 pt-4 space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-[11px] uppercase tracking-widest text-espresso/40">
-                Style quiz submission
-              </span>
+        <AccountSection
+          title="Style quiz"
+          tone="violet"
+          summary={selection ? 'submitted' : 'not done'}
+        >
+          {selection ? (
+            <>
               {quiz && (
-                <button
-                  onClick={() => printQuizSheet(partner, selection)}
-                  className="btn-ghost text-xs shrink-0"
-                >
-                  Print quiz
-                </button>
-              )}
-            </div>
-            {quiz && <QuizAnswers quiz={quiz} />}
-            <div className="grid gap-3 sm:grid-cols-2">
-              {selection.shipping_address && <ShipTo address={selection.shipping_address} />}
-              {selection.note && (
-                <div className="bg-cream rounded-xl px-4 py-3 border border-espresso/5">
-                  <p className="label">Note from partner</p>
-                  <p className="text-sm text-espresso/75 italic">“{selection.note}”</p>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => printQuizSheet(partner, selection)}
+                    className="btn-ghost text-xs"
+                  >
+                    Print quiz
+                  </button>
                 </div>
               )}
-            </div>
-          </div>
-        )}
-
-        {/* Kit history — every box, newest first */}
-        <div className="border-t border-espresso/10 pt-4 space-y-3">
-          <span className="text-[11px] uppercase tracking-widest text-espresso/40">
-            Box history ({partnerKits.length})
-            {!editable && <span className="normal-case tracking-normal"> · view only</span>}
-          </span>
-          {partnerKits.length === 0 ? (
-            <p className="text-sm text-espresso/45">No boxes yet.</p>
+              {quiz && <QuizAnswers quiz={quiz} />}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {selection.shipping_address && <ShipTo address={selection.shipping_address} />}
+                {selection.note && (
+                  <div className="bg-white rounded-xl px-4 py-3 border border-espresso/5">
+                    <p className="label">Note from partner</p>
+                    <p className="text-sm text-espresso/75 italic">“{selection.note}”</p>
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
-            <div className="space-y-3">
-              {partnerKits.map((k) => (
-                <KitEditorCard
+            <p className="text-sm text-espresso/45">No quiz submitted yet.</p>
+          )}
+        </AccountSection>
+
+        <AccountSection
+          title="Purchases & invoices"
+          tone="green"
+          summary={
+            invoiceKits.length
+              ? `${purchasesSummary} · ${invoiceKits.length} invoice${invoiceKits.length === 1 ? '' : 's'}`
+              : purchasesSummary
+          }
+        >
+          {invoiceKits.length > 0 && (
+            <div className="rounded-xl bg-green-600 text-white px-4 py-3 space-y-1.5">
+              <p className="text-[11px] uppercase tracking-widest opacity-80">
+                Attached invoices
+              </p>
+              {invoiceKits.map((k) => (
+                <a
                   key={k.id}
-                  partner={partner}
-                  kit={k}
-                  pieces={piecesByKit[k.id] || []}
-                  editable={editable}
-                  onChange={onChange}
-                />
+                  href={k.invoice_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between gap-3 text-sm font-medium hover:underline"
+                >
+                  <span>
+                    Box shipped {k.ship_date || 'n/a'}
+                    {k.status === 'Returned' && k.returned_at
+                      ? ` · returned ${k.returned_at.slice(0, 10)}`
+                      : ''}
+                  </span>
+                  <span>View invoice ↗</span>
+                </a>
               ))}
             </div>
           )}
-        </div>
+          {kept.length === 0 ? (
+            <p className="text-sm text-espresso/45">No kept pieces yet.</p>
+          ) : (
+            <div className="space-y-1.5">
+              {kept.map((pc) => (
+                <div
+                  key={pc.id}
+                  className="flex items-center justify-between gap-3 rounded-lg bg-white border border-green-200 px-3 py-2 text-sm"
+                >
+                  <span className="text-espresso/80 min-w-0 truncate">
+                    {pc.piece_name}
+                    {pc.color && <span className="text-espresso/40"> · {pc.color}</span>}
+                  </span>
+                  <span className="flex items-center gap-2 shrink-0">
+                    <PurchaseStatusBadge status={pc.purchase_status} />
+                    <span className="font-medium tabular-nums">
+                      {pc.purchase_amount == null ? '—' : money(pc.purchase_amount)}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </AccountSection>
+
+        <AccountSection
+          title="Box history"
+          tone="amber"
+          summary={`${partnerKits.length} box${partnerKits.length === 1 ? '' : 'es'}`}
+        >
+          {partnerKits.length === 0 ? (
+            <p className="text-sm text-espresso/45">No boxes yet.</p>
+          ) : (
+            partnerKits.map((k) => (
+              <KitAccordion
+                key={k.id}
+                partner={partner}
+                kit={k}
+                pieces={piecesByKit[k.id] || []}
+                editable={editable}
+                onChange={onChange}
+              />
+            ))
+          )}
+        </AccountSection>
       </div>
     </Modal>
   )
