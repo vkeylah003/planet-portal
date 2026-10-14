@@ -1169,13 +1169,13 @@ function PartnersTab({ partners, kits, pieces, selections, onChange }) {
                   <td className="px-5 py-3 text-right space-x-2">
                     <button
                       onClick={() => setViewing(p)}
-                      className="btn-outline text-xs"
+                      className="btn-ghost text-xs"
                     >
                       View
                     </button>
                     <button
                       onClick={() => setEditing(p)}
-                      className="btn-outline text-xs"
+                      className="btn-ghost text-xs"
                     >
                       Edit
                     </button>
