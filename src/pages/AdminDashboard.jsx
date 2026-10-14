@@ -3607,10 +3607,10 @@ function KitModal({ partner, kit, pieces, onClose, onChange }) {
 // opening an account shows a tidy list of one-line summaries instead of every
 // field at once; click a header to open just that category.
 const ACCOUNT_TONES = {
-  blue: { wrap: 'border-blue-200 bg-blue-50/60', head: 'text-blue-800', pill: 'bg-blue-100 text-blue-800' },
-  violet: { wrap: 'border-violet-200 bg-violet-50/60', head: 'text-violet-800', pill: 'bg-violet-100 text-violet-800' },
-  green: { wrap: 'border-green-300 bg-green-50', head: 'text-green-800', pill: 'bg-green-100 text-green-800' },
-  amber: { wrap: 'border-amber-200 bg-amber-50/60', head: 'text-amber-800', pill: 'bg-amber-100 text-amber-800' },
+  blue: { wrap: 'border-blue-100 bg-blue-50/40', head: 'text-blue-700', pill: 'bg-blue-100/70 text-blue-700' },
+  violet: { wrap: 'border-violet-100 bg-violet-50/40', head: 'text-violet-700', pill: 'bg-violet-100/70 text-violet-700' },
+  green: { wrap: 'border-green-200 bg-green-50/50', head: 'text-green-700', pill: 'bg-green-100/70 text-green-700' },
+  amber: { wrap: 'border-amber-100 bg-amber-50/40', head: 'text-amber-700', pill: 'bg-amber-100/70 text-amber-700' },
 }
 function AccountSection({ title, tone = 'blue', summary, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -3630,7 +3630,7 @@ function AccountSection({ title, tone = 'blue', summary, children, defaultOpen =
             </span>
           )}
         </span>
-        <span className={`text-sm shrink-0 ${t.head}`}>{open ? '▲ Hide' : '▼ Show'}</span>
+        <span className={`text-sm shrink-0 opacity-80 ${t.head}`}>{open ? '▲ Hide' : '▼ Show'}</span>
       </button>
       {open && <div className="px-4 pb-4 pt-1 space-y-3">{children}</div>}
     </div>
@@ -3644,7 +3644,7 @@ function KitAccordion({ partner, kit, pieces, editable, onChange }) {
   const [open, setOpen] = useState(false)
   const kept = pieces.filter((p) => p.partner_decision === 'Keep').length
   return (
-    <div className="rounded-xl border border-amber-200 bg-white">
+    <div className="rounded-xl border border-amber-100 bg-white">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -3664,13 +3664,13 @@ function KitAccordion({ partner, kit, pieces, editable, onChange }) {
               target="_blank"
               rel="noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="px-2 py-0.5 rounded-full bg-green-600 text-white font-semibold hover:bg-green-700"
+              className="px-2 py-0.5 rounded-full bg-green-700/85 text-white font-medium hover:bg-green-700"
             >
               Invoice ↗
             </a>
           )}
         </span>
-        <span className="text-xs text-amber-800 shrink-0">{open ? '▲' : '▼'}</span>
+        <span className="text-xs text-amber-700 shrink-0">{open ? '▲' : '▼'}</span>
       </button>
       <div className={open ? 'px-3 pb-3' : 'hidden'}>
         <KitEditorCard
@@ -3795,7 +3795,7 @@ function PartnerAccountModal({ partner, kits, pieces, selection, editable = fals
           }
         >
           {invoiceKits.length > 0 && (
-            <div className="rounded-xl bg-green-600 text-white px-4 py-3 space-y-1.5">
+            <div className="rounded-xl bg-green-700/85 text-white px-4 py-3 space-y-1.5">
               <p className="text-[11px] uppercase tracking-widest opacity-80">
                 Attached invoices
               </p>
@@ -3825,7 +3825,7 @@ function PartnerAccountModal({ partner, kits, pieces, selection, editable = fals
               {kept.map((pc) => (
                 <div
                   key={pc.id}
-                  className="flex items-center justify-between gap-3 rounded-lg bg-white border border-green-200 px-3 py-2 text-sm"
+                  className="flex items-center justify-between gap-3 rounded-lg bg-white border border-green-100 px-3 py-2 text-sm"
                 >
                   <span className="text-espresso/80 min-w-0 truncate">
                     {pc.piece_name}
