@@ -1167,13 +1167,13 @@ function PartnersTab({ partners, kits, pieces, selections, onChange }) {
                     </button>
                     <button
                       onClick={() => setViewing(p)}
-                      className="btn-ghost text-xs"
+                      className="btn-outline text-xs"
                     >
                       View
                     </button>
                     <button
                       onClick={() => setEditing(p)}
-                      className="btn-ghost text-xs"
+                      className="btn-outline text-xs"
                     >
                       Edit
                     </button>
