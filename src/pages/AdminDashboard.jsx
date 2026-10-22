@@ -33,14 +33,21 @@ const ACTIVE_KIT_STATUSES = ['Preparing', 'Shipped', 'Delivered', 'Return Pendin
 const isActiveKit = (k) => ACTIVE_KIT_STATUSES.includes(k?.status)
 const PLATFORMS = ['GoAffPro', 'Impact']
 
-// A box the partner is KEEPING (so it shouldn't sit with the plain "Delivered"
-// boxes you're waiting on): still an active kit, every piece has been decided,
-// and at least one is Keep with a payment pending or paid. Derived from the
+// A box with a KEPT piece (so it doesn't sit with the plain "Delivered" boxes
+// you're waiting on, or the fully-returned ones): at least one piece is Keep
+// with a payment pending or paid, and — if the box is still out — every piece
+// has been decided. Derived from the
 // pieces — nothing to remember to set. Returns null when it isn't a kept box,
 // otherwise the amounts still due / already paid.
 function keptSummary(kit, kitPieces) {
-  if (!isActiveKit(kit) || !kitPieces || kitPieces.length === 0) return null
-  if (!kitPieces.every((p) => p.partner_decision === 'Keep' || p.partner_decision === 'Return')) {
+  if (!kitPieces || kitPieces.length === 0) return null
+  // A box still out needs every piece decided before it counts as kept; a box
+  // already marked Returned is settled, so any kept piece with a payment on it
+  // puts it under Kept (instead of lumping it in with fully-returned boxes).
+  if (
+    isActiveKit(kit) &&
+    !kitPieces.every((p) => p.partner_decision === 'Keep' || p.partner_decision === 'Return')
+  ) {
     return null
   }
   let due = 0
@@ -2681,10 +2688,20 @@ function CurrentKitPanel({ kit, pieces }) {
 // A PREVIOUS box: a returned kit. A clean one-line history entry — no pieces,
 // no countdown. Pieces belong only to the current box.
 function PreviousKitPanel({ kit, pieces, onManage, onViewProducts }) {
+  const kept = keptSummary(kit, pieces)
   return (
     <div className="rounded-xl bg-espresso/[0.03] border border-espresso/5 px-4 py-3">
       <div className="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-espresso/55">
-        <Badge status={kit.status} />
+        {kept ? (
+          <Badge status="Kept">
+            Kept ·{' '}
+            {kept.due > 0
+              ? `${money(kept.due)} due${kept.paid > 0 ? ` · ${money(kept.paid)} paid` : ''}`
+              : `${money(kept.paid)} paid`}
+          </Badge>
+        ) : (
+          <Badge status={kit.status} />
+        )}
         {kit.status === 'Returned' && kit.returned_at && (
           <span>
             returned <span className="font-semibold text-espresso">{kit.returned_at.slice(0, 10)}</span>
@@ -3004,6 +3021,10 @@ function BoxCycleTab({ partners, kits, pieces, selections }) {
   const selectedPartnerIds = new Set(
     selections.filter((s) => s.partner_id).map((s) => s.partner_id)
   )
+  const piecesByKitCycle = (pieces || []).reduce((acc, pc) => {
+    ;(acc[pc.kit_id] = acc[pc.kit_id] || []).push(pc)
+    return acc
+  }, {})
   const selectionByPartner = latestSelectionsByPartner(selections)
 
   const bucketOf = (p) => boxCycleBucket(p, kitsByPartner, selectedPartnerIds)
@@ -3094,7 +3115,7 @@ function BoxCycleTab({ partners, kits, pieces, selections }) {
                             <span className="text-espresso/55 tabular-nums w-24 shrink-0">
                               {k.ship_date || 'not yet shipped'}
                             </span>
-                            <Badge status={k.status} />
+                            <Badge status={kitDisplayStatus(k, piecesByKitCycle[k.id])} />
                             {k.status === 'Returned' && k.returned_at && (
                               <span className="text-espresso/55">
                                 · returned {k.returned_at.slice(0, 10)}
