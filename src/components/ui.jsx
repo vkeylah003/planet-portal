@@ -54,6 +54,7 @@ const STATUS_STYLES = {
   Delivered: 'bg-green-100 text-green-700',
   'Return Pending': 'bg-amber-100 text-amber-700',
   Returned: 'bg-espresso/10 text-espresso/60',
+  Kept: 'bg-violet-100 text-violet-700',
   // piece decisions
   Keep: 'bg-green-100 text-green-700',
   Return: 'bg-amber-100 text-amber-700',

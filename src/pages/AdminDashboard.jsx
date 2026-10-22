@@ -33,6 +33,34 @@ const ACTIVE_KIT_STATUSES = ['Preparing', 'Shipped', 'Delivered', 'Return Pendin
 const isActiveKit = (k) => ACTIVE_KIT_STATUSES.includes(k?.status)
 const PLATFORMS = ['GoAffPro', 'Impact']
 
+// A box the partner is KEEPING (so it shouldn't sit with the plain "Delivered"
+// boxes you're waiting on): still an active kit, every piece has been decided,
+// and at least one is Keep with a payment pending or paid. Derived from the
+// pieces — nothing to remember to set. Returns null when it isn't a kept box,
+// otherwise the amounts still due / already paid.
+function keptSummary(kit, kitPieces) {
+  if (!isActiveKit(kit) || !kitPieces || kitPieces.length === 0) return null
+  if (!kitPieces.every((p) => p.partner_decision === 'Keep' || p.partner_decision === 'Return')) {
+    return null
+  }
+  let due = 0
+  let paid = 0
+  let any = false
+  for (const p of kitPieces) {
+    if (p.partner_decision !== 'Keep') continue
+    const st = (p.purchase_status || '').toLowerCase()
+    if (st === 'pending') {
+      any = true
+      due += Number(p.purchase_amount || 0)
+    } else if (st === 'paid') {
+      any = true
+      paid += Number(p.purchase_amount || 0)
+    }
+  }
+  return any ? { due, paid } : null
+}
+const kitDisplayStatus = (kit, kitPieces) => (keptSummary(kit, kitPieces) ? 'Kept' : kit.status)
+
 // Payment status for a kept piece. No DB check constraint on kit_pieces.
 // purchase_status (it's a free-text column, see
 // scripts/add_purchase_amount_column.sql) — these two exact lowercase
@@ -2586,11 +2614,21 @@ function PieceChips({ pieces, muted = false }) {
 // shown prominently with status, return countdown, live shipment state, and
 // its pieces.
 function CurrentKitPanel({ kit, pieces }) {
+  const kept = keptSummary(kit, pieces)
   return (
     <div className="rounded-2xl bg-cream/60 border border-espresso/5 p-4">
       <div className="flex items-center gap-2 flex-wrap">
-        <Badge status={kit.status} />
-        {kit.return_by_date && <ReturnCountdown date={kit.return_by_date} />}
+        {kept ? (
+          <Badge status="Kept">
+            Kept ·{' '}
+            {kept.due > 0
+              ? `${money(kept.due)} due${kept.paid > 0 ? ` · ${money(kept.paid)} paid` : ''}`
+              : `${money(kept.paid)} paid`}
+          </Badge>
+        ) : (
+          <Badge status={kit.status} />
+        )}
+        {kit.return_by_date && !kept && <ReturnCountdown date={kit.return_by_date} />}
         {kit.tracking_number && (
           <ShipmentPill status={kit.delivery_status} deliveredAt={kit.delivered_at} />
         )}
@@ -2719,7 +2757,7 @@ function KitsTab({ partners, kits, pieces, selections, onChange }) {
     if (filter === 'All') return true
     const pk = kitsByPartner[p.id] || []
     if (filter === 'No box out') return !pk.some(isActiveKit)
-    return pk.some((k) => k.status === filter)
+    return pk.some((k) => kitDisplayStatus(k, piecesByKit[k.id]) === filter)
   }
   const countFor = (filter) => partners.filter((p) => matchesFilter(p, filter)).length
 
@@ -2727,7 +2765,7 @@ function KitsTab({ partners, kits, pieces, selections, onChange }) {
   // status chip if at least one partner is in it, so the bar stays relevant.
   const filterTabs = [
     { id: 'All', label: `All (${partners.length})` },
-    ...KIT_STATUSES.map((s) => ({ id: s, label: `${s} (${countFor(s)})` })).filter(
+    ...[...KIT_STATUSES, 'Kept'].map((s) => ({ id: s, label: `${s === 'Kept' ? 'Kept / payment' : s} (${countFor(s)})` })).filter(
       (t) => t.id === statusFilter || countFor(t.id) > 0
     ),
     { id: 'No box out', label: `No box out (${countFor('No box out')})` },
@@ -2804,7 +2842,7 @@ function KitsTab({ partners, kits, pieces, selections, onChange }) {
                     <h3 className="font-heading text-xl text-espresso">{p.name}</h3>
                     <PlatformBadge platform={p.platform} />
                     {currentKit ? (
-                      <Badge status={currentKit.status} />
+                      <Badge status={kitDisplayStatus(currentKit, piecesByKit[currentKit.id])} />
                     ) : (
                       <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium tracking-wide bg-espresso/5 text-espresso/45">
                         No box currently out
